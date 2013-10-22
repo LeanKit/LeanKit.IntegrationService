@@ -1,0 +1,19 @@
+﻿    <div class="row">
+        {{#checkIf "customStateIsNew"}}
+        <div class="col-xs-1"></div>
+        <div id="custom-state" class="col-xs-7"></div>
+        <div class="col-xs-3">
+            {{{simpleSelect "getStatesForPicker" id="statePicker" class="form-control"}}}
+        </div>
+            <div class="col-xs-1">
+                <div id="confirm" class="btn btn-primary btn-sm disabled"><span class="glyphicon glyphicon-ok"></span></div>
+            </div>
+        {{else}}
+        <div class="col-xs-1">
+            <div id="remove" class="btn btn-link no-padding" style="margin-top: -4px;">&nbsp;<span class="glyphicon glyphicon-remove"></span></div>
+        </div>
+        <div class="col-xs-11">
+            {{State}}
+        </div>
+        {{/checkIf}}
+    </div>

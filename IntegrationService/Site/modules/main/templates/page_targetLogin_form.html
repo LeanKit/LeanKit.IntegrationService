@@ -1,0 +1,51 @@
+        <p>Select your Target. You can only connect to one Target system per Integration Service instance.</p>
+<fieldset>
+    <div class="form-group">
+        <label class="control-label col-sm-2" for="Type">Type:</label>
+        <div class="col-sm-3">
+            <select id="Type" class="form-control picker">
+                <option value="none"></option>
+                <option value="TFS">TFS</option>
+                <option value="Jira">Jira</option>
+                <option value="GitHubIssues">GitHub Issues</option>
+                <option value="GitHubPulls">GitHub Pull Requests</option>
+            </select>
+        </div>
+    </div>
+</fieldset>
+        <p>Enter the host address and your credentials for the selected target:</p>
+    <fieldset>
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="Host">Host:</label>
+                <div class="input-group col-sm-7">
+                    <div class="input-group-btn">
+                        <button id="protocol-btn" type="button" class="btn btn-default dropdown-toggle" style="min-width: 90px;" data-toggle="dropdown"><span id="Protocol" class="caption">https://</span>&nbsp;<span class="caret"></span></button>
+                        <ul class="dropdown-menu">
+                            <li><a href="#">https://</a></li>
+                            <li><a href="#">http://</a></li>
+                        </ul>
+                    </div>
+                    <input class="form-control" type="text" id="Host" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="User">User:</label>
+                <div class="col-sm-6">
+                    <input class="form-control" type="text" placeholder="User" id="User" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="Password">Password:</label>
+                <div class="col-sm-6">
+                    <input class="form-control" type="password" placeholder="Password" id="Password" />
+                </div>
+            </div>
+
+            <div class="col-sm-2"></div>
+            <div class="col-sm-6">
+                <button class="btn btn-sm btn-primary disabled" id="btn-connect" style="margin-left:-10px">Connect</button>
+            </div>
+    </fieldset>
+

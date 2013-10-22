@@ -1,0 +1,1 @@
+﻿window.AppIsReleased = true;

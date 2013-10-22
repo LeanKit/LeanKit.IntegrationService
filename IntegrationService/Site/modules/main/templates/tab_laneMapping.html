@@ -1,0 +1,47 @@
+﻿<h2>Lane / State Mapping</h2>
+<form class="form-inline">
+    <fieldset>
+        <div class="panel panel-info">
+            <div class="panel-heading panel-heading-small">
+                Board Lanes
+                <div  id="help-board-lanes" class="pull-right"><span class="glyphicon glyphicon-info-sign"></span></div>
+            </div>
+            <div id="lanetable">{{{LaneHtml}}}</div>
+        </div>
+        
+        <div class="hide" id="state-edit-controls">
+            <div class="panel panel-info">
+                <div class="panel-heading panel-heading-small">
+                    Mapped States
+                    <div  id="help-project-states" class="pull-right"><span class="glyphicon glyphicon-info-sign"></span></div>
+                </div>
+                <div class="state-list">
+                    {{{nestedView "States" factory="laneStateMap"}}}
+                </div>
+                <div style="border-top: 1px #b8d6e1 solid">
+                    <div class="input-group">
+                        <span class="input-group-addon"><label for="build-workflow" class="label label-primary"><input id="build-workflow" type="checkbox"/>&nbsp;Build Workflow
+                                                        </label>
+                        </span>
+                        {{{nestedView "WorkflowStates" factory="laneStateMap" class="workflow-builder"}}}
+                        <div class="input-group-addon"><div id="use-workflow" class="btn btn-primary"><span class="glyphicon glyphicon-ok"></span></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-info">
+                <div class="panel-heading panel-heading-small">
+                    Available States
+                    <div  id="help-available-states" class="pull-right"><span class="glyphicon glyphicon-info-sign"></span></div>
+                </div>
+                <div style="padding:10px">
+                    {{{partial "StateButtons" factory="laneStateMap" }}}
+                </div>
+
+            </div>
+        </div>
+
+
+    </fieldset>
+
+</form>

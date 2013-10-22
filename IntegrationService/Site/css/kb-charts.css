@@ -1,0 +1,380 @@
+﻿#kb-content-area {
+	font-size: 0.75em;
+}
+
+#kb-content-area a {
+	font-weight: bold;
+}
+
+a.kb-ch-button {
+	float: left;
+}
+button.kb-ch-button {
+	width: auto;
+	overflow: visible;
+}
+.kb-button-right {
+	margin-left: -5px;
+}
+.kb-ch-button .ui-icon {
+	position: absolute;
+	top: 50%;
+	margin-top: -8px;
+	left: 50%;
+	margin-left: -8px;
+}
+.kb-ch-item-inner {
+	border:9px solid white;
+	float:left;
+	padding:10px;
+	width:99%;
+}
+
+.kb-ch-button {
+	outline: 0;
+	text-decoration: none !important;
+	cursor: pointer;
+	position: relative;
+	text-align: center;
+	zoom: 1;
+	font-size: 10px;
+}
+.kb-ch-button-container {
+	margin: 10px;
+	padding:5px;
+	background-color: #FFFFFF;
+	border: 1px solid #CCCCCC;
+	background-image: url(../../Content/Images/Dashboard/ItemShadow.png);
+	height: 35px;
+	position:relative;
+	clear:both;
+}
+.kb-ch-childLaneTable {
+	height: 100%;
+}
+.kb-ch-headerTr {
+	height: 15px;
+}
+.kb-ch-hidden {
+	visibility: collapse;
+}
+.kb-ch-lane-name {
+	margin-top: .6em;
+}
+.kb-ch-lane-selection-group {
+	vertical-align: bottom;
+}
+.kb-ch-laneHeaderRepresentation {
+	border: 2px solid white;
+	background: #2191c0;
+	color: #eaf5f7;
+	font-weight: bold;
+	cursor: pointer;
+	min-height: 30px;
+	height: 100%;
+}
+.kb-ch-main-button {
+	font-size: 1.1em;
+	width: 200px;
+	
+}
+
+.kb-ch-control-button {
+	font-size: 1.1em;
+	width: 200px;
+	cursor: pointer;
+	text-align:center;
+	
+}
+.kb-ch-refresh-group {
+	float: right;
+	margin-right:0;
+}
+.kb-ch-legend-group 
+{
+    float:right;
+    margin-right:150px;
+}
+.kb-ch-legend-image 
+{
+    float:left;
+    margin-top:4px;
+}
+.kb-ch-legend-text 
+{
+    margin-top:6px;
+    width:200px;
+}
+.kb-ch-rolledToParent {
+	display: none;
+}
+.kb-ch-rolledUp {
+	float: right;
+}
+.kb-ch-secondaryText {
+	font-style: italic;
+	color: #999999;
+	margin-left: 25px;
+}
+.kb-ch-tab {
+	background-color: #FFFFFF;
+	border-left: solid 1px black;
+	border-top: solid 1px black;
+	border-right: solid 1px black;
+	border-bottom: solid 1px white;
+	padding: 3px;
+	min-width: 80px;
+	-moz-border-radius-topleft: 6px;
+	-moz-border-radius-topright: 6px;
+	-webkit-border-top-left-radius: 6px;
+	-webkit-border-top-right-radius: 6px;
+     border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    text-align: center;
+}
+
+.kb-ch-tab a{
+    min-width: 100px;
+}
+.kb-ch-tab-strip li {
+	display: inline;
+	list-style: none;
+	float: left;
+	margin-right: 5px;
+}
+.kb-ch-tab-strip {
+	margin-left: 5px;
+}
+.kb-ch-tab-unselected
+{
+    background-image: url(../../Content/Images/Dashboard/ItemShadow.png);
+    border-bottom: 1px solid #C0C0C0;
+}
+.kb-ch-toggle-padding {
+	margin: 10px;
+	vertical-align: bottom;
+}
+/* solo icon buttons must have block properties for the text-indent to work */
+.kb-ch-unrolled {
+	float: right;
+}
+
+/* unselected */
+.kb-ch-unselected {
+	background: gray;
+	color: #b0b0b0;
+	border: 2px solid #b0b0b0;
+}
+.kb-ch-laneHeaderRepresentation:hover {
+	background: #5f8696;
+	color: black;
+	border: 2px solid #acacac;
+}
+.kb-ch-laneHeaderRepresentation:active {
+	background: Gray;
+	color: black;
+	border: 2px solid #919191;
+}
+.kb-ch-laneHeaderRepresentation.kb-ch-unselected:hover {
+	background: #919191;
+	color: black;
+	border: 2px solid #acacac;
+}
+.kb-ch-laneHeaderRepresentation.kb-ch-unselected:active {
+	background: Gray;
+	color: black;
+	border: 2px solid #919191;
+}
+.kb-ch-laneHeaderRepresentation div.ui-icon {
+	background-image: url(../theme/images/ui-icons_222222_256x240.png);
+	margin-right: 5px;
+}
+.kb-ch-laneHeaderRepresentation.kb-ch-unselected div.ui-icon {
+	background-image: url(../theme/images/ui-icons_888888_256x240.png);
+}
+
+/* stop */
+.kb-ch-finish {
+	background: #E14F1C;
+	color: white;
+	border: 2px solid #CD0A0A;
+}
+.kb-ch-laneHeaderRepresentation.kb-ch-finish:hover {
+	background: #E14F1C;
+	color: black;
+	border: 2px solid #CD0A0A;
+}
+.kb-ch-laneHeaderRepresentation.kb-ch-finish:active {
+	background: #CD0A0A;
+	color: white;
+	border: 2px solid #CD0A0A;
+}
+
+/* start */
+.kb-ch-start {
+	background: #6EAC2C;
+	color: white;
+	border: 2px solid #ACDD4A;
+}
+.kb-ch-laneHeaderRepresentation.kb-ch-start:hover {
+	background: #ACDD4A;
+	color: black;
+	border: 2px solid #ACDD4A;
+}
+.kb-ch-laneHeaderRepresentation.kb-ch-start:active {
+	background: #6EAC2C;
+	color: white;
+	border: 2px solid #ACDD4A;
+}
+
+.kb-dateselector-slider
+{
+    width: 400px;
+    float: right;
+    margin-right: 40px;
+    border: 1px solid #999999;
+    padding: 4px;
+}
+
+.kb-chart-start-date, .kb-chart-end-date{
+    width: 100px !important;
+}
+.kbm-full-width-grid-no-margin {
+	color: #333333;
+	width: 934px;
+}
+#boardRepresentation {
+	background-color: rgb(240, 240, 240);
+	padding: 20px 25px 25px 25px;
+	width: 100%;
+	height: 100%;
+	border-collapse: separate;
+}
+#boardRepresentation tbody, #boardRepresentation tr, #boardRepresentation td {
+	border: 0px solid black;
+	margin: 0;
+	padding: 0;
+}
+#boardRepresentation td {
+	vertical-align: top;
+	text-align: center;
+	height: 100%;
+}
+#boardRepresentation tr {
+	width: 100%;
+}
+#boardRepresentation table {
+	vertical-align: top;
+	width: 100%;
+	height: auto;
+}
+#kb-content-area {
+	padding-top: 10px;
+}
+
+.kb-board-selection label{
+    width: 100px;
+    display:block;
+    float:left;
+}
+
+.kb-ch-lane-annotation {
+	font-size:smaller;
+	font-style:italic;
+}
+
+.kb-ch-back-link {
+	padding: 10px;
+}
+
+.kb-ch-card-overlay { 
+     
+    /* must be initially hidden */ 
+    display:none; 
+     
+    /* place overlay on top of other elements */ 
+    z-index:10000; 
+     
+    /* styling */ 
+    background-color:#FFFFFF; 
+     
+    width:300px;     
+    min-height:200px; 
+    border:1px solid #666666; 
+     
+    /* CSS3 styling for latest browsers */ 
+    -moz-box-shadow:0 0 15px 1px #444444;
+    -webkit-box-shadow: 0 0 15px #444444;     
+} 
+
+.kb-ch-card-overlay div.close {  
+    position:absolute; right:5px; top:5px; 
+    cursor:pointer; 
+}
+
+.kb-ch-graph-header{
+	font-size:1.2em;
+	padding:5px;
+}
+
+.kb-ch-card-info{
+	float: left;
+}
+
+.kb-ch-card-label{
+	float: left;
+	padding-left: 5px;
+	width:120px;
+}
+
+.kb-ch-card-record {
+	padding: 10px;
+	font-size: 1.0em;
+	color: #666666;
+}
+
+.kb-ch-card-view{
+	vertical-align:bottom;
+	text-align:center;
+}
+
+.kb-ch-category-selector{
+	float: left;
+	margin-left: 30px;
+}
+
+.kb-ch-control-point-selector
+{
+	float:left;
+}
+
+.kb-ch-criteria-container{
+	width: 500px;
+}
+
+.kb-ch-export
+{
+	cursor:pointer;
+	color: #034AF3;
+	font-weight:bolder;	
+}
+
+.ch-tags-filter
+{
+	padding-top: 7px;
+}
+
+.ch-tags-filter label
+{
+	padding: 3px;
+}
+
+.ch-tags-filter input
+{
+	width: 360px;
+}
+.ch-tags-filter span
+{
+	font-size: 8pt;
+	color: #808080;
+}

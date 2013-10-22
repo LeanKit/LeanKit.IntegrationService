@@ -1,0 +1,94 @@
+﻿<h2>Options</h2>
+<p>Specify rules for how the LeanKit board and associated Target project will respond to new, updated, and deleted items.</p>
+
+<fieldset>
+    <h4>Creating</h4>                
+    <p><i>When new Target items or LeanKit cards are created:</i></p>    
+    <div>
+        <div class="form-group">
+            <div class="checkbox">
+                <label>
+                    <input id="CreateCards" type="checkbox"> Create a new corresponding LeanKit card
+                </label>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="checkbox">
+                <label>
+                    <input id="CreateTargetItems" type="checkbox"> Create a new corresponding Target item
+                </label>
+            </div>
+        </div>
+    </div>
+</fieldset>
+
+<fieldset>
+    <h4>Updating</h4>                
+    <p><i>When an associated Target item or LeanKit card is changed:</i></p>        
+    <div class="form-group">        
+        <div class="checkbox">
+            <label>
+                <input id="UpdateCards" type="checkbox"> Update Cards
+            </label>
+        </div>
+        &nbsp;&nbsp;
+        <div class="checkbox">
+            <label>
+                <input id="UpdateCardLanes" type="checkbox"> Move Cards when State changes
+            </label>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="checkbox">
+            <label>
+                <input id="UpdateTargetItems" type="checkbox"> Update Target Items
+            </label>
+        </div>
+    </div>
+</fieldset>
+
+<fieldset>
+    <h4>Deleting</h4>
+    <p><i>When an associated Target item or LeanKit card is deleted, the corresponding item will NOT be deleted.</i></p>                
+    <div class="hide">
+        <div class="checkbox">
+            <label>
+                <input type="checkbox"> Delete Cards
+            </label>
+        </div>
+        <div class="checkbox">
+            <label>
+                <input type="checkbox"> Delete Target Items
+            </label>
+        </div>
+    </div>
+</fieldset>
+
+<fieldset>
+    <h4>Other Settings</h4>
+    <div>
+        <div class="checkbox">
+            <label>
+                <input id="TagCardsWithTargetSystemName" type="checkbox"> When creating LeanKit cards, tag the card with the target system (e.g. 'TFS', 'Jira', or 'GitHub')
+            </label>
+        </div>
+    </div>
+</fieldset>
+
+<div class="well" style="margin-top:20px;">
+    <div class="text-center">
+        <div id="remove-btn" class="btn btn-danger" style="width:200px">Remove Mapping...</div>
+    </div>
+    <div id="confirmation" class="text-info hide">
+        <div class="text-warning">
+            <h4><strong>This mapping will be removed.</strong></h4>
+            <p>'<strong>{{Title}}</strong>' and '<strong>{{TargetProjectName}}</strong>' will no longer be synchronized. Existing items in each system will remain.</p>
+        </div>
+        <div style="margin-top:10px;">
+            <div id="cancel-btn" class="btn btn-sm btn-link">Cancel</div>
+            <div id="confirm-btn" class="btn btn-sm btn-danger"><span class="glyphicon glyphicon-ok" ></span>&nbsp;Remove</div>
+        </div>
+
+    </div>
+</div>

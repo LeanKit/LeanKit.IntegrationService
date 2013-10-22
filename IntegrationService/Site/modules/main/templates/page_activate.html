@@ -1,0 +1,31 @@
+﻿   <div class="panel-heading">
+      Confirm Settings and Activate
+   </div> 
+<div class="margin-lg" style="margin-bottom: 20px;">
+    <div class="row">
+        <div class="col-xs-8">
+            The Integration Service will be restarted using the configured mappings below. Verify your settings are correct, and click Activate Now.
+        </div>
+        <div class="col-xs-3">
+            <button id="activate-now" class="btn btn-danger">Activate Now</button>
+        </div>
+            <div class="col-xs-1 hide" id="spinner">
+        <img src="img/9.gif"/>
+    </div>
+        <div class="row">
+            <div class="col-xs-8"></div>
+            <div class="col-xs-4" id="message"></div>
+        </div>
+    </div>
+
+<!--    <div class="row debug-yellow">
+        <div class="col-xs-7 debug-pink">&nbsp;</div>
+        <div class="col-xs-3 debug-green">
+            &nbsp;
+        </div>
+        <div class="col-sm-2 debug-pink"></div>
+    </div>-->
+{{{nestedView "mappingSummaryView" factory="activate" class="row space-above4"}}}
+</div>
+
+

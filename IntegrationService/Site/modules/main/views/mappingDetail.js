@@ -1,0 +1,244 @@
+﻿/*
+//------------------------------------------------------------------------------
+// <copyright company="LeanKit Inc.">
+//     Copyright (c) LeanKit Inc.  All rights reserved.
+// </copyright> 
+//------------------------------------------------------------------------------
+*/
+App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
+
+
+    Main.controllers.MappingDetailController = Marionette.Controller.extend({
+        initialize: function(options) {
+            this.owner = options.owner;
+            this.model = options.model;
+            this.configureViews();
+            
+            if (this.model.TargetProjectId() !== "") {
+                this.view = this.loadBoardDetails();
+            } else {
+                this.view = new Main.views.MappingDetailView({ controller: this, model: this.model });
+            }
+
+
+        },
+
+        loadBoardDetails: function() {
+            // look up the board details
+            this.loading = $.Deferred();
+            this.board = new Main.models.Board();
+            var self = this;
+            var parms = App.credentials.leankit.asQueryString("&boardId=" + this.model.BoardId());
+            this.board.fetch({
+                data: parms,
+                success: function(item) {
+                    if (_.isUndefined(self.view.render)) {
+                        self.view = new Main.views.MappingDetailView({ controller: self, model: self.model });
+                        self.loading.resolve();
+                    } else {
+                        self.owner.triggerMethod('board:loaded');
+                    }
+                }
+            });
+
+
+            return this.loading;
+
+        },
+
+        configure: function () {
+            this.owner.triggerMethod('project:assigned');
+            this.loadBoardDetails();
+        },
+
+        close:function() {
+            if (_.isObject(this.view)) {
+                this.view.close();
+            }
+            this.view = undefined;
+            this.model = undefined;
+
+        },
+        
+        configureViews: function() {
+            this.viewFactory = new App.ViewFactory(this, "MappingDetail");
+
+            this.viewFactory.register("optionsTab", function (c) {
+                if (!_.isObject(c.subcontrollers)) c.subcontrollers = {};
+                if (_.isObject(c.subcontrollers.optionsTab)) {
+                    c.subcontrollers.optionsTab.close();
+                    c.subcontrollers.optionsTab = undefined;
+                }
+
+                c.subcontrollers.optionsTab = new Main.controllers.OptionsTabController({ model:c.model});
+                return c.subcontrollers.optionsTab.view;
+            });
+
+            this.viewFactory.register("queryTab", function (c) {
+                if (!_.isObject(c.subcontrollers)) c.subcontrollers = {};
+                if (_.isObject(c.subcontrollers.queryTab)) {
+                    c.subcontrollers.queryTab.close();
+                    c.subcontrollers.queryTab = undefined;
+                }
+
+                c.subcontrollers.queryTab = new Main.controllers.QueryTabController({ model: c.model, targetTypes: c.owner.getTypes() });
+                return c.subcontrollers.queryTab.view;
+            });
+
+            this.viewFactory.register("laneMapTab", function(c) {
+                if (!_.isObject(c.subcontrollers)) c.subcontrollers = { };
+                if (_.isObject(c.subcontrollers.laneMap)) {
+                    c.subcontrollers.laneMap.close();
+                    c.subcontrollers.laneMap = undefined;
+                }
+
+                c.subcontrollers.laneMap = new Main.controllers.LaneStateMappingController({ owner: c, model:c.model, board: c.board, lanesAndStates: c.model.LaneToStatesMap() });
+                return c.subcontrollers.laneMap.view;
+            });
+
+            this.viewFactory.register("typeMapTab", function (c) {
+                if (!_.isObject(c.subcontrollers)) c.subcontrollers = { };
+                if (_.isObject(c.subcontrollers.typeMapTab)) {
+                    c.subcontrollers.typeMapTab.close();
+                    c.subcontrollers.typeMapTab = undefined;
+                }
+
+                var leanKitTypes = [];
+                if (_.isObject(c.board)) {
+                    var attrs = _.pluck(c.board.CardTypes().models, "attributes");
+                    leanKitTypes = _.pluck(attrs, "Name");
+                }
+                var targetTypes = _.pluck(c.owner.getTypes(), "Name");
+
+                c.subcontrollers.typeMapTab = new Main.controllers.TypeMapTabController({ owner: c, board: c.board, collection: c.model.TypeMap(), leanKitTypes: leanKitTypes, targetTypes: targetTypes });
+                return c.subcontrollers.typeMapTab.view;
+            });
+
+            this.viewFactory.register("projectPicker", function(controller) {
+                var availableProjects = controller.owner.getAvailableTargetProjects();
+                return new Main.views.SelectView({ id: "TargetProjectId", collection: availableProjects });
+            });
+        },
+
+        onPrepNestedViews: function () {
+            this.viewFactory.each(function (nestedView) {
+                if (_.isString(nestedView.id)) {
+                    var region = this.view[nestedView.id];
+                    region.show(nestedView);
+                }
+            }, this);
+        }
+        
+    });
+
+    Main.views.MappingDetailViewMixIn = {
+        template: this.template("mappingDetail"),
+        tag: "div",
+        className: "panel panel-primary",
+        style: "margin-left:20px",
+        events: {
+            "click #btn-configure": "configureRequested",
+            "click .nav li a": "tabClicked",
+            "change #TargetProjectId": "projectSelected",
+            "click #save-btn": "saveRequested"
+        },
+
+        initialize: function (options) {
+            this.controller = options.controller;
+            this.model = options.model;
+            this.pickerView = undefined;
+            this.listenTo(this.model, "change", this.modelChanged, this);
+            this.initializeBindings();
+            this.bindUIElements();
+        },
+
+        ui: {
+            "projectPicker": "#picker",
+            "controls": "#controls",
+            "notMapped": "#not-mapped",
+            "configure": "#btn-configure",
+            "tabstrip": "#tabstrip",
+            "saveBtn": "#save-btn",
+            "errorIcon": "#error-icon"
+        },
+
+        onShow: function () {
+            if (this.model.hasProject()) {
+                this.ui.notMapped.addClass('hide');
+                this.ui.controls.removeClass('hide');
+            } else {
+                this.ui.notMapped.removeClass('hide');
+                this.ui.controls.addClass('hide');
+            }
+
+            this.ui.saveBtn.popover({ trigger: "hover", title: "This mapping has changes", content: "You can save them now, or they will be automatically saved when selecting a new project or section.", placement: "bottom" });
+            this.ui.errorIcon.popover({ trigger: "hover", title: "This mapping is incomplete", content: "You must have at least one status selected on the 'Selection' tab, and each selection status must be assigned to a lane on the 'Lane and States' tab.", placement: "bottom" });
+
+            this.ui.tabstrip.kendoTabStrip({ activate:this.tabActivated, animation: { open: { effects: "" } } });
+
+            this.controller.triggerMethod("prep:nestedViews");
+
+            this.bindModel();
+
+            this.validate();
+        },
+
+        tabActivated: function (e) {
+            // trigger backbone event with name of tab that was activated
+            Main.trigger('tab:activated', e.item.innerText);
+        },
+        
+        projectSelected: function (e) {
+            this.ui.configure.removeClass('disabled');
+            var projName = e.currentTarget.selectedOptions[0].value;
+            this.model.set("TargetProjectName", projName);
+            // TargetProjectId is set automatically in BoundView
+        },
+
+        onSelectChanged: function () {
+            this.controller.triggerMethod("project:selected");
+        },
+
+        configureRequested: function () {
+            this.controller.configure();
+        },
+
+        tabClicked: function (e) {
+            e.preventDefault();
+            $(this).tab('show');
+        },
+
+        modelChanged: function () {
+            this.validate(true);
+        },
+
+        validate: function (hasChanges) {
+            if (this.model.isValid()) {
+                this.ui.errorIcon.addClass('hide');
+                if (hasChanges) {
+                    this.ui.saveBtn.removeClass('hide');
+                    this.ui.saveBtn.fadeIn();
+                }
+            } else {
+                this.ui.saveBtn.addClass('hide');
+                this.ui.errorIcon.removeClass('hide');
+                this.ui.errorIcon.fadeIn();
+            }
+        },
+
+
+        saveRequested: function () {
+            var saved = App.request("saveCurrentMapping");
+            if (saved) {
+                this.ui.saveBtn.fadeOut();
+            }
+        }
+
+
+    };
+
+    Main.views.MappingDetailView = Marionette.Layout.extend(
+        _.extend(NiceTools.BoundViewMixIn, Main.views.MappingDetailViewMixIn));
+
+
+});

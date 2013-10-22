@@ -1,0 +1,70 @@
+﻿<div class="panel panel-primary">
+    <div class="panel-heading">
+        <h5>{{Title}} ({{BoardId}})<div class="pull-right">{{TargetProjectName}}</div></h5>
+    </div>
+    
+    <div class="well well-small">
+        <strong><em>Selection</em></strong>
+        {{#checkIf "useCustomQuery"}}
+        <div><strong>Use this custom query:</strong><br/>{{Query}}</div>
+        {{else}}
+        {{#checkIf "targetIsTfs"}}
+        <div><strong>Iteration Path:</strong><br/>{{IterationPath}}</div>
+        {{/checkIf}}
+        <div><strong>Include items in these states:</strong><br/>{{QueryStatesSpaced}}</div>
+        <div><strong>Exclude items of these types:</strong><br/>{{Excludes}}</div>
+        {{/checkIf}}
+    </div>
+
+    <div class="well well-small" style="margin-bottom: 20px">
+        <strong><em>Behavior</em></strong>
+        {{#if CreateCards}}
+        <div>
+            <span class="glyphicon glyphicon-ok"></span>&nbsp;Create Cards
+        </div>
+        {{/if}}
+        
+        {{#if CreateTargetItems}}
+        <div>
+            <span class="glyphicon glyphicon-ok"></span>&nbsp;Create Target Items
+        </div>
+        {{/if}}
+        
+        {{#if UpdateCards}}
+        <div>
+            <span class="glyphicon glyphicon-ok"></span>&nbsp;Update Cards
+        </div>
+        {{/if}}
+        
+        {{#if UpdateCardLanes}}
+        <div>
+            <span class="glyphicon glyphicon-ok"></span>&nbsp;Move Cards
+        </div>
+        {{/if}}
+        
+        {{#if UpdateTargetItems}}
+        <div>
+            <span class="glyphicon glyphicon-ok"></span>&nbsp;Update Target Items
+        </div>
+        {{/if}}
+        
+        {{#if TagCardsWithTargetSystemName}}
+        <div>
+            <span class="glyphicon glyphicon-ok"></span>&nbsp;Tag cards created via this service
+        </div>
+        {{/if}}
+
+    </div>
+
+    <div class="well well-small">
+        <strong><em>Lane/State Mapping</em></strong>
+        {{{request "getLaneToStatesMap"}}}
+    </div>
+
+    <div class="well well-small">
+        <strong><em>Type Mapping</em></strong>
+        {{{request "getCardTypeMapping"}}}
+    </div>
+</div>
+
+
