@@ -21,19 +21,19 @@ To build the LeanKit Integration Service from source, you will need the followin
 - [Microsoft Visual Studio Team Explorer 2010](http://www.microsoft.com/en-us/download/details.aspx?id=329)\*
 - [Team Explorer for Microsoft Visual Studio 2012](http://www.microsoft.com/en-us/download/details.aspx?id=30656)\*
 
-\* *If you do not need support for TFS, you can remove references to IntegrationService.Targets.TFS from your projects.*
+\* *If you do not need support for TFS, you can remove references to `IntegrationService.Targets.TFS` from your projects.*
 
 ### Configuring node.js
 
 - Download and install node.js. Allow node.js to be added to your PATH.
 - From a command line, execute the following commands:
 
-	npm install -g grunt
-	npm install -g grunt-cli
+    npm install -g grunt
+    npm install -g grunt-cli
 
-- From a command line, change to the IntegrationService/Build directory and execute:
+- From a command line, change to the `IntegrationService/Build` directory and execute:
 
-	npm install
+    npm install
 
 This will read the package.json file and install additional dependencies for building the project.
 	
