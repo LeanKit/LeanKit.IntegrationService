@@ -28,12 +28,16 @@ To build the LeanKit Integration Service from source, you will need the followin
 - Download and install node.js. Allow node.js to be added to your PATH.
 - From a command line, execute the following commands:
 
-    npm install -g grunt
-    npm install -g grunt-cli
+```
+npm install -g grunt
+npm install -g grunt-cli
+```
 
 - From a command line, change to the `IntegrationService/Build` directory and execute:
 
-    npm install
+```
+npm install
+```
 
 This will read the package.json file and install additional dependencies for building the project.
 	
