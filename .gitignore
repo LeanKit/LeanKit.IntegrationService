@@ -27,3 +27,4 @@ Thumbs.db
 /*.InstallLog
 node_modules
 packages
+*.sln.DotSettings

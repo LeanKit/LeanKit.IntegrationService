@@ -133,13 +133,6 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             this.customStateCollection.add(new Backbone.Model({ State: state }));
         },
         
-        //customStateAdded: function (state) {
-        //    this.owner.model.addStateToLane(this.currentLane, state);
-        //},
-        
-        //customStateRemoved: function (m) {
-        //    this.owner.model.removeStateFromLane(this.currentLane, m.get("State"));
-        //},
         
         tabActivated:function (tabName) {
             if (tabName !== "Lanes and States") return;
@@ -150,7 +143,12 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                 this.model.isValid();
                 this.view.markUnassignedStatesAsWarning(this.model.unassignedStates);
             }
+        },
+        
+        onClose: function () {
+            this.stopListening();
         }
+
 
 
     });
@@ -206,6 +204,10 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
 
         onShow:function () {
             
+        },
+        
+        onClose:function () {
+            this.controller.triggerMethod("close");
         },
         
         laneSelected: function(e) {

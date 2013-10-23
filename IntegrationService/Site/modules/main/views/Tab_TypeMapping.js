@@ -69,7 +69,6 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                     // no? then add it
                     foundType = typeCollection.findWhere({ LeanKitType: type, TargetType: type });
                     if (_.isUndefined(foundType)) {
-                        App.log("add");
                         var m = new Main.models.TypeMapModel({ LeanKitType: type, TargetType: type });
                         typeCollection.add(m);
                     }
@@ -111,8 +110,11 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         
         tabActivated: function (tabName) {
             if (tabName !== "Card Types") return;
-            if (_.isObject(this.owner.model.TypeMap()) && this.owner.model.TypeMap().length == 0)
-                this.autoMapMatchedItems(this.model.get("TypeCollection"));
+            this.autoMapMatchedItems(this.model.get("TypeCollection"));
+        },
+        
+        onClose:function () {
+            this.stopListening();
         }
 
     });
@@ -172,6 +174,10 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
 
         onShow: function () {
             if (this.controller) this.controller.triggerMethod("prep:nestedViews");
+        },
+        
+        onClose: function () {
+            this.controller.triggerMethod("close");
         },
 
         addRequested: function () {
