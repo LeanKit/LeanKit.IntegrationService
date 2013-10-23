@@ -135,7 +135,7 @@ namespace IntegrationService.Targets.TFS
                 {
                     Active = true,
                     Title = workItem.Title,
-                    Description = workItem.Description,
+                    Description = workItem.LeanKitDescription(),
                     Priority = workItem.LeanKitPriority(),
                     TypeId = mappedCardType.Id,
                     TypeName = mappedCardType.Name,
