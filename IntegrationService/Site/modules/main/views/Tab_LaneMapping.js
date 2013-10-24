@@ -132,8 +132,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         addCustomState: function (state) {
             this.customStateCollection.add(new Backbone.Model({ State: state }));
         },
-        
-        
+                
         tabActivated:function (tabName) {
             if (tabName !== "Lanes and States") return;
             // if the required states differ from queryStates, update required states and re-validate
@@ -148,8 +147,6 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         onClose: function () {
             this.stopListening();
         }
-
-
 
     });
 
