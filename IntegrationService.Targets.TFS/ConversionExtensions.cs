@@ -8,6 +8,7 @@ using System;
 using System.Linq;
 using Kanban.API.Client.Library.TransferObjects;
 using Microsoft.TeamFoundation.WorkItemTracking.Client;
+using RestSharp.Contrib;
 
 namespace IntegrationService.Targets.TFS
 {
@@ -36,8 +37,24 @@ namespace IntegrationService.Targets.TFS
             if (workItem.Fields == null) return "";
 			return workItem.Fields.Contains("Repro Steps") 
 				? workItem.Fields["Repro Steps"].Value.ToString() 
-				: workItem.Fields["Description"].Value.ToString();
+				: EnsureHtmlEncode(workItem.Fields["Description"].Value.ToString());
         }
+
+		private static string EnsureHtmlEncode(string text)
+		{
+			if (string.IsNullOrEmpty(text.Trim()))
+				return text;
+
+			if (IsHtmlEncoded(text))
+				return text;
+			
+			return HttpUtility.HtmlEncode(text);
+		}
+
+		private static bool IsHtmlEncoded(string text)
+		{
+			return (HttpUtility.HtmlDecode(text) != text);
+		}
 
         public static int CalculateLeanKitPriority(string tfsPriority)
         {
