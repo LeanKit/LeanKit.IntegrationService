@@ -32,17 +32,20 @@ namespace IntegrationService.Targets.TFS
 
         }
 
-        public static string LeanKitDescription(this WorkItem workItem)
+        public static string LeanKitDescription(this WorkItem workItem, int tfsVersion)
         {
             if (workItem.Fields == null) return "";
 			return workItem.Fields.Contains("Repro Steps") 
 				? workItem.Fields["Repro Steps"].Value.ToString() 
-				: EnsureHtmlEncode(workItem.Fields["Description"].Value.ToString());
+				: EnsureHtmlEncode(workItem.Fields["Description"].Value.ToString(), tfsVersion);
         }
 
-		private static string EnsureHtmlEncode(string text)
+		private static string EnsureHtmlEncode(string text, int tfsVersion)
 		{
 			if (string.IsNullOrEmpty(text.Trim()))
+				return text;
+
+			if (tfsVersion > 2010)
 				return text;
 
 			if (IsHtmlEncoded(text))

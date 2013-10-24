@@ -12,6 +12,7 @@ using System.Threading;
 using IntegrationService.Util;
 using Kanban.API.Client.Library;
 using Kanban.API.Client.Library.TransferObjects;
+using Microsoft.TeamFoundation.Build.Client;
 using Microsoft.TeamFoundation.Client;
 using Microsoft.TeamFoundation.Server;
 using Microsoft.TeamFoundation.WorkItemTracking.Client;
@@ -135,7 +136,7 @@ namespace IntegrationService.Targets.TFS
                 {
                     Active = true,
                     Title = workItem.Title,
-                    Description = workItem.LeanKitDescription(),
+                    Description = workItem.LeanKitDescription(GetTfsVersion()),
                     Priority = workItem.LeanKitPriority(),
                     TypeId = mappedCardType.Id,
                     TypeName = mappedCardType.Name,
@@ -499,7 +500,7 @@ namespace IntegrationService.Targets.TFS
                 saveCard = true;
             }
 
-            var description = workItem.LeanKitDescription();
+            var description = workItem.LeanKitDescription(GetTfsVersion());
             if (description != card.Description)
             {
                 card.Description = description;
@@ -612,7 +613,7 @@ namespace IntegrationService.Targets.TFS
 
             if (updatedItems.Contains("Description"))
             {
-                var description = workItem.LeanKitDescription();
+                var description = workItem.LeanKitDescription(GetTfsVersion());
                 if (description != card.Description)
                 {
                     if (workItem.UseReproSteps())
@@ -853,6 +854,31 @@ namespace IntegrationService.Targets.TFS
                 }
             }
         }
+
+		private int GetTfsVersion()
+		{
+			int def = 0;
+
+			if (_projectCollection == null)
+				return def;
+			
+			try
+			{
+				var buildServer = _projectCollection.GetService<IBuildServer>();
+				switch (buildServer.BuildServerVersion)
+				{
+					case(BuildServerVersion.V3):
+						return 2010;
+					case(BuildServerVersion.V4):
+						return 2012;
+					default:
+						return def;
+				}
+			} catch (Exception ex) {
+				Log.Error(String.Format("An error occurred: {0} - {1} - {2}", ex.GetType(), ex.Message, ex.StackTrace));
+				return def;
+			}
+		}
 
         public void LoadTfsUsers()
         {
