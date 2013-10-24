@@ -66,35 +66,34 @@ namespace IntegrationService.Tests.TFS
 	public class When_calculating_priority : SpecBase
 	{
 		[Test]
-		public void It_should_default_to_normal() 
+		public void It_should_default_to_normal()
 		{
 			ConversionExtensions.CalculateLeanKitPriority(null).ShouldEqual(1);
 			ConversionExtensions.CalculateLeanKitPriority("").ShouldEqual(1);
 		}
 
-
 		[Test]
-		public void It_should_map_priority_of_4_to_critical() 
+		public void It_should_map_priority_of_4_to_low()
 		{
-			ConversionExtensions.CalculateLeanKitPriority("4").ShouldEqual(3);
+			ConversionExtensions.CalculateLeanKitPriority("4").ShouldEqual(0);
 		}
 
 		[Test]
-		public void It_should_map_priority_of_3_to_high() 
+		public void It_should_map_priority_of_3_to_normal()
 		{
-			ConversionExtensions.CalculateLeanKitPriority("3").ShouldEqual(2);
+			ConversionExtensions.CalculateLeanKitPriority("3").ShouldEqual(1);
 		}
 
 		[Test]
-		public void It_should_map_priority_of_2_to_normal() 
+		public void It_should_map_priority_of_2_to_high()
 		{
-			ConversionExtensions.CalculateLeanKitPriority("2").ShouldEqual(1);
+			ConversionExtensions.CalculateLeanKitPriority("2").ShouldEqual(2);
 		}
 
 		[Test]
-		public void It_should_map_priority_of_1_to_low() 
+		public void It_should_map_priority_of_1_to_critical()
 		{
-			ConversionExtensions.CalculateLeanKitPriority("1").ShouldEqual(0);
+			ConversionExtensions.CalculateLeanKitPriority("1").ShouldEqual(3);
 		}
 
 		[Test]
@@ -103,7 +102,7 @@ namespace IntegrationService.Tests.TFS
 			ConversionExtensions.CalculateLeanKitPriority("Roscoe").ShouldEqual(1);
 			ConversionExtensions.CalculateLeanKitPriority("40").ShouldEqual(1);
 			ConversionExtensions.CalculateLeanKitPriority("0").ShouldEqual(1);
-			ConversionExtensions.CalculateLeanKitPriority("5").ShouldEqual(1);
+			ConversionExtensions.CalculateLeanKitPriority("6").ShouldEqual(1);
 		}
 	}
 

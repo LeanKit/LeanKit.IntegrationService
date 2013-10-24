@@ -241,17 +241,19 @@ namespace IntegrationService.Targets.TFS
         }
 
 
-        public void SetWorkItemPriority(WorkItem workItem, int newPriority)
-        {
-            // the reverse of the above
-            if (workItem.Fields.Contains("Priority"))
-            {
-                var tfsValue = newPriority + 1;
-                workItem.Fields["Priority"].Value = tfsValue;
-            }
-        }
+		public void SetWorkItemPriority(WorkItem workItem, int newPriority)
+		{
+			//LK Priority: 0 = Low, 1 = Normal, 2 = High, 3 = Critical
+			//TFS Priority: 1-4
 
-		public long? CalculateAssignedUserId(long boardId, string assignedTo)
+			if (!workItem.Fields.Contains("Priority")) return;
+
+			var tfsValue = 4 - newPriority;
+			if (tfsValue < 1) tfsValue = 1;
+			workItem.Fields["Priority"].Value = tfsValue;
+		}
+
+	    public long? CalculateAssignedUserId(long boardId, string assignedTo)
 		{
 			if (!String.IsNullOrEmpty(assignedTo))
 			{

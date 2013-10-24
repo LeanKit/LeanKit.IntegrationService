@@ -59,26 +59,27 @@ namespace IntegrationService.Targets.TFS
 			return (HttpUtility.HtmlDecode(text) != text);
 		}
 
-        public static int CalculateLeanKitPriority(string tfsPriority)
-        {
-
+		public static int CalculateLeanKitPriority(string tfsPriority)
+		{
 			var lkPriority = 1; // default to 1 - Normal
 
-            if (string.IsNullOrEmpty(tfsPriority))
-                return lkPriority;
+			if (string.IsNullOrEmpty(tfsPriority))
+				return lkPriority;
 
 			int tfsPriorityInt;
-			var gotInt = int.TryParse(tfsPriority, out tfsPriorityInt);
-            if (gotInt)
-            {
-                if (tfsPriorityInt > 0 && tfsPriorityInt < 5)
-                    lkPriority = tfsPriorityInt - 1;
-            }
-            //LK Priority: 0 = Low, 1 = Normal, 2 = High, 3 = Critical
-            //TFS Priority: 1-4
+			if (!int.TryParse(tfsPriority, out tfsPriorityInt)) return lkPriority;
 
-            return lkPriority;
-        }
+			//LK Priority: 0 = Low, 1 = Normal, 2 = High, 3 = Critical
+			//TFS Priority: 1-4
+
+			if (tfsPriorityInt > 5) return lkPriority;
+
+			if (tfsPriorityInt > 0)
+				lkPriority = 4 - tfsPriorityInt;
+			if (lkPriority < 0) lkPriority = 0;
+
+			return lkPriority;
+		}
 
         public static bool UseReproSteps(this WorkItem workItem)
         {
