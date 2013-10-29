@@ -28,6 +28,11 @@ namespace IntegrationService.API
 		public string Host { get; set; }
 		public string User { get; set; }
 		public string Password { get; set; }
+
+		public override string ToString()
+		{
+			return string.Format("Type: {0}, Protocol: {1}, Host: {2}, User: {3}", Type, Protocol, Host, User);
+		}
 	}
 
 	[Route("/boards")]
@@ -59,10 +64,12 @@ namespace IntegrationService.API
 			IEnumerable<BoardListing> boards;
 			try
 			{
+				"Getting all boards...".Debug();
 				boards = api.GetBoards();
 			}
 			catch (Exception ex)
 			{
+				ex.Message.Error();
 				return ServerError(ex.Message);
 			}
 
@@ -76,10 +83,12 @@ namespace IntegrationService.API
 			Board board;
 			try
 			{
+				string.Format("Getting board {0}", request.BoardId).Debug();
 				board = api.GetBoard(request.BoardId);
 			}
 			catch (Exception ex)
 			{
+				ex.Message.Error();
 				return ServerError(ex.Message);
 			}
 
@@ -135,10 +144,12 @@ namespace IntegrationService.API
 				Board board;
 				try
 				{
+					string.Format("Getting all lanes for board {0}", boardId).Debug();
 					board = api.GetBoard(boardId);
 				}
 				catch (Exception ex)
 				{
+					ex.Message.Error();
 					return ServerError(ex.Message);
 				}
 
@@ -195,6 +206,8 @@ namespace IntegrationService.API
 				account.UrlTemplateOverride = "http://kanban-cibuild.localkanban.com/";
 			else if (!account.Hostname.Contains("http://"))
 				account.UrlTemplateOverride = "https://" + account.Hostname + ".leankit.com/";
+			
+			string.Format("Attempting connection to {0}", request).Debug();
 
 			return LeanKitClientFactory.Create(account);
 
@@ -203,6 +216,8 @@ namespace IntegrationService.API
 
 		private void SaveLogin(LeanKitAccountAuth account)
 		{
+			"Saving LeanKit login information...".Debug();
+
 			var dir = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
 			if (dir == null) throw new Exception("Could not access current directory.");
 			var curFolder = dir.FullName;

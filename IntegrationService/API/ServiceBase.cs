@@ -5,6 +5,7 @@
 //------------------------------------------------------------------------------
 
 using System.Net;
+using IntegrationService.Util;
 using ServiceStack.Common.Web;
 using ServiceStack.ServiceInterface;
 
@@ -41,6 +42,7 @@ namespace IntegrationService.API
         {
             if (message.Contains("\r\n"))
                 message = message.Replace("\r\n", " ");
+			message.Error();
             return new HttpResult(HttpStatusCode.InternalServerError, message);
         }
 

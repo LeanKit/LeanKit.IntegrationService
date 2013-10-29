@@ -17,46 +17,26 @@ using ServiceStack.ServiceHost;
 namespace IntegrationService.API
 {
 
-    [Route("/configuration")]
-    public class ConfigurationRequest:Request
-    {
-        
-    }
+	[Route("/configuration")]
+	public class ConfigurationRequest : Request { }
 
-    [Route("/leankit-login")]
-    public class LeankitLoginRequest:Request
-    {
-        
-    }
+	[Route("/leankit-login")]
+	public class LeankitLoginRequest : Request { }
 
     [Route("/target-login")]
-    public class TargetLoginRequest:Request
-    {
-        
-    }
+	public class TargetLoginRequest : Request { }
 
     [Route("/mapping/{BoardId}")]
-    public class MappingRequest:BoardMappingModel
-    {
-    }
+	public class MappingRequest : BoardMappingModel { }
 
     [Route("/settings")]
-    public class SettingsRequest:ConfigurationSettingsModel
-    {
-        
-    }
+	public class SettingsRequest : ConfigurationSettingsModel { }
 
     [Route("/configuration/text")]
-    public class ConfigurationTextRequest
-    {
-        
-    }
+	public class ConfigurationTextRequest { }
 
     [Route("/activate")]
-    public class ActivationRequest
-    {
-        
-    }
+	public class ActivationRequest { }
 
     public class ConfigService:ServiceBase
     {
@@ -83,6 +63,7 @@ namespace IntegrationService.API
             }
             catch (Exception ex)
             {
+				ex.Message.Error();
                 return ServerError(ex.Message);
             }
          
