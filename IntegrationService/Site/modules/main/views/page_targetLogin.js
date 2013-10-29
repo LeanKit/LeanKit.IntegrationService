@@ -37,6 +37,8 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             view.spin();
             $.ajax(url, {
                 type: 'GET',
+                contentType: 'application/json',
+                dataType: 'json',
                 data: $.param(this.view.model.attributes),
                 success: function () {
                     view.credentialsOK();
