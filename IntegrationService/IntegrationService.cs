@@ -28,14 +28,7 @@ namespace IntegrationService
 
 		public void Start()
 		{
-			var assemblies = Assembly.GetExecutingAssembly().GetReferencedAssemblies();
-			var types = new List<System.Type>();
-			foreach (var assemblyName in assemblies)
-			{
-				var assembly = Assembly.Load(assemblyName);
-				types.AddRange(assembly.GetTypes());
-			}
-			types.AddRange(Assembly.GetExecutingAssembly().GetTypes());
+			var types = GetAllTypes();
 
 			// model mapping configuration
 			var mappings = types.Where(x => x.IsClass && typeof (IModelMapping).IsAssignableFrom(x));
@@ -51,6 +44,19 @@ namespace IntegrationService
 
 			StartIntegration(types);
 
+		}
+
+		private static List<System.Type> GetAllTypes()
+		{
+			var assemblies = Assembly.GetExecutingAssembly().GetReferencedAssemblies();
+			var types = new List<System.Type>();
+			foreach (var assemblyName in assemblies)
+			{
+				var assembly = Assembly.Load(assemblyName);
+				types.AddRange(assembly.GetTypes());
+			}
+			types.AddRange(Assembly.GetExecutingAssembly().GetTypes());
+			return types;
 		}
 
 		public static void Reset()
@@ -74,7 +80,7 @@ namespace IntegrationService
 					File.Copy(src, dest, true);
 			}
 
-			var types = Assembly.GetExecutingAssembly().GetTypes();
+			var types = GetAllTypes();
 			Instance.StartIntegration(types);
 		}
 
