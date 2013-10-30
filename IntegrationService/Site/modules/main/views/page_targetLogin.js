@@ -143,7 +143,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
 
         changeType:function (e) {
 			var target = this.$(e.currentTarget).val();
-            this.ui.hostInput.prop("placeholder", target);
+            this.ui.hostInput.prop("placeholder", this.placeholder[target]);
         },
 
         hideConnect: function () {
