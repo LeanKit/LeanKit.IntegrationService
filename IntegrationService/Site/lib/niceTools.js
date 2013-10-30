@@ -328,6 +328,8 @@ NiceTools = (function(Backbone, Marionette, _) {
                     var id = undefined;
                     if (_.isObject(e.currentTarget.selectedOptions))
                         id = e.currentTarget.selectedOptions[0].id;
+                    else
+                        id = e.currentTarget.options[e.currentTarget.selectedIndex].id;
                     if (_.isUndefined(id) || id === "") id = e.currentTarget.value;
                     this.model.set(e.currentTarget.id, id);
                     this.triggerMethod("select:changed", id, e.currentTarget);
@@ -437,6 +439,8 @@ NiceTools = (function(Backbone, Marionette, _) {
                     var id=undefined;
                     if (_.isObject(e.currentTarget.selectedOptions))
                         id = e.currentTarget.selectedOptions[0].id;
+                    else
+                        id = e.currentTarget.options[e.currentTarget.selectedIndex].id;
                     if (_.isUndefined(id) || id === "") id = e.currentTarget.value;
                     this.M(e.currentTarget.id, id);
                     this.triggerMethod("select:changed", id, e.currentTarget);
