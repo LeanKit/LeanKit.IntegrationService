@@ -2,7 +2,7 @@
 //------------------------------------------------------------------------------
 // <copyright company="LeanKit Inc.">
 //     Copyright (c) LeanKit Inc.  All rights reserved.
-// </copyright> 
+// </copyright>
 //------------------------------------------------------------------------------
 */
 App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
@@ -13,7 +13,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             this.pageName = options.pageName;
             this.model = options.model;
         },
-        
+
         isValid: function () {
             if (!this.model) return false;
 
@@ -50,7 +50,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             });
 
         },
-        
+
         getFormView: function () {
             // give formView to page view
             this.formView = new Main.views.TargetLoginFormView({ model: this.model, controller: this });
@@ -67,7 +67,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         regions: {
             "form":"#form"
         },
-        
+
         ui: {
             "message": "#message",
             "spinner": "#spinner"
@@ -78,7 +78,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         },
 
         onShow: function () {
-            this.form.show(this.controller.getFormView());                
+            this.form.show(this.controller.getFormView());
         },
 
         credentialsOK: function () {
@@ -87,7 +87,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             this.$el.addClass("has-success").removeClass("has-error");
             this.form.currentView.hideConnect();
         },
-        
+
         credentialsFailed:function () {
             this.spin(false);
             this.ui.message.html("Could not connect to " + this.model.get('Type') + ". Please verify your credentials.");
@@ -142,13 +142,14 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         },
 
         changeType:function (e) {
-            this.ui.hostInput.prop("placeholder", this.placeholder[e.currentTarget.selectedOptions[0].value]);
+			var target = this.$(e.currentTarget).val();
+            this.ui.hostInput.prop("placeholder", target);
         },
-        
+
         hideConnect: function () {
             this.ui.connect.hide();
         },
-        
+
         placeholder: {
             TFS: "YourServer.com/YourCollection",
             Jira: "YourAccount.atlassian.net",
