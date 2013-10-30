@@ -325,7 +325,9 @@ NiceTools = (function(Backbone, Marionette, _) {
             var type = e.currentTarget.type;
             if (type === "select-one") {
                 if (e.currentTarget.id != "") {
-                    var id = e.currentTarget.selectedOptions[0].id;
+                    var id = undefined;
+                    if (_.isObject(e.currentTarget.selectedOptions))
+                        id = e.currentTarget.selectedOptions[0].id;
                     if (_.isUndefined(id) || id === "") id = e.currentTarget.value;
                     this.model.set(e.currentTarget.id, id);
                     this.triggerMethod("select:changed", id, e.currentTarget);
@@ -432,7 +434,9 @@ NiceTools = (function(Backbone, Marionette, _) {
             var type = e.currentTarget.type;
             if (type === "select-one") {
                 if (e.currentTarget.id != "") {
-                    var id = e.currentTarget.selectedOptions[0].id;
+                    var id=undefined;
+                    if (_.isObject(e.currentTarget.selectedOptions))
+                        id = e.currentTarget.selectedOptions[0].id;
                     if (_.isUndefined(id) || id === "") id = e.currentTarget.value;
                     this.M(e.currentTarget.id, id);
                     this.triggerMethod("select:changed", id, e.currentTarget);

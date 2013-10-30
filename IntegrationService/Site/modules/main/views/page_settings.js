@@ -35,7 +35,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
     });
     
 
-    Main.views.SettingsView = Main.views.PageView.extend(_.extend(NiceTools.BoundViewMixIn, {
+    Main.views.SettingsView = Main.views.PageView.extend(_.extend({
         template: this.template("page_settings"),
         className:"panel panel-primary",
         ui: {
@@ -57,6 +57,6 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         onChange: function () {
             this.model.save();
         }
-    }));
+    }, NiceTools.BoundViewMixIn));
 
 });

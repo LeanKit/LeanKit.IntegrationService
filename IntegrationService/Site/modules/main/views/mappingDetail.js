@@ -190,7 +190,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         
         projectSelected: function (e) {
             this.ui.configure.removeClass('disabled');
-            var projName = e.currentTarget.selectedOptions[0].value;
+            var projName = e.currentTarget.value;
             this.model.set("TargetProjectName", projName);
             // TargetProjectId is set automatically in BoundView
         },
@@ -238,7 +238,6 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
     };
 
     Main.views.MappingDetailView = Marionette.Layout.extend(
-        _.extend(NiceTools.BoundViewMixIn, Main.views.MappingDetailViewMixIn));
-
+        _.extend(Main.views.MappingDetailViewMixIn, NiceTools.BoundViewMixIn));
 
 });
