@@ -32,9 +32,7 @@ namespace IntegrationService.Targets.TFS
         private List<Microsoft.TeamFoundation.Server.Identity> _tfsUsers;
 	    private const string ServiceName = "TFS";
 
-	    public Tfs(IBoardSubscriptionManager subscriptions) : base(subscriptions)
-        {
-        }
+	    public Tfs(IBoardSubscriptionManager subscriptions) : base(subscriptions) { }
 
 	    public Tfs(IBoardSubscriptionManager subscriptions,
 	               IConfigurationProvider<Configuration> configurationProvider,
@@ -84,7 +82,7 @@ namespace IntegrationService.Targets.TFS
 					 project.Identity.TargetName, iterationQuery, stateQuery, project.ExcludedTypeQuery, queryAsOfDate);
 			}
 
-		    string queryStr = string.Format("SELECT [System.Id], [System.WorkItemType]," +
+		    var queryStr = string.Format("SELECT [System.Id], [System.WorkItemType]," +
 		                                    " [System.State], [System.AssignedTo], [System.Title], [System.Description]" +
 		                                    " FROM WorkItems " +
 		                                    " WHERE {0}" +
@@ -95,6 +93,8 @@ namespace IntegrationService.Targets.TFS
             var changedItems = query.EndQuery(cancelableAsyncResult);
 
 			Log.Info("\nQuery [{0}] for changes after {1}", project.Identity.Target, queryAsOfDate);
+			Log.Debug(queryStr);
+
 		    foreach (WorkItem item in changedItems)
             {
                 Log.Info("Work Item [{0}]: {1}, {2}, {3}",
@@ -105,7 +105,7 @@ namespace IntegrationService.Targets.TFS
 
                 if (card == null || card.ExternalSystemName != ServiceName)
                 {
-                    Log.Debug("Create new card for work item [{0}]", item.Id);
+                    Log.Debug("Creating new card for work item [{0}]", item.Id);
                     CreateCardFromWorkItem(project, item);
                 }
                 // TODO: else if Lane = defined end lane then update it in TFS (i.e. we missed the event)

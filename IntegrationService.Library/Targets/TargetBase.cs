@@ -274,6 +274,7 @@ namespace IntegrationService.Targets
 
             try
             {
+				Log.Debug("Connecting to LeanKit account [{0}] with account [{1}]", LeanKitAccount.Hostname, LeanKitAccount.Username);
                 LeanKit = LeanKitClientFactory.Create(LeanKitAccount);
             }
             catch (Exception ex)

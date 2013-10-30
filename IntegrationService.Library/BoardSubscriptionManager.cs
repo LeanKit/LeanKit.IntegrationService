@@ -34,18 +34,16 @@ namespace IntegrationService
 
         internal class BoardSubscription
         {
-            private readonly LeanKitAccountAuth _accountAuth;
-            private readonly long _boardId;
+	        private readonly long _boardId;
             internal readonly ILeanKitApi LkClientApi;
             internal ILeanKitIntegration Integration;
             internal readonly List<Action<long, BoardChangedEventArgs, ILeanKitApi>> Notifications = new List<Action<long, BoardChangedEventArgs, ILeanKitApi>>();
             
             internal BoardSubscription(LeanKitAccountAuth auth, long boardId)
             {
-                _accountAuth = auth;
                 _boardId = boardId;
-                LkClientApi = new LeanKitClientFactory().Create(_accountAuth);
-                Integration = new LeanKitIntegrationFactory().Create(_boardId, _accountAuth);
+				LkClientApi = new LeanKitClientFactory().Create(auth);
+				Integration = new LeanKitIntegrationFactory().Create(_boardId, auth);
 
                 new Thread(WatchThread).Start();
             }
@@ -104,7 +102,7 @@ namespace IntegrationService
             {
                 if (!BoardSubscriptions.ContainsKey(boardId))
                 {
-                    throw new Exception("Board id not found");
+                    throw new Exception(string.Format("Board id [{0}] not found", boardId));
                 }
                 sub = BoardSubscriptions[boardId];
             }

@@ -31,7 +31,7 @@ namespace IntegrationService.API
 
 		public override string ToString()
 		{
-			return string.Format("Type: {0}, Protocol: {1}, Host: {2}, User: {3}", Type, Protocol, Host, User);
+			return string.Format("Url: {0}, User: {1}", Url, User);
 		}
 	}
 
