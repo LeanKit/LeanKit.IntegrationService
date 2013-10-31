@@ -103,6 +103,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         className: "form-horizontal",
         initialize: function (options) {
             this.controller = options.controller;
+            this.initializeBindings();
         },
 
         ui: {
@@ -113,7 +114,6 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         events: {
             "click ul.dropdown-menu li a":"protocolChanged",
             "click #btn-connect": "connectRequested",
-            "change select#Type":"changeType"
         },
 
         onShow: function () {
@@ -126,8 +126,8 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             this.ui.connect.removeClass("disabled");
         },
 
-        onSelectChanged:function (id, label) {
-            
+        onItemSelected:function (id, label) {
+            this.ui.hostInput.prop("placeholder", this.placeholder[id]);
         },
         
         userPressedEnter: function () {
@@ -143,11 +143,6 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
 
         connectRequested: function () {
             this.controller.tryConnect();
-        },
-
-        changeType:function (e) {
-			var target = this.$(e.currentTarget).val();
-            this.ui.hostInput.prop("placeholder", this.placeholder[target]);
         },
 
         hideConnect: function () {

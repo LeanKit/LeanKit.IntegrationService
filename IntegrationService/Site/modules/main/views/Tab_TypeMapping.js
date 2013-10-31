@@ -35,6 +35,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                         
             // add blank item
             this.leanKitTypes.unshift("");
+            this.targetTypes.unshift("");
             
             App.reqres.setHandler('leanKitTypes', function () {
                 return this.leanKitTypes;
@@ -124,20 +125,22 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
        events: {
            "click #remove": "removeRequested",
            "click #confirm": "confirmed",
-           "change select":"typeSelected"
        },
        
         ui: {
             "removeBtn":"#remove",
             "confirmBtn":"#confirm"
         },
-
+        initialize:function () {
+            this.initializeBindings();
+        },
+            
        onShow:function () {
            this.bindModel();
            this.delegateEvents();
        },
        
-       typeSelected: function (e) {
+       onItemSelected: function () {
            if (this.M("LeanKitType") !== "" && this.M("TargetType") !== "")
                this.ui.confirmBtn.removeClass("disabled");
        },

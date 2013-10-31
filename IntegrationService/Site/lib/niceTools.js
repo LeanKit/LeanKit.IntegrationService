@@ -334,9 +334,8 @@ NiceTools = (function(Backbone, Marionette, _) {
             } else {
                 // multi-select types are not supported at this time
             }
-            // this is causing 'onSelectCHanged' to be fired on the wrong object
-            // disabled pending resolution
-            //this.triggerMethod("select:changed", id, selectedText, e.currentTarget);
+
+            this.triggerMethod("item:selected", id, selectedText, e.currentTarget);
         },
 
         modelChanged: function(m) {

@@ -136,22 +136,30 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         tag: "div",
         className: "panel panel-primary",
         style: "margin-left:20px",
-        events: {
-            "click #btn-configure": "configureRequested",
-            "click .nav li a": "tabClicked",
-            "change #TargetProjectId": "projectSelected",
-            "click #save-btn": "saveRequested"
+        noProjectEvents: {
+            "change fieldset select":   "selectChanged",
+            "click #btn-configure":     "configureRequested"
         },
 
+        projectEvents: {
+            "click .nav li a":          "tabClicked",
+            "click #save-btn":          "saveRequested"
+        },
+        
         initialize: function (options) {
             this.controller = options.controller;
             this.model = options.model;
             this.pickerView = undefined;
             this.listenTo(this.model, "change", this.modelChanged, this);
-            this.initializeBindings();
+            this.resetEvents();
             this.bindUIElements();
         },
 
+        resetEvents:function (delegateNow) {
+            this.events = this.model.TargetProjectId() === "" ? this.noProjectEvents : this.projectEvents;
+            if (delegateNow) this.delegateEvents();
+        },
+        
         ui: {
             "projectPicker": "#picker",
             "controls": "#controls",
@@ -188,25 +196,15 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             Main.trigger('tab:activated', e.item.innerText);
         },
         
-        projectSelected: function (e) {
+        onItemSelected: function (id, label, target) {
             this.ui.configure.removeClass('disabled');
-            var projName = e.currentTarget.options[e.currentTarget.selectedIndex].text;
-            this.model.set("TargetProjectName", projName);
+            this.model.set("TargetProjectName", label);
             // TargetProjectId is set automatically in BoundView
         },
 
-        // this was being called when the select box in Main.views.TypeMapItemView is used!
-        // not sure why. As workaround, using projectSelected instead
-        //onSelectChanged: function (id, label, target) {
-        //    //this.controller.triggerMethod("project:selected");
-        //    this.ui.configure.removeClass('disabled');
-        //    var projName = label;
-        //    this.model.set("TargetProjectName", projName);
-        //    // TargetProjectId is set automatically in BoundView
-        //},
-
         configureRequested: function () {
             this.controller.configure();
+            this.resetEvents(true);
         },
 
         tabClicked: function (e) {
