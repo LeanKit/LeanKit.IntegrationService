@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -101,7 +102,7 @@ namespace IntegrationService.Targets.TFS
                                   item.Id, item.Title, item.Fields["System.AssignedTo"].Value, item.State);
 
                 // does this workitem have a corresponding card?
-                var card = LeanKit.GetCardByExternalId(project.Identity.LeanKit, item.Id.ToString());
+                var card = LeanKit.GetCardByExternalId(project.Identity.LeanKit, item.Id.ToString(CultureInfo.InvariantCulture));
 
                 if (card == null || card.ExternalSystemName != ServiceName)
                 {
@@ -141,8 +142,8 @@ namespace IntegrationService.Targets.TFS
                     TypeId = mappedCardType.Id,
                     TypeName = mappedCardType.Name,
                     LaneId = laneId,
-                    ExternalCardID = workItem.Id.ToString(),
-                    ExternalSystemName = ServiceName                    
+                    ExternalCardID = workItem.Id.ToString(CultureInfo.InvariantCulture),
+                    ExternalSystemName = ServiceName
                 };
 
 			if (workItem.Fields.Contains("Tags") && workItem.Fields["Tags"] != null && workItem.Fields["Tags"].Value != null)
@@ -212,13 +213,13 @@ namespace IntegrationService.Targets.TFS
 
 	        CardAddResult cardAddResult = null;
 
-	        int tries = 0;
-	        bool success = false;
+	        var tries = 0;
+	        var success = false;
 	        while (tries < 10 && !success)
 	        {
 		        if (tries > 0)
 		        {
-			        Log.Error(String.Format("Attempting to create card for work item [{0}] attempt number [{1}]", workItem.Id,
+			        Log.Warn(String.Format("Attempting to create card for work item [{0}] attempt number [{1}]", workItem.Id,
 			                                 tries));
 					// wait 5 seconds before trying again
 					Thread.Sleep(new TimeSpan(0, 0, 5));
@@ -231,7 +232,7 @@ namespace IntegrationService.Targets.TFS
 		        }
 		        catch (Exception ex)
 		        {
-			        Log.Error(String.Format("An error occurred: {0} - {1} - {2}", ex.GetType(), ex.Message, ex.StackTrace));
+					Log.Error(ex, string.Format("An error occurred creating a new card for work item [{0}]", workItem.Id));
 		        }
 		        tries++;
 	        }
@@ -335,7 +336,7 @@ namespace IntegrationService.Targets.TFS
 			{
 				if (tries > 0)
 				{
-					Log.Error(String.Format("Attempting to update external work item [{0}] attempt number [{1}]", workItemId, tries));
+					Log.Warn(String.Format("Attempting to update external work item [{0}] attempt number [{1}]", workItemId, tries));
 					// wait 5 seconds before trying again
 					Thread.Sleep(new TimeSpan(0, 0, 5));
 				}
@@ -365,14 +366,14 @@ namespace IntegrationService.Targets.TFS
 
 							// check to see if the workitem is already in one of the workflow states
 							var alreadyInState = workflowStates.FirstOrDefault(x => x.Trim().ToLowerInvariant() == workItemToUpdate.State.ToLowerInvariant());
-							if (!String.IsNullOrEmpty(alreadyInState))
+							if (!string.IsNullOrEmpty(alreadyInState))
 							{
 								// change workflowStates to only use the states after the currently set state
 								var currentIndex = Array.IndexOf(workflowStates, alreadyInState);
 								if (currentIndex < workflowStates.Length - 1)
 								{
 									var updatedWorkflowStates = new List<string>();
-									for (int i = currentIndex + 1; i < workflowStates.Length; i++)
+									for (var i = currentIndex + 1; i < workflowStates.Length; i++)
 									{
 										updatedWorkflowStates.Add(workflowStates[i]);
 									}
@@ -399,8 +400,8 @@ namespace IntegrationService.Targets.TFS
 								// if so then skip those states
 								if (workItemToUpdate.IsValid()) 
 								{
-									Log.Debug(String.Format("Attempting to process WorkItem [{0}] through workflow of [{1}].", workItemId, attemptState));
-									foreach (string workflowState in workflowStates)
+									Log.Debug(string.Format("Attempting to process WorkItem [{0}] through workflow of [{1}].", workItemId, attemptState));
+									foreach (var workflowState in workflowStates)
 									{
 									    UpdateStateOfExternalItem(card, new List<string> {workflowState.Trim()}, mapping, runOnlyOnce);
 									}
@@ -417,7 +418,7 @@ namespace IntegrationService.Targets.TFS
 
 										// try to reverse the changes we've made
 										Log.Debug(String.Format("Attempted invalid workflow for WorkItem [{0}]. Attempting to reverse previous state changes.", workItemId));
-										foreach (string workflowState in workflowStates.Reverse().Skip(1))
+										foreach (var workflowState in workflowStates.Reverse().Skip(1))
 										{
 										    UpdateStateOfExternalItem(card, new List<string> {workflowState.Trim()}, mapping, runOnlyOnce);
 										}
@@ -435,9 +436,9 @@ namespace IntegrationService.Targets.TFS
 						}
 						
 
-						if (workItemToUpdate.State.ToLowerInvariant() == attemptState.ToLowerInvariant())
+						if (workItemToUpdate.State.Equals(attemptState, StringComparison.InvariantCultureIgnoreCase))
 						{
-							Log.Debug(String.Format("WorkItem [{0}] is already in state [{1}]", workItemId, workItemToUpdate.State));
+							Log.Debug(string.Format("WorkItem [{0}] is already in state [{1}]", workItemId, workItemToUpdate.State));
 							return;
 						}
 
@@ -455,10 +456,8 @@ namespace IntegrationService.Targets.TFS
 
 					if (!valid)
 					{
-						Log.Error(
-							String.Format(
-								"Unable to update WorkItem [{0}] to [{1}] because the state is invalid from the current state.",
-								workItemId, workItemToUpdate.State));
+						Log.Warn(string.Format("Unable to update WorkItem [{0}] to [{1}] because the state is invalid from the current state.", 
+							workItemId, workItemToUpdate.State));
 						return;
 					}
 
@@ -466,23 +465,20 @@ namespace IntegrationService.Targets.TFS
 					{
 						workItemToUpdate.Save();
 						success = true;
-						Log.Debug(String.Format("Updated state for mapped WorkItem [{0}] to [{1}]", workItemId, workItemToUpdate.State));
+						Log.Debug(string.Format("Updated state for mapped WorkItem [{0}] to [{1}]", workItemId, workItemToUpdate.State));
 					}
 					catch (ValidationException ex)
 					{
-						Log.Error(String.Format("Unable to update WorkItem [{0}] to [{1}], ValidationException: {2}", workItemId,
-						                         workItemToUpdate.State, ex.Message));
+						Log.Warn(string.Format("Unable to update WorkItem [{0}] to [{1}], ValidationException: {2}", workItemId, workItemToUpdate.State, ex.Message));
 					}
 					catch (Exception ex)
 					{
-						Log.Error(String.Format("Unable to update WorkItem [{0}] to [{1}], Exception: {2}", workItemId,
-						                         workItemToUpdate.State, ex.Message));
-					}					
+						Log.Error(ex, string.Format("Unable to update WorkItem [{0}] to [{1}]", workItemId, workItemToUpdate.State));
+					}
 				}
 				else
 				{
-					Log.Debug(String.Format("Could not retrieve WorkItem [{0}] for updating state to [{1}]", workItemId,
-					                         workItemToUpdate.State));
+					Log.Debug(String.Format("Could not retrieve WorkItem [{0}] for updating state to [{1}]", workItemId, workItemToUpdate.State));
 				}
 				tries++;
 			}
@@ -492,10 +488,10 @@ namespace IntegrationService.Targets.TFS
         {
             Log.Info("WorkItem [{0}] updated, comparing to corresponding card...", workItem.Id);
 
-	        long boardId = project.Identity.LeanKit;
+	        var boardId = project.Identity.LeanKit;
 
             // sync and save those items that are different (of title, description, priority)
-            bool saveCard = false;
+            var saveCard = false;
             if (workItem.Title != card.Title)
             {
                 card.Title = workItem.Title;
@@ -529,14 +525,12 @@ namespace IntegrationService.Targets.TFS
 					var tfsTagsArr = tfsTags.Split(',');
 					foreach (string tag in tfsTagsArr)
 					{
-						if (!card.Tags.ToLowerInvariant().Contains(tag.ToLowerInvariant()))
-						{
-							if (card.Tags == string.Empty)
-								card.Tags = tag;
-							else
-								card.Tags += "," + tag;
-							saveCard = true;
-						}
+						if (card.Tags.ToLowerInvariant().Contains(tag.ToLowerInvariant())) continue;
+						if (card.Tags == string.Empty)
+							card.Tags = tag;
+						else
+							card.Tags += "," + tag;
+						saveCard = true;
 					}
 				}
             }
@@ -559,25 +553,21 @@ namespace IntegrationService.Targets.TFS
 			// check the state of the work item
 			// if we have the state mapped to a lane then check to see if the card is in that lane
 			// if it is not in that lane then move it to that lane
-			if (project.UpdateCardLanes && !string.IsNullOrEmpty(workItem.State))
-			{
-			    var laneId = project.LaneFromState(workItem.State);
+	        if (!project.UpdateCardLanes || string.IsNullOrEmpty(workItem.State)) return;
+	        var laneId = project.LaneFromState(workItem.State);
 
-				// if card is already in archive lane then we do not want to move it to the end lane
-				// because it is effectively the same thing with respect to integrating with TFS
-				if (card.LaneId == project.ArchiveLaneId) 
-				{
-					laneId = 0;
-				}
+	        // if card is already in archive lane then we do not want to move it to the end lane
+	        // because it is effectively the same thing with respect to integrating with TFS
+	        if (card.LaneId == project.ArchiveLaneId) 
+	        {
+		        laneId = 0;
+	        }
 
-				if (laneId != 0) 
-				{
-					if (card.LaneId != laneId) 
-					{
-						LeanKit.MoveCard(project.Identity.LeanKit, card.Id, laneId, 0, "Moved Lane From TFS Work Item");
-					}
-				}
-			}
+	        if (laneId == 0) return;
+	        if (card.LaneId != laneId) 
+	        {
+		        LeanKit.MoveCard(project.Identity.LeanKit, card.Id, laneId, 0, "Moved Lane From TFS Work Item");
+	        }
         }
 
         protected override void CardUpdated(Card card, List<string> updatedItems, BoardMapping boardMapping)
@@ -647,7 +637,7 @@ namespace IntegrationService.Targets.TFS
 
             if (updatedItems.Contains("Size"))
             {
-                workItem.History += "Card size changed to " + card.Size.ToString() + "\r";
+                workItem.History += "Card size changed to " + card.Size + "\r";
                 workItem.Save();
             }
 
@@ -747,7 +737,7 @@ namespace IntegrationService.Targets.TFS
 
 				Log.Debug(String.Format("Created Work Item [{0}] from Card [{1}]", workItem.Id, card.Id));
 
-				card.ExternalCardID = workItem.Id.ToString();
+				card.ExternalCardID = workItem.Id.ToString(CultureInfo.InvariantCulture);
 				card.ExternalSystemName = "TFS";
 
 				if (_projectHyperlinkService != null) 
@@ -859,7 +849,7 @@ namespace IntegrationService.Targets.TFS
 
 		private int GetTfsVersion()
 		{
-			int def = 0;
+			const int def = 2012;
 
 			if (_projectCollection == null)
 				return def;
