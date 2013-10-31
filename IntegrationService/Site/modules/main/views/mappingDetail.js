@@ -190,14 +190,20 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         
         projectSelected: function (e) {
             this.ui.configure.removeClass('disabled');
-            var projName = e.currentTarget.value;
+            var projName = e.currentTarget.options[e.currentTarget.selectedIndex].text;
             this.model.set("TargetProjectName", projName);
             // TargetProjectId is set automatically in BoundView
         },
 
-        onSelectChanged: function () {
-            this.controller.triggerMethod("project:selected");
-        },
+        // this was being called when the select box in Main.views.TypeMapItemView is used!
+        // not sure why. As workaround, using projectSelected instead
+        //onSelectChanged: function (id, label, target) {
+        //    //this.controller.triggerMethod("project:selected");
+        //    this.ui.configure.removeClass('disabled');
+        //    var projName = label;
+        //    this.model.set("TargetProjectName", projName);
+        //    // TargetProjectId is set automatically in BoundView
+        //},
 
         configureRequested: function () {
             this.controller.configure();

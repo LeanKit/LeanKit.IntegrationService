@@ -126,6 +126,10 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             this.ui.connect.removeClass("disabled");
         },
 
+        onSelectChanged:function (id, label) {
+            
+        },
+        
         userPressedEnter: function () {
             var pwd = this.M("Password");
             if (_.isString(pwd) && pwd !== "")

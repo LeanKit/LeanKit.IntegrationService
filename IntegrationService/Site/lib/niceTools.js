@@ -323,18 +323,20 @@ NiceTools = (function(Backbone, Marionette, _) {
 
         selectChanged: function(e) {
             var type = e.currentTarget.type;
+            var id;
+            var selectedText;
             if (type === "select-one") {
                 if (e.currentTarget.id != "") {
-                    var id = undefined;
-                    if (_.isObject(e.currentTarget.selectedOptions))
-                        id = e.currentTarget.selectedOptions[0].id;
-                    else
-                        id = e.currentTarget.options[e.currentTarget.selectedIndex].id;
-                    if (_.isUndefined(id) || id === "") id = e.currentTarget.value;
+                    id = e.currentTarget.value;
                     this.model.set(e.currentTarget.id, id);
-                    this.triggerMethod("select:changed", id, e.currentTarget);
                 }
+                selectedText = e.currentTarget.options[e.currentTarget.selectedIndex].text;
+            } else {
+                // multi-select types are not supported at this time
             }
+            // this is causing 'onSelectCHanged' to be fired on the wrong object
+            // disabled pending resolution
+            //this.triggerMethod("select:changed", id, selectedText, e.currentTarget);
         },
 
         modelChanged: function(m) {
@@ -390,110 +392,7 @@ NiceTools = (function(Backbone, Marionette, _) {
         }
     };
 
-    niceTools.BoundView = niceTools.ItemView.extend({
-    
-        constructor: function() {
-            if (!this.events) this.events = { };
-            this.events["change input[type=text]"] = "fieldChanged";
-            this.events["change fieldset input[type=password]"] = "fieldChanged";
-            this.events["change fieldset input[type=checkbox]"] = "checkboxChanged";
-            this.events["change fieldset textarea"] = "fieldChanged";
-            this.events["change fieldset select"] = "selectChanged";
-            this.events["keypress fieldset input"] = "inputKeypressed";
-            Marionette.ItemView.prototype.constructor.apply(this, arguments);
-
-            this.fadeHtmlChanges = true;
-        },
-                
-        bindModel: function () {
-            //    call after rendering to populate fields with model values
-            if (_.isUndefined(this.model)) return;
-            for (var prop in this.model.attributes) {
-                if (prop === "") continue;
-                var el = this.$("#" + prop);
-                var newVal = this.model.get(prop);
-                if (el && el.length > 0) {
-                    this.updateElement(el, newVal);
-                }
-            }
-
-           //  watch changes on the model
-            this.listenTo(this.model, "change", this.modelChanged, this);
-
-        },
-        
-        fieldChanged: function(e) {
-            if (e.currentTarget.id != "")
-                this.M(e.currentTarget.id, e.currentTarget.value);
-        },
-
-        checkboxChanged: function(e) {
-            if (e.currentTarget.id != "")
-                this.M(e.currentTarget.id, e.currentTarget.checked);
-        },
-
-        selectChanged:function (e) {
-            var type = e.currentTarget.type;
-            if (type === "select-one") {
-                if (e.currentTarget.id != "") {
-                    var id=undefined;
-                    if (_.isObject(e.currentTarget.selectedOptions))
-                        id = e.currentTarget.selectedOptions[0].id;
-                    else
-                        id = e.currentTarget.options[e.currentTarget.selectedIndex].id;
-                    if (_.isUndefined(id) || id === "") id = e.currentTarget.value;
-                    this.M(e.currentTarget.id, id);
-                    this.triggerMethod("select:changed", id, e.currentTarget);
-                }
-            }
-        },
-        
-        modelChanged: function(m) {
-            for (var prop in m.changed) {
-                if (prop === "") continue;
-                var el = this.$("#" + prop);
-                var newVal = m.changed[prop];
-                if (el && el.length > 0) {
-                    this.updateElement(el, newVal);
-                }
-            }
-            if (this.onChange) this.onChange(m);
-        },
-        
-        updateElement: function(el, newVal) {
-            if (el.is('input')) {
-                if (el[0].type === "checkbox")
-                    el.prop('checked', newVal);
-                else
-                    el.val(newVal);
-            } else if (el.is('select')) {
-                el.val(newVal);
-            }
-            else {
-                if (this.fadeHtmlChanges) {
-                    el.fadeOut(250, '', function (x) {
-                        el.html(newVal);
-                        el.fadeIn(250);
-                    });
-                } else {
-                    el.html(newVal);
-                }
-            }
-        },
-        inputKeypressed:function (e) {
-            if (e.which === 13) {
-                var el = e.currentTarget;
-                var $el = this.$(el);
-                 //check for changes on current target
-                if ($el.is('input') || $el.is('select')) {
-                    if (this.M(el.id) !== el.value)
-                        this.M(el.id, el.value);
-                }
-                e.preventDefault();
-                if (this.userPressedEnter) this.userPressedEnter();
-            }
-        }
-    });
+    niceTools.BoundView = niceTools.ItemView.extend(niceTools.BoundViewMixIn);
 
     niceTools.NestedView = niceTools.BoundView.extend({
         initialize: function (options) {

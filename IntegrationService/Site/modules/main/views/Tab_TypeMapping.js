@@ -124,6 +124,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
        events: {
            "click #remove": "removeRequested",
            "click #confirm": "confirmed",
+           "change select":"typeSelected"
        },
        
         ui: {
@@ -136,7 +137,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
            this.delegateEvents();
        },
        
-       onSelectChanged: function (e) {
+       typeSelected: function (e) {
            if (this.M("LeanKitType") !== "" && this.M("TargetType") !== "")
                this.ui.confirmBtn.removeClass("disabled");
        },

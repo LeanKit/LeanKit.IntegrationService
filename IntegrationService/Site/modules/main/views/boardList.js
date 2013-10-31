@@ -33,18 +33,20 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
     });
 
     Main.views.SelectItemView = Marionette.ItemView.extend({
-        template:this.template("selectItemView"),
+        template: this.template("selectItemView"),
         tagName: "option",
-        id: function () {
-            return this.model.get("Id");
+        //id: function () {
+        //    return this.model.get("Id");
+        //},
+        onRender: function() {
+            this.$el.prop("value", this.model.get("Id"));
         }
-
     });
 
     Main.views.SelectView = Marionette.CollectionView.extend({
         itemView: Main.views.SelectItemView,
         tagName: 'select',
-        className: "form-control picker"
+        className: "form-control"
     });
 
 
