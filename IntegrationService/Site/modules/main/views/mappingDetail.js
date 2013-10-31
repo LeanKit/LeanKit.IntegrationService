@@ -150,7 +150,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             this.controller = options.controller;
             this.model = options.model;
             this.pickerView = undefined;
-            this.listenTo(this.model, "change", this.modelChanged, this);
+            this.listenTo(this.model, "change", this.modelChanged2, this);
             this.resetEvents();
             this.bindUIElements();
         },
@@ -212,7 +212,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             $(this).tab('show');
         },
 
-        modelChanged: function () {
+        modelChanged2: function () {
             this.validate(true);
         },
 
