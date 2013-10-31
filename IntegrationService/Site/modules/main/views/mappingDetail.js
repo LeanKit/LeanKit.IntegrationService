@@ -193,7 +193,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
 
         tabActivated: function (e) {
             // trigger backbone event with name of tab that was activated
-            Main.trigger('tab:activated', e.item.innerText);
+            Main.trigger('tab:activated', e.item.textContent);
         },
         
         onItemSelected: function (id, label, target) {
