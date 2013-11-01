@@ -8,7 +8,8 @@
 App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
 
     Main.controllers.OptionsTabController = Marionette.Controller.extend({
-        initialize: function(options) {
+        initialize: function (options) {
+            this.model = options.model;
             this.view = new Main.views.OptionsTabView({ model: options.model });
         },
     });
@@ -19,7 +20,8 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             "click #remove-btn": "removeMappingRequested",
             "click #cancel-btn": "canceled",
             "click #confirm-btn": "confirmed",
-            "click #UpdateCards": "updateCardsChanged"
+            "click #UpdateCards": "updateCardsChanged",
+            "change fieldset input[type=checkbox]": "checkboxChanged"
         },
         ui: {
             "removeBtn": "#remove-btn",

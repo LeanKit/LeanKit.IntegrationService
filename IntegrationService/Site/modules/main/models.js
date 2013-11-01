@@ -48,10 +48,10 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             LaneToStatesMap: undefined,
             TypeMap: undefined,
             CreateCards: true,
-            CreateTargetItems:false,
+            CreateTargetItems: false,
             UpdateCards: true,
             UpdateTargetItems: false,
-            TagCardsWithTargetSystemName:true
+            TagCardsWithTargetSystemName: false
         },
         parse: function (item) {
             if (item === "OK") return; // side effect of saving; ignore
