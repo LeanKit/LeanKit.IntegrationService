@@ -620,7 +620,9 @@ namespace IntegrationService.Targets
 	                {
 		                var states = boardConfig.LaneToStatesMap[movedCardEvent.ToLane.Id.Value];
 		                if (states != null && states.Count > 0)
+		                {
 			                UpdateStateOfExternalItem(movedCardEvent.MovedCard, states, boardConfig);
+		                }
 						else
 							Log.Debug(String.Format("No states are mapped to the Lane [{0}]", movedCardEvent.ToLane.Id.Value));		         
 	                }

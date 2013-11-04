@@ -311,27 +311,26 @@ namespace IntegrationService.Targets.TFS
 
         protected void UpdateStateOfExternalItem(Card card, List<string> states, BoardMapping mapping, bool runOnlyOnce)
 		{
-			if (card.ExternalSystemName != ServiceName)
-				return;
-
-			if (string.IsNullOrEmpty(card.ExternalCardID))
-				return;
+			if (card.ExternalSystemName != ServiceName) return;
+			if (string.IsNullOrEmpty(card.ExternalCardID)) return;
 
 			int workItemId;
 
 			// use external card id to get the TFS work item
-			try {
-				workItemId = Convert.ToInt32(card.ExternalCardID);
-			} catch (Exception) {
-				Log.Debug("Ignoring card [{0}] with missing external id value.", card.Id);
-				return;
-			}
-
-	        if (states == null || states.Count == 0)
+	        try
+	        {
+		        workItemId = Convert.ToInt32(card.ExternalCardID);
+	        }
+	        catch (Exception)
+	        {
+		        Log.Debug("Ignoring card [{0}] with missing external id value.", card.Id);
 		        return;
+	        }
 
-			int tries = 0;
-			bool success = false;
+	        if (states == null || states.Count == 0) return;
+
+			var tries = 0;
+			var success = false;
 			while (tries < 10 && !success && (!runOnlyOnce || tries == 0))
 			{
 				if (tries > 0)
@@ -341,6 +340,7 @@ namespace IntegrationService.Targets.TFS
 					Thread.Sleep(new TimeSpan(0, 0, 5));
 				}
 
+				Log.Debug("Attempting to retrieve work item [{0}]", workItemId);
 				var workItemToUpdate = _projectCollectionWorkItemStore.GetWorkItem(workItemId);
 				if (workItemToUpdate != null)
 				{
@@ -351,7 +351,7 @@ namespace IntegrationService.Targets.TFS
 					// may be able to figure out the issue and handle it
 					// see http://bartwullems.blogspot.com/2012/04/tf237124-work-item-is-not-ready-to-save.html
 					// according to docs the result should be a collection of Microsoft.TeamFoundation.WorkItemTracking.Client, not sure why it is an ArrayList
-				    int ctr = 0;
+				    var ctr = 0;
 					var valid = false;
 					foreach (var st in states)
 					{
@@ -387,7 +387,7 @@ namespace IntegrationService.Targets.TFS
 								// if it is already in the final state then bail
 								if (workItemToUpdate.State.ToLowerInvariant() == workflowStates.Last().ToLowerInvariant())
 								{
-									Log.Debug(String.Format("WorkItem [{0}] is already in state [{1}]", workItemId, workItemToUpdate.State));
+									Log.Debug("WorkItem [{0}] is already in state [{1}]", workItemId, workItemToUpdate.State);
 									return;
 								}
 
@@ -400,7 +400,7 @@ namespace IntegrationService.Targets.TFS
 								// if so then skip those states
 								if (workItemToUpdate.IsValid()) 
 								{
-									Log.Debug(string.Format("Attempting to process WorkItem [{0}] through workflow of [{1}].", workItemId, attemptState));
+									Log.Debug("Attempting to process WorkItem [{0}] through workflow of [{1}].", workItemId, attemptState);
 									foreach (var workflowState in workflowStates)
 									{
 									    UpdateStateOfExternalItem(card, new List<string> {workflowState.Trim()}, mapping, runOnlyOnce);
@@ -417,14 +417,14 @@ namespace IntegrationService.Targets.TFS
 										}
 
 										// try to reverse the changes we've made
-										Log.Debug(String.Format("Attempted invalid workflow for WorkItem [{0}]. Attempting to reverse previous state changes.", workItemId));
+										Log.Debug("Attempted invalid workflow for WorkItem [{0}]. Attempting to reverse previous state changes.", workItemId);
 										foreach (var workflowState in workflowStates.Reverse().Skip(1))
 										{
 										    UpdateStateOfExternalItem(card, new List<string> {workflowState.Trim()}, mapping, runOnlyOnce);
 										}
 
 										// now try to set it back whatever it was before
-										Log.Debug(String.Format("Attempted invalid workflow for WorkItem [{0}]. Setting state back to initial state of [{1}].", workItemId, initialState));
+										Log.Debug("Attempted invalid workflow for WorkItem [{0}]. Setting state back to initial state of [{1}].", workItemId, initialState);
 										UpdateStateOfExternalItem(card, new List<string> {initialState.Trim()}, mapping, runOnlyOnce );
 
 										// set the current attempt to empty string so that it will not be valid and 
@@ -450,14 +450,13 @@ namespace IntegrationService.Targets.TFS
 
 						ctr++;
 
-						if (valid)
-							break;
+						if (valid) break;
 					}
 
 					if (!valid)
 					{
-						Log.Warn(string.Format("Unable to update WorkItem [{0}] to [{1}] because the state is invalid from the current state.", 
-							workItemId, workItemToUpdate.State));
+						Log.Warn("Unable to update WorkItem [{0}] to [{1}] because the state is invalid from the current state.", 
+							workItemId, workItemToUpdate.State);
 						return;
 					}
 
@@ -465,11 +464,11 @@ namespace IntegrationService.Targets.TFS
 					{
 						workItemToUpdate.Save();
 						success = true;
-						Log.Debug(string.Format("Updated state for mapped WorkItem [{0}] to [{1}]", workItemId, workItemToUpdate.State));
+						Log.Debug("Updated state for mapped WorkItem [{0}] to [{1}]", workItemId, workItemToUpdate.State);
 					}
 					catch (ValidationException ex)
 					{
-						Log.Warn(string.Format("Unable to update WorkItem [{0}] to [{1}], ValidationException: {2}", workItemId, workItemToUpdate.State, ex.Message));
+						Log.Warn("Unable to update WorkItem [{0}] to [{1}], ValidationException: {2}", workItemId, workItemToUpdate.State, ex.Message);
 					}
 					catch (Exception ex)
 					{
@@ -478,7 +477,7 @@ namespace IntegrationService.Targets.TFS
 				}
 				else
 				{
-					Log.Debug(String.Format("Could not retrieve WorkItem [{0}] for updating state to [{1}]", workItemId, workItemToUpdate.State));
+					Log.Debug("Could not retrieve WorkItem [{0}] for updating state to [{1}]", workItemId, workItemToUpdate.State);
 				}
 				tries++;
 			}
@@ -515,7 +514,7 @@ namespace IntegrationService.Targets.TFS
             if(workItem.Fields!=null && 
 				workItem.Fields.Contains("Tags") && 
 				workItem.Fields["Tags"] != null && 
-				workItem.Fields["Tags"].Value!= card.Tags)
+				workItem.Fields["Tags"].Value.ToString() != card.Tags)
             {
 	            var tfsTags = workItem.Fields["Tags"].Value.ToString();
 				// since we cannot set the tags in TFS we cannot blindly overwrite the LK tags 
@@ -523,7 +522,7 @@ namespace IntegrationService.Targets.TFS
 				if (!string.IsNullOrEmpty(tfsTags))
 				{
 					var tfsTagsArr = tfsTags.Split(',');
-					foreach (string tag in tfsTagsArr)
+					foreach (var tag in tfsTagsArr)
 					{
 						if (card.Tags.ToLowerInvariant().Contains(tag.ToLowerInvariant())) continue;
 						if (card.Tags == string.Empty)
@@ -570,95 +569,105 @@ namespace IntegrationService.Targets.TFS
 	        }
         }
 
-        protected override void CardUpdated(Card card, List<string> updatedItems, BoardMapping boardMapping)
-        {
-			if (card.ExternalSystemName != ServiceName)
-				return;
+	    protected override void CardUpdated(Card card, List<string> updatedItems, BoardMapping boardMapping)
+	    {
+		    if (card.ExternalSystemName != ServiceName)
+			    return;
 
-			if (string.IsNullOrEmpty(card.ExternalCardID))
-				return;
+		    if (string.IsNullOrEmpty(card.ExternalCardID))
+			    return;
 
-            Log.Info("Card [{0}] updated.", card.Id);
+		    Log.Info("Card [{0}] updated.", card.Id);
 
-            int workItemId;
-	        try
-            {
-                workItemId = Convert.ToInt32(card.ExternalCardID);
-            }
-            catch (Exception)
-            {
-                Log.Debug("Ignoring card [{0}] with missing external id value.", card.Id);
-                return;
-            }
+		    int workItemId;
+		    try
+		    {
+			    workItemId = Convert.ToInt32(card.ExternalCardID);
+		    }
+		    catch (Exception)
+		    {
+			    Log.Debug("Ignoring card [{0}] with missing external id value.", card.Id);
+			    return;
+		    }
 
-            var workItem = _projectCollectionWorkItemStore.GetWorkItem(workItemId);
+		    Log.Debug("Attempting to load Work Item [{0}]", workItemId);
+		    WorkItem workItem;
+		    try
+		    {
+			    workItem = _projectCollectionWorkItemStore.GetWorkItem(workItemId);
+		    }
+		    catch (Exception ex)
+		    {
+			    Log.Error(ex, string.Format("Could not load Work Item [{0}]", workItemId));
+			    return;
+		    }
 
-            if (workItem == null)
-            {
-                Log.Debug("Failed to find work item matching [{0}].", workItemId);
-                return;
-            }
+		    if (workItem == null)
+		    {
+			    Log.Debug("Failed to find work item matching [{0}].", workItemId);
+			    return;
+		    }
 
-            if (updatedItems.Contains("Title") && workItem.Title != card.Title)
-                workItem.Title = card.Title;
+		    if (updatedItems.Contains("Title") && workItem.Title != card.Title)
+			    workItem.Title = card.Title;
 
 
-            if (updatedItems.Contains("Description"))
-            {
-                var description = workItem.LeanKitDescription(GetTfsVersion());
-                if (description != card.Description)
-                {
-                    if (workItem.UseReproSteps())
-                        workItem.Fields["Repro Steps"].Value = card.Description;
-                    else
-                        workItem.Description = card.Description;
-                }
-            }
+		    if (updatedItems.Contains("Description"))
+		    {
+			    var description = workItem.LeanKitDescription(GetTfsVersion());
+			    if (description != card.Description)
+			    {
+				    if (workItem.UseReproSteps())
+					    workItem.Fields["Repro Steps"].Value = card.Description;
+				    else
+					    workItem.Description = card.Description;
+			    }
+		    }
 
-            if (updatedItems.Contains("Priority"))
-            {
-                var currentWorkItemPriority = workItem.LeanKitPriority();
-                if (currentWorkItemPriority != card.Priority)
-                    SetWorkItemPriority(workItem, card.Priority);
-            }
+		    if (updatedItems.Contains("Priority"))
+		    {
+			    var currentWorkItemPriority = workItem.LeanKitPriority();
+			    if (currentWorkItemPriority != card.Priority)
+				    SetWorkItemPriority(workItem, card.Priority);
+		    }
 
-            if (updatedItems.Contains("DueDate"))
-            {
-                SetDueDate(workItem, card.DueDate);
-            }
+		    if (updatedItems.Contains("DueDate"))
+		    {
+			    SetDueDate(workItem, card.DueDate);
+		    }
 
-            if (workItem.IsDirty)
-            {
-                Log.Info("Updating corresponding work item [{0}]", workItem.Id);
-                workItem.Save();
-            }
+		    if (workItem.IsDirty)
+		    {
+			    Log.Info("Updating corresponding work item [{0}]", workItem.Id);
+			    workItem.Save();
+		    }
 
-            // unsupported properties; append changes to history
+		    // unsupported properties; append changes to history
 
-            if (updatedItems.Contains("Size"))
-            {
-                workItem.History += "Card size changed to " + card.Size + "\r";
-                workItem.Save();
-            }
+		    if (updatedItems.Contains("Size"))
+		    {
+			    workItem.History += "Card size changed to " + card.Size + "\r";
+			    workItem.Save();
+		    }
 
-            if (updatedItems.Contains("Blocked"))
-            {
-                if (card.IsBlocked)
-                    workItem.History += "Card is blocked: " + card.BlockReason + "\r";
-                else
-                    workItem.History += "Card is no longer blocked: " + card.BlockReason + "\r";
-                workItem.Save();
-            }
+		    if (updatedItems.Contains("Blocked"))
+		    {
+			    if (card.IsBlocked)
+				    workItem.History += "Card is blocked: " + card.BlockReason + "\r";
+			    else
+				    workItem.History += "Card is no longer blocked: " + card.BlockReason + "\r";
+			    workItem.Save();
+		    }
 
-			if (updatedItems.Contains("Tags"))
-			{
-				workItem.History += "Tags in LeanKit changed to " + card.Tags + "\r";
-				workItem.Save();				
-			}
+		    if (updatedItems.Contains("Tags"))
+		    {
+			    workItem.History += "Tags in LeanKit changed to " + card.Tags + "\r";
+			    workItem.Save();
+		    }
 
-        }
+	    }
 
-        private void SetDueDate(WorkItem workItem, string date)
+	    private void SetDueDate(WorkItem workItem, string date)
         {
             if (workItem.Fields.Contains("Due Date"))
                 workItem.Fields["Due Date"].Value = date;
@@ -733,9 +742,11 @@ namespace IntegrationService.Targets.TFS
 
 			try 
 			{
+				Log.Debug("Attempting to create Work Item from Card [{0}]", card.Id);
+
 				workItem.Save();
 
-				Log.Debug(String.Format("Created Work Item [{0}] from Card [{1}]", workItem.Id, card.Id));
+				Log.Debug("Created Work Item [{0}] from Card [{1}]", workItem.Id, card.Id);
 
 				card.ExternalCardID = workItem.Id.ToString(CultureInfo.InvariantCulture);
 				card.ExternalSystemName = "TFS";
@@ -752,15 +763,15 @@ namespace IntegrationService.Targets.TFS
 					UpdateStateOfExternalItem(card, states, boardMapping, true);
 				}			
 
-				LeanKit.UpdateCard(boardMapping.Identity.LeanKit, card);				
+				LeanKit.UpdateCard(boardMapping.Identity.LeanKit, card);
 			} 
 			catch (ValidationException ex) 
 			{
-				Log.Error(string.Format("Unable to create WorkItem from Card [{0}]. ValidationException: {1}", card.Id, ex.Message));
+				Log.Error("Unable to create WorkItem from Card [{0}]. ValidationException: {1}", card.Id, ex.Message);
 			} 
 			catch (Exception ex) 
 			{
-				Log.Error(string.Format("Unable to create WorkItem from Card [{0}], Exception: {1}", card.Id, ex.Message));
+				Log.Error("Unable to create WorkItem from Card [{0}], Exception: {1}", card.Id, ex.Message);
 			}
 		}
 
@@ -774,7 +785,7 @@ namespace IntegrationService.Targets.TFS
 	        }
 	        catch (UriFormatException ex)
 	        {
-		        Log.Error(String.Format("Error connection to TFS. Ensure the Target Host is a valid URL: {0} - {1}", ex.GetType(), ex.Message));
+		        Log.Error("Error connection to TFS. Ensure the Target Host is a valid URL: {0} - {1}", ex.GetType(), ex.Message);
 		        return;
 	        }
 
@@ -828,7 +839,7 @@ namespace IntegrationService.Targets.TFS
             }
             catch (Exception e)
             {
-                Log.Error(String.Format("Error connecting to TFS: {0} - {1}", e.GetType(), e.Message));
+                Log.Error("Error connecting to TFS: {0} - {1}", e.GetType(), e.Message);
             }
 
 	        // per project, if exclusions are defined, build type filter to exclude them
@@ -867,7 +878,7 @@ namespace IntegrationService.Targets.TFS
 						return def;
 				}
 			} catch (Exception ex) {
-				Log.Error(String.Format("An error occurred: {0} - {1} - {2}", ex.GetType(), ex.Message, ex.StackTrace));
+				Log.Error("An error occurred: {0} - {1} - {2}", ex.GetType(), ex.Message, ex.StackTrace);
 				return def;
 			}
 		}
@@ -879,6 +890,7 @@ namespace IntegrationService.Targets.TFS
             
             try
             {
+				Log.Info("Loading TFS Users...");
                 var users = new List<Microsoft.TeamFoundation.Server.Identity>();
                 var iss = _projectCollection.GetService<ICommonStructureService>();
                 if (iss != null)
@@ -923,7 +935,7 @@ namespace IntegrationService.Targets.TFS
             }
             catch (Exception ex)
             {
-                Log.Error(String.Format("An error occurred: {0} - {1} - {2}", ex.GetType(), ex.Message, ex.StackTrace));
+                Log.Error("An error occurred: {0} - {1} - {2}", ex.GetType(), ex.Message, ex.StackTrace);
             }            
         }
 
