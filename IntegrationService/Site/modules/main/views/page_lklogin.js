@@ -105,6 +105,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         className: "form-horizontal",
         initialize: function (options) {
             this.controller = options.controller;
+            this.initializeBindings();
         },
 
         ui: {

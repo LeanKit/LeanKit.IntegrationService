@@ -396,6 +396,7 @@ NiceTools = (function(Backbone, Marionette, _) {
     niceTools.NestedView = niceTools.BoundView.extend({
         initialize: function (options) {
             this.controller = options.controller;
+            initializeBindings();
             this.triggerMethod("after:initialize", options);
 
         },
