@@ -20,11 +20,15 @@ namespace IntegrationService
 			var appHost = new AppHost();
 			appHost.Init();
 
+			var urlConfig = ConfigurationManager.AppSettings["ConfigurationSiteUrl"];
+			var url = (urlConfig != null && urlConfig.StartsWith("http")) ? urlConfig : "http://+";
+
 			var port = "8090";
 			if (ConfigurationManager.AppSettings["ConfigurationSitePort"] != null)
 			{
 				port = ConfigurationManager.AppSettings["ConfigurationSitePort"];
 			}
+	
 			int portNumber;
 			if (!int.TryParse(port, out portNumber))
 			{
@@ -36,10 +40,10 @@ namespace IntegrationService
 			{
 				try
 				{
-					appHost.Start(string.Format("http://localhost:{0}/", portNumber));
+					appHost.Start(string.Format("{0}:{1}/", url, portNumber));
 					validPort = true;
 				}
-				catch (HttpListenerException hlex)
+				catch (HttpListenerException)
 				{
 					string.Format("HTTP Port {0} not available, trying {1}", portNumber, portNumber + 1).Warn();
 					portNumber++;
@@ -50,8 +54,11 @@ namespace IntegrationService
 					break;
 				}
 			}
-			if (validPort)
-				string.Format("Browse to http://localhost:{0}/ to configure.", portNumber).Print();
+			
+			if (!validPort) return;
+
+			if (url.Equals("http://+", StringComparison.InvariantCultureIgnoreCase)) url = "http://localhost";
+			string.Format("Browse to {0}:{1}/ to configure.", url, portNumber).Print();
 		}
 
 		public void Shutdown()

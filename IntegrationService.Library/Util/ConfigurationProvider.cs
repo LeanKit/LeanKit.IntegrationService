@@ -14,40 +14,41 @@ namespace IntegrationService.Util
 {
     public class ConfigurationProvider:IConfigurationProvider<Configuration>
     {
-        public Configuration GetConfiguration()
-        {
-			var dir = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
-			if (dir == null) throw new Exception("Could not access application directory.");
-			var curFolder = dir.FullName;
-			var configJsonFile = Path.Combine(curFolder, "config-live.json");
-            Configuration config;
-            if (!File.Exists(configJsonFile))
-            {
-                throw new ConfigurationErrorsException("Missing config-live.json file. You must have at least one of the config files.");
-            }
-            try
-            {
-		            using (var stream = new StreamReader(configJsonFile))
-		            {
-			            config = JsonSerializer.DeserializeFromReader<Configuration>(stream);
-		            }
-	            }
-            catch (Exception ex)
-            {
-                throw new ConfigurationErrorsException(ex.Message);
-            }
+	    public Configuration GetConfiguration()
+	    {
+		    var dir = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
+		    if (dir == null) throw new Exception("Could not access application directory.");
+		    var curFolder = dir.FullName;
+		    var configJsonFile = Path.Combine(curFolder, "config-live.json");
+		    Configuration config;
+		    if (!File.Exists(configJsonFile))
+		    {
+			    throw new ConfigurationErrorsException(
+				    "Missing config-live.json file. You must have at least one of the config files.");
+		    }
+		    try
+		    {
+			    using (var stream = new StreamReader(configJsonFile))
+			    {
+				    config = JsonSerializer.DeserializeFromReader<Configuration>(stream);
+			    }
+		    }
+		    catch (Exception ex)
+		    {
+			    throw new ConfigurationErrorsException(ex.Message);
+		    }
 
-            if (config != null)
-            {
-                config.LocalStoragePath = Path.Combine(curFolder, "localstore.json");
-            }
+		    if (config != null)
+		    {
+			    config.LocalStoragePath = Path.Combine(curFolder, "localstore.json");
+		    }
 
-            ValidateConfiguration(config);
+		    ValidateConfiguration(config);
 
-            return config;
-        }
+		    return config;
+	    }
 
-        private void ValidateConfiguration(Configuration config)
+	    private void ValidateConfiguration(Configuration config)
         {
             if (config == null) throw new ConfigurationErrorsException("Configuration is invalid.");
             if (config.LeanKit == null) throw new ConfigurationErrorsException("Configuration is missing LeanKit config section.");
