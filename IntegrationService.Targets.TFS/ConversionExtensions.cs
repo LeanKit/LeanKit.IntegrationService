@@ -6,7 +6,7 @@
 
 using System;
 using System.Linq;
-using Kanban.API.Client.Library.TransferObjects;
+using LeanKit.API.Client.Library.TransferObjects;
 using Microsoft.TeamFoundation.WorkItemTracking.Client;
 using RestSharp.Contrib;
 

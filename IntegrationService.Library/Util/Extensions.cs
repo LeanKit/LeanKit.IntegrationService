@@ -49,5 +49,9 @@ namespace IntegrationService.Util
 			Log.Error(message);
 		}
 
+	    public static void Error(this string message, Exception ex)
+	    {
+		    Log.Error(ex, message);
+	    }
     }
 }

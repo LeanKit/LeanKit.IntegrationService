@@ -6,8 +6,8 @@
 
 using System;
 using System.Linq;
-using Kanban.API.Client.Library;
-using Kanban.API.Client.Library.TransferObjects;
+using LeanKit.API.Client.Library;
+using LeanKit.API.Client.Library.TransferObjects;
 
 namespace IntegrationService.Targets.JIRA
 {

@@ -10,9 +10,9 @@ using System.Configuration;
 using System.Linq;
 using IntegrationService.Targets;
 using IntegrationService.Util;
-using Kanban.API.Client.Library;
-using Kanban.API.Client.Library.EventArguments;
-using Kanban.API.Client.Library.TransferObjects;
+using LeanKit.API.Client.Library;
+using LeanKit.API.Client.Library.EventArguments;
+using LeanKit.API.Client.Library.TransferObjects;
 using Moq;
 using NUnit.Framework;
 using Should;
@@ -949,9 +949,9 @@ namespace IntegrationService.Tests
 	{
 		private Board _testBoard;
 		private BoardMapping _mapping;
-		private Kanban.API.Client.Library.TransferObjects.Lane _childLane1;
-		private Kanban.API.Client.Library.TransferObjects.Lane _childLane2;
-		private Kanban.API.Client.Library.TransferObjects.Lane _childLane3;
+		private LeanKit.API.Client.Library.TransferObjects.Lane _childLane1;
+		private LeanKit.API.Client.Library.TransferObjects.Lane _childLane2;
+		private LeanKit.API.Client.Library.TransferObjects.Lane _childLane3;
 
 		protected override void OnStartFixture()
 		{
@@ -961,9 +961,9 @@ namespace IntegrationService.Tests
 			parentLane.ParentLaneId = 0;
 
 			// Create and configure child lanes
-			_childLane1 = Test<Kanban.API.Client.Library.TransferObjects.Lane>.Item;
-			_childLane2 = Test<Kanban.API.Client.Library.TransferObjects.Lane>.Item;
-			_childLane3 = Test<Kanban.API.Client.Library.TransferObjects.Lane>.Item;
+			_childLane1 = Test<LeanKit.API.Client.Library.TransferObjects.Lane>.Item;
+			_childLane2 = Test<LeanKit.API.Client.Library.TransferObjects.Lane>.Item;
+			_childLane3 = Test<LeanKit.API.Client.Library.TransferObjects.Lane>.Item;
 
 			_childLane1.ChildLaneIds = null;
 			_childLane1.ParentLaneId = parentLane.Id.Value;

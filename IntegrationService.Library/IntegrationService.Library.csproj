@@ -38,8 +38,8 @@
     <Reference Include="AutoMapper.Net4">
       <HintPath>..\packages\AutoMapper.3.0.0\lib\net40\AutoMapper.Net4.dll</HintPath>
     </Reference>
-    <Reference Include="Kanban.API.Client.Library">
-      <HintPath>..\lib\Kanban.API.Client.Library.dll</HintPath>
+    <Reference Include="LeanKit.API.Client.Library">
+      <HintPath>..\lib\LeanKit.API.Client.Library.dll</HintPath>
     </Reference>
     <Reference Include="log4net">
       <HintPath>..\packages\log4net.2.0.0\lib\net40-full\log4net.dll</HintPath>

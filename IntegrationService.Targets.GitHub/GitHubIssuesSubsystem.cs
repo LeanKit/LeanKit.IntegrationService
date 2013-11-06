@@ -10,8 +10,8 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using IntegrationService.Util;
-using Kanban.API.Client.Library;
-using Kanban.API.Client.Library.TransferObjects;
+using LeanKit.API.Client.Library;
+using LeanKit.API.Client.Library.TransferObjects;
 using RestSharp;
 using ServiceStack.Text;
 

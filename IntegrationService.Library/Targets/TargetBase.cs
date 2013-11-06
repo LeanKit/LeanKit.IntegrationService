@@ -12,10 +12,10 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using IntegrationService.Util;
-using Kanban.API.Client.Library;
-using Kanban.API.Client.Library.EventArguments;
-using Kanban.API.Client.Library.Exceptions;
-using Kanban.API.Client.Library.TransferObjects;
+using LeanKit.API.Client.Library;
+using LeanKit.API.Client.Library.EventArguments;
+using LeanKit.API.Client.Library.Exceptions;
+using LeanKit.API.Client.Library.TransferObjects;
 
 namespace IntegrationService.Targets
 {
@@ -430,7 +430,7 @@ namespace IntegrationService.Targets
         }
 
 		// This method is based on method of same name from Kanban.ApplicationServices.BoardService
-		private long GetDefaultDropLane(IList<Kanban.API.Client.Library.TransferObjects.Lane> lanes)
+		private long GetDefaultDropLane(IList<LeanKit.API.Client.Library.TransferObjects.Lane> lanes)
 		{
 			//get first top level lane
 			var firstParentLane = lanes.Where(x => x.ParentLaneId == 0)
@@ -450,7 +450,7 @@ namespace IntegrationService.Targets
 		}
 
 		// This method is based on method of same name from Kanban.ApplicationServices.BoardService
-		private Kanban.API.Client.Library.TransferObjects.Lane FindFirstChildLane(Kanban.API.Client.Library.TransferObjects.Lane parentLane, IList<Kanban.API.Client.Library.TransferObjects.Lane> allLanes)
+		private LeanKit.API.Client.Library.TransferObjects.Lane FindFirstChildLane(LeanKit.API.Client.Library.TransferObjects.Lane parentLane, IList<LeanKit.API.Client.Library.TransferObjects.Lane> allLanes)
 		{
 			if (parentLane == null) return null;
 			return (parentLane.ChildLaneIds != null && parentLane.ChildLaneIds.Any())

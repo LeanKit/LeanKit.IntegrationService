@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using IntegrationService.Targets.TFS;
-using Kanban.API.Client.Library.TransferObjects;
+using LeanKit.API.Client.Library.TransferObjects;
 using Microsoft.TeamFoundation.Client;
 using Microsoft.TeamFoundation.WorkItemTracking.Client;
 using Moq;

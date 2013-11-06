@@ -63,7 +63,7 @@ namespace IntegrationService.API
             }
             catch (Exception ex)
             {
-				ex.Message.Error();
+				ex.Message.Error(ex);
                 return ServerError(ex.Message);
             }
          

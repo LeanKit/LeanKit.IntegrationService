@@ -7,9 +7,9 @@
 using System.Collections.Generic;
 using AutoMapper;
 using IntegrationService.Util;
-using Kanban.API.Client.Library.TransferObjects;
-using KanbanBoard = Kanban.API.Client.Library.TransferObjects.Board;
-using KanbanLane = Kanban.API.Client.Library.TransferObjects.Lane;
+using LeanKit.API.Client.Library.TransferObjects;
+using KanbanBoard = LeanKit.API.Client.Library.TransferObjects.Board;
+using KanbanLane = LeanKit.API.Client.Library.TransferObjects.Lane;
 
 namespace IntegrationService.API.Models
 {

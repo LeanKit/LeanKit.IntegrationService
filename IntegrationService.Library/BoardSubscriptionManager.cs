@@ -10,9 +10,9 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using IntegrationService.Util;
-using Kanban.API.Client.Library;
-using Kanban.API.Client.Library.EventArguments;
-using Kanban.API.Client.Library.TransferObjects;
+using LeanKit.API.Client.Library;
+using LeanKit.API.Client.Library.EventArguments;
+using LeanKit.API.Client.Library.TransferObjects;
 
 namespace IntegrationService
 {
@@ -65,7 +65,7 @@ namespace IntegrationService
 					_log.Debug(string.Format("Start watching board [{0}]", boardIdLocal));
 		            Integration.StartWatching();					
 	            }
-	            catch (Kanban.API.Client.Library.Exceptions.UnauthorizedAccessException e)
+	            catch (LeanKit.API.Client.Library.Exceptions.UnauthorizedAccessException e)
 	            {
 		            _log.Error(string.Format("Error authenticating with LeanKit: {0}", e.Message));		            
 	            }

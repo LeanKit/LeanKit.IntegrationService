@@ -79,7 +79,7 @@ namespace IntegrationService.Targets.TFS
             }
             catch (Exception e)
             {
-				string.Format("Failed to connect: {0}", e.Message).Error();
+				string.Format("Failed to connect: {0}", e.Message).Error(e);
 				return ConnectionResult.FailedToConnect;
             }
 

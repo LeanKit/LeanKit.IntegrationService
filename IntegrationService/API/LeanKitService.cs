@@ -12,10 +12,10 @@ using System.Reflection;
 using AutoMapper;
 using IntegrationService.API.Models;
 using IntegrationService.Util;
-using Kanban.API.Client.Library;
-using Kanban.API.Client.Library.TransferObjects;
+using LeanKit.API.Client.Library;
+using LeanKit.API.Client.Library.TransferObjects;
 using ServiceStack.ServiceHost;
-using Board = Kanban.API.Client.Library.TransferObjects.Board;
+using Board = LeanKit.API.Client.Library.TransferObjects.Board;
 
 namespace IntegrationService.API
 {
@@ -69,7 +69,7 @@ namespace IntegrationService.API
 			}
 			catch (Exception ex)
 			{
-				ex.Message.Error();
+				ex.Message.Error(ex);
 				return ServerError(ex.Message);
 			}
 
@@ -88,13 +88,13 @@ namespace IntegrationService.API
 			}
 			catch (Exception ex)
 			{
-				ex.Message.Error();
+				ex.Message.Error(ex);
 				return ServerError(ex.Message);
 			}
 
 			var boardmodel = Mapper.Map<Models.Board>(board);
 
-			var allLanes = new List<Kanban.API.Client.Library.TransferObjects.Lane>();
+			var allLanes = new List<LeanKit.API.Client.Library.TransferObjects.Lane>();
 			allLanes.AddRange(board.Backlog);
 			allLanes.AddRange(board.Lanes);
 			allLanes.AddRange(board.Archive);
@@ -112,7 +112,7 @@ namespace IntegrationService.API
 			return OK(boardmodel);
 		}
 
-		private void MapChildLanes(IList<Kanban.API.Client.Library.TransferObjects.Lane> lanes, Kanban.API.Client.Library.TransferObjects.Lane parentLane,
+		private void MapChildLanes(IList<LeanKit.API.Client.Library.TransferObjects.Lane> lanes, LeanKit.API.Client.Library.TransferObjects.Lane parentLane,
 		                           LaneModel parentLaneModel, int level)
 		{
 			parentLaneModel.ChildLanes = new List<LaneModel>();
@@ -149,12 +149,12 @@ namespace IntegrationService.API
 				}
 				catch (Exception ex)
 				{
-					ex.Message.Error();
+					ex.Message.Error(ex);
 					return ServerError(ex.Message);
 				}
 
 				var laneNames = new List<LaneName>();
-				var allLanes = new List<Kanban.API.Client.Library.TransferObjects.Lane>();
+				var allLanes = new List<LeanKit.API.Client.Library.TransferObjects.Lane>();
 				allLanes.AddRange(board.Backlog);
 				allLanes.AddRange(board.Lanes);
 				allLanes.AddRange(board.Archive);
@@ -174,7 +174,7 @@ namespace IntegrationService.API
 			return OK(boards);
 		}
 
-		private void GetChildLaneNames(List<LaneName> laneNames, long parentId, string title, IList<Kanban.API.Client.Library.TransferObjects.Lane> lanes)
+		private void GetChildLaneNames(List<LaneName> laneNames, long parentId, string title, IList<LeanKit.API.Client.Library.TransferObjects.Lane> lanes)
 		{
 			var children = lanes.Where(x => x.ParentLaneId == parentId);
 			foreach (var lane in children)

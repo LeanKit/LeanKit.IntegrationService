@@ -11,7 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Web;
 using IntegrationService.API.Models;
-using Kanban.API.Client.Library.TransferObjects;
+using LeanKit.API.Client.Library.TransferObjects;
 using ServiceStack.Html;
 
 namespace IntegrationService.API
