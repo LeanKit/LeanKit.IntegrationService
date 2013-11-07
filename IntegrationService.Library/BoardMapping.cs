@@ -64,7 +64,7 @@ namespace IntegrationService
 				sb.Append("      Lane to States:   " + Environment.NewLine);
 				foreach (var item in LaneToStatesMap)
 				{
-					sb.Append("        " + item.Key.ToString() + ": ");
+					sb.Append("        " + item.Key + ": ");
 					foreach(var state in item.Value)
 						sb.Append(state + ", ");
 					sb.Append(Environment.NewLine);
@@ -101,8 +101,8 @@ namespace IntegrationService
 
 			sb.Append(Environment.NewLine);
 			sb.AppendLine("     Query :                         " + Query);
-			sb.AppendLine("     ArchiveLaneId :                 " + ArchiveLaneId.ToString());
-			sb.AppendLine("     TagCardsWithTargetSystemName :  " + TagCardsWithTargetSystemName.ToString());
+			sb.AppendLine("     ArchiveLaneId :                 " + ArchiveLaneId);
+			sb.AppendLine("     TagCardsWithTargetSystemName :  " + TagCardsWithTargetSystemName);
 			sb.AppendLine("     CreateCards :                   " + CreateCards);
 			sb.AppendLine("     CreateTargetItems :             " + CreateTargetItems);
 			sb.AppendLine("     UpdateCards :                   " + UpdateCards);
