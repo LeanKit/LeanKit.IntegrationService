@@ -59,11 +59,11 @@ namespace IntegrationService.API
 		public object Get(BoardsRequest request)
 		{
 
-			var api = Connect(request, true);
-
 			IEnumerable<BoardListing> boards;
 			try
 			{
+				var api = Connect(request, true);
+
 				"Getting all boards...".Debug();
 				boards = api.GetBoards();
 			}
@@ -78,11 +78,11 @@ namespace IntegrationService.API
 
 		public object Get(BoardRequest request)
 		{
-			var api = Connect(request);
 
 			Board board;
 			try
 			{
+				var api = Connect(request);
 				string.Format("Getting board {0}", request.BoardId).Debug();
 				board = api.GetBoard(request.BoardId);
 			}
@@ -137,7 +137,17 @@ namespace IntegrationService.API
 		public object Get(BoardLaneRequest request)
 		{
 			var boards = new Dictionary<long, List<LaneName>>();
-			var api = Connect(request);
+			ILeanKitApi api;
+
+			try
+			{
+				api = Connect(request);
+			}
+			catch (Exception ex)
+			{
+				ex.Message.Error(ex);
+				return ServerError(ex.Message);
+			}
 
 			foreach (var boardId in request.BoardIds)
 			{
@@ -218,20 +228,28 @@ namespace IntegrationService.API
 		{
 			"Saving LeanKit login information...".Debug();
 
-			var dir = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
-			if (dir == null) throw new Exception("Could not access current directory.");
-			var curFolder = dir.FullName;
-			var storagefile = Path.Combine(curFolder, "config-edit.json");
-			var localStorage = new LocalStorage<Configuration>(storagefile);
-			var config = File.Exists(storagefile) ? localStorage.Load() : new Configuration();
+			try
+			{
+				var dir = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
+				if (dir == null) throw new Exception("Could not access current directory.");
+				var curFolder = dir.FullName;
+				var storagefile = Path.Combine(curFolder, "config-edit.json");
+				var localStorage = new LocalStorage<Configuration>(storagefile);
+				var config = File.Exists(storagefile) ? localStorage.Load() : new Configuration();
 
-			config.LeanKit = new ServerConfiguration
+				config.LeanKit = new ServerConfiguration
 				{
 					Host = account.Hostname,
 					User = account.Username,
 					Password = account.Password
 				};
-			localStorage.Save(config);
+				localStorage.Save(config);
+			}
+			catch (Exception ex)
+			{
+				string.Format("Error saving login creditials: {0}", ex.Message).Error(ex);
+				throw;
+			}
 		}
 	}
 }

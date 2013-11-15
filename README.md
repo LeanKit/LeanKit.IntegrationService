@@ -42,7 +42,7 @@ npm install
 ```
 
 This will read the package.json file and install additional dependencies for building the project.
-	
+
 ## Questions?
 
 Visit [support.leankit.com](http://support.leankit.com).
