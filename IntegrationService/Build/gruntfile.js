@@ -101,7 +101,8 @@
 
     grunt.unify.getModuleCode = function (file) {
         var code = grunt.file.read(file);
-        var i = code.indexOf('\n');
+        var moduleStart = code.indexOf("App.module(");
+        var i = code.indexOf('\n', moduleStart);
         code = code.substring(i);
         i = code.lastIndexOf('});');
         code = code.substring(0, i);
