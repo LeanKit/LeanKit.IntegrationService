@@ -4,7 +4,9 @@
   "devDependencies": {
     "grunt": "~0.4.1",
     "grunt-contrib-jshint": "~0.1.1",
-    "grunt-contrib-nodeunit": "~0.1.2"
+    "grunt-contrib-nodeunit": "~0.1.2",
+    "grunt-contrib-handlebars": "~0.6.0",
+    "grunt-contrib-uglify": "~0.2.7"
   },
   "main":"app"
 }
