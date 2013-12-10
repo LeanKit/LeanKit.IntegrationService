@@ -62,11 +62,11 @@ namespace IntegrationService.Targets.TFS
             Log.Debug("Polling TFS [{0}] for Work Items", project.Identity.TargetName);
 
 			//query a project for new items   
-	        var stateQuery = String.Format(" AND ({0})", String.Join(" or ", project.QueryStates.Select(x => "[System.State] = '" + x.Trim() + "'").ToList()));
+	        var stateQuery = string.Format(" AND ({0})", String.Join(" or ", project.QueryStates.Select(x => "[System.State] = '" + x.Trim() + "'").ToList()));
 	        var iterationQuery = "";
-			if (!String.IsNullOrEmpty(project.IterationPath))
+			if (!string.IsNullOrEmpty(project.IterationPath))
 	        {
-		        iterationQuery = String.Format(" AND [System.IterationPath] UNDER '{0}' ", project.IterationPath);
+		        iterationQuery = string.Format(" AND [System.IterationPath] UNDER '{0}' ", project.IterationPath);
 	        }
 
 	        var queryAsOfDate = QueryDate.AddMilliseconds(Configuration.PollingFrequency*-1.5).ToString("o");
@@ -88,8 +88,23 @@ namespace IntegrationService.Targets.TFS
 		                                    " FROM WorkItems " +
 		                                    " WHERE {0}" +
 		                                    " ORDER BY [System.TeamProject]", tfsQuery);
-            var query = new Query(_projectCollectionWorkItemStore, queryStr, null, false);
-            var cancelableAsyncResult = query.BeginQuery();
+		    if (_projectCollectionWorkItemStore == null)
+		    {
+			    "Reconnecting to TFS...".Info();
+				Init();
+		    }
+		    Query query;
+		    try
+		    {
+			    query = new Query(_projectCollectionWorkItemStore, queryStr, null, false);
+		    }
+		    catch (Exception ex)
+		    {
+			    Log.Error("Error creating TFS query. {0} ", ex.Message);
+				if (_projectCollectionWorkItemStore == null) Log.Error("Project Collection Work Item Store is null");
+			    throw;
+		    }
+		    var cancelableAsyncResult = query.BeginQuery();
 
             var changedItems = query.EndQuery(cancelableAsyncResult);
 
