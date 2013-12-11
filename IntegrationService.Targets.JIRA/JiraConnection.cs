@@ -118,6 +118,25 @@ namespace IntegrationService.Targets.JIRA
 					}
 				}
 			}
+			else
+			{
+				// JIRA 5.x has one list of statuses for all projects
+				// http://example.com:8080/jira/rest/api/2/status
+				request = new RestRequest("/rest/api/2/status", Method.GET);
+				response = _restClient.Execute(request);
+				if (response.StatusCode == HttpStatusCode.OK)
+				{
+					var jiraStates = new JsonSerializer<List<Status>>().DeserializeFromString(response.Content);
+					if (jiraStates != null && jiraStates.Any())
+					{
+						foreach (var jiraStatus in jiraStates)
+						{
+							if (!states.ContainsKey(jiraStatus.Name))
+								states.Add(jiraStatus.Name, new State(jiraStatus.Name));
+						}
+					}
+				}
+			}
 
 			return states.Values.ToList();
 		}
