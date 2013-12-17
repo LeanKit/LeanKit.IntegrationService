@@ -330,7 +330,7 @@ namespace IntegrationService.Targets.JIRA
 			else
 			{
                 var stateQuery = String.Format(" and ({0})", String.Join(" or ", project.QueryStates.Select(x => "status = '" + x.Trim() + "'").ToList()));
-				jqlQuery = string.Format("project=\"{0}\" {1} and updated > \"{2}\" order by created asc", project.Identity.Target, stateQuery, queryAsOfDate.ToString("yyyy/MM/dd hh:mm"));	
+				jqlQuery = string.Format("project=\"{0}\" {1} and updated > \"{2}\" order by created asc", project.Identity.Target, stateQuery, queryAsOfDate.ToString("yyyy/MM/dd HH:mm"));	
 			}
 
 			//https://yoursite.atlassian.net/rest/api/latest/search?jql=project=%22More+Tests%22+and+status=%22open%22+and+created+%3E+%222008/12/31+12:00%22+order+by+created+asc&fields=id,status,priority,summary,description
@@ -504,7 +504,7 @@ namespace IntegrationService.Targets.JIRA
 			{
 				if (tries > 0)
 				{
-					Log.Error(string.Format("Attempting to update external work item [{0}] attempt number [{1}]", card.ExternalCardID,
+					Log.Warn(string.Format("Attempting to update external work item [{0}] attempt number [{1}]", card.ExternalCardID,
 					                         tries));
 					// wait 5 seconds before trying again
 					Thread.Sleep(new TimeSpan(0, 0, 5));

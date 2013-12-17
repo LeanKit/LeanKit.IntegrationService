@@ -157,7 +157,7 @@ namespace IntegrationService.Targets
 					if (StopEvent.WaitOne(Configuration.PollingFrequency))
 						break;
 
-					QueryDate = DateTime.UtcNow;
+					QueryDate = DateTime.Now;
 				}
 			}
 		}
