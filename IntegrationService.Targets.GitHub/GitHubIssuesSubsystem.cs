@@ -343,7 +343,7 @@ namespace IntegrationService.Targets.GitHub
             var boardId = project.Identity.LeanKit;
         
             var mappedCardType = issue.LeanKitCardType(project);
-            var laneId = project.LaneFromState(issue.State);
+            var laneId = project.LanesFromState(issue.State).First();
             var card = new Card
             {
 			    Active = true,

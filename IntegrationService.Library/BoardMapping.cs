@@ -43,15 +43,15 @@ namespace IntegrationService
 		public IList<CardType> ValidCardTypes { get; set; }
 		public long ArchiveLaneId { get; set; }
 
-		public long LaneFromState(string state)
+		public List<long> LanesFromState(string state)
 		{
-			long laneId = LaneToStatesMap
+			var laneIds = LaneToStatesMap
 				.Where(x => x.Value.Contains(state))
-				.Select(x => x.Key)
-				.FirstOrDefault();
-			if (laneId == 0)
-				laneId = ValidLanes.Select(x => x.Id).First();
-			return laneId;
+				.Select(x => x.Key).ToList();
+			if (laneIds.Any())
+				return laneIds;
+			
+			return ValidLanes.Select(x => x.Id).ToList();			
 		}
 
 		public override string ToString() 
