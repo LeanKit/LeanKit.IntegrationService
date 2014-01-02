@@ -297,20 +297,19 @@ namespace IntegrationService.Targets.JIRA
 			// if it is not in that lane then move it to that lane
 			if (boardMapping.UpdateCardLanes && issue.Fields != null && issue.Fields.Status != null && !string.IsNullOrEmpty(issue.Fields.Status.Name)) 
 			{
-			    var laneId = boardMapping.LaneFromState(issue.Fields.Status.Name);
-
 				// if card is already in archive lane then we do not want to move it to the end lane
 				// because it is effectively the same thing with respect to integrating with TFS
-				if (card.LaneId == boardMapping.ArchiveLaneId) 
+				if (card.LaneId == boardMapping.ArchiveLaneId)
 				{
-					laneId = 0;
+					return;
 				}
 
-				if (laneId != 0) 
+				var laneIds = boardMapping.LanesFromState(issue.Fields.Status.Name);
+				if (laneIds.Any()) 
 				{
-					if (card.LaneId != laneId) 
+					if (!laneIds.Contains(card.LaneId)) 
 					{
-						LeanKit.MoveCard(boardMapping.Identity.LeanKit, card.Id, laneId, 0, "Moved Lane From Jira Issue");
+						LeanKit.MoveCard(boardMapping.Identity.LeanKit, card.Id, laneIds.First(), 0, "Moved Lane From Jira Issue");
 					}
 				}
 			}
@@ -389,7 +388,7 @@ namespace IntegrationService.Targets.JIRA
 
 	        var mappedCardType = issue.LeanKitCardType(project);
 
-            var laneId = project.LaneFromState(issue.Fields.Status.Name);
+            var laneId = project.LanesFromState(issue.Fields.Status.Name).First();
 
 	        var card = new Card
                 {

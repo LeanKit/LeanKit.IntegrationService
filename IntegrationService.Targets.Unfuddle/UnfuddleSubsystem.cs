@@ -359,7 +359,7 @@ namespace IntegrationService.Targets.Unfuddle
 
 	        var mappedCardType = ticket.LeanKitCardType(project);
 
-            var laneId = project.LaneFromState(ticket.Status);
+            var laneId = project.LanesFromState(ticket.Status).First();
 	        var card = new Card
                 {
                     Active = true,

@@ -147,7 +147,7 @@ namespace IntegrationService.Targets.TFS
 
             var mappedCardType = workItem.LeanKitCardType(project);
 
-            var laneId = project.LaneFromState(workItem.State);
+            var laneId = project.LanesFromState(workItem.State).First();
             var card = new Card
                 {
                     Active = true,
@@ -568,19 +568,22 @@ namespace IntegrationService.Targets.TFS
 			// if we have the state mapped to a lane then check to see if the card is in that lane
 			// if it is not in that lane then move it to that lane
 	        if (!project.UpdateCardLanes || string.IsNullOrEmpty(workItem.State)) return;
-	        var laneId = project.LaneFromState(workItem.State);
 
 	        // if card is already in archive lane then we do not want to move it to the end lane
 	        // because it is effectively the same thing with respect to integrating with TFS
-	        if (card.LaneId == project.ArchiveLaneId) 
+	        if (card.LaneId == project.ArchiveLaneId)
 	        {
-		        laneId = 0;
+		        return;
 	        }
 
-	        if (laneId == 0) return;
-	        if (card.LaneId != laneId) 
+			var laneIds = project.LanesFromState(workItem.State);
+
+	        if (laneIds.Any())
 	        {
-		        LeanKit.MoveCard(project.Identity.LeanKit, card.Id, laneId, 0, "Moved Lane From TFS Work Item");
+		        if (!laneIds.Contains(card.LaneId))
+		        {
+			        LeanKit.MoveCard(project.Identity.LeanKit, card.Id, laneIds.First(), 0, "Moved Lane From TFS Work Item");
+		        }
 	        }
         }
 
