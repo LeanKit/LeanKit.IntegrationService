@@ -582,6 +582,21 @@ namespace IntegrationService.Targets.TFS
 	        {
 		        if (!laneIds.Contains(card.LaneId))
 		        {
+					// first let's see if any of the lanes are sibling lanes, if so then 
+					// we should be using one of them. So we'll limit the results to just siblings
+					if (project.ValidLanes != null) {
+						var siblingLaneIds = (from siblingLaneId in laneIds
+											  let parentLane =
+												  project.ValidLanes.FirstOrDefault(x =>
+													  x.HasChildLanes &&
+													  x.ChildLaneIds.Contains(siblingLaneId) &&
+													  x.ChildLaneIds.Contains(card.LaneId))
+											  where parentLane != null
+											  select siblingLaneId).ToList();
+						if (siblingLaneIds.Any())
+							laneIds = siblingLaneIds;
+					}
+
 			        LeanKit.MoveCard(project.Identity.LeanKit, card.Id, laneIds.First(), 0, "Moved Lane From TFS Work Item");
 		        }
 	        }

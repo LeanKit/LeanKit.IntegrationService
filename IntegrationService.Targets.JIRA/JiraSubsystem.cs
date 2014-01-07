@@ -307,8 +307,24 @@ namespace IntegrationService.Targets.JIRA
 				var laneIds = boardMapping.LanesFromState(issue.Fields.Status.Name);
 				if (laneIds.Any()) 
 				{
-					if (!laneIds.Contains(card.LaneId)) 
+					if (!laneIds.Contains(card.LaneId))
 					{
+						// first let's see if any of the lanes are sibling lanes, if so then 
+						// we should be using one of them. So we'll limit the results to just siblings
+						if (boardMapping.ValidLanes != null)
+						{
+							var siblingLaneIds = (from siblingLaneId in laneIds
+							                             let parentLane =
+								                             boardMapping.ValidLanes.FirstOrDefault(x =>
+									                             x.HasChildLanes && 
+																 x.ChildLaneIds.Contains(siblingLaneId) &&
+									                             x.ChildLaneIds.Contains(card.LaneId))
+							                             where parentLane != null
+							                             select siblingLaneId).ToList();
+							if (siblingLaneIds.Any())
+								laneIds = siblingLaneIds;
+						}
+
 						LeanKit.MoveCard(boardMapping.Identity.LeanKit, card.Id, laneIds.First(), 0, "Moved Lane From Jira Issue");
 					}
 				}
