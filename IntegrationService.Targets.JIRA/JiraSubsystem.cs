@@ -82,7 +82,7 @@ namespace IntegrationService.Targets.JIRA
 				{
 					bool isDirty = false;
 
-					var updateJson = "{ \"fields\": { ";
+					string updateJson = "{ \"fields\": { ";
 
 					if (updatedItems.Contains("Title") && issueToUpdate.Fields.Summary != updatedCard.Title)
 					{
@@ -91,10 +91,10 @@ namespace IntegrationService.Targets.JIRA
 					}
 
 					updateJson += "\"summary\": \"" + issueToUpdate.Fields.Summary + "\"";
-
-					if (updatedItems.Contains("Description") && issueToUpdate.Fields.Description.SanitizeCardDescription() != updatedCard.Description)
+					
+					if (updatedItems.Contains("Description") && issueToUpdate.Fields.Description != updatedCard.Description)
 					{
-						var updatedDescription = updatedCard.Description;
+						string updatedDescription = updatedCard.Description;
 						if (!string.IsNullOrEmpty(updatedDescription)) 
 						{
 							updatedDescription = updatedDescription.Replace("<p>", "").Replace("</p>", "");
@@ -229,9 +229,9 @@ namespace IntegrationService.Targets.JIRA
 					saveCard = true;
 				}
 
-				if (issue.Fields.Description != null && issue.Fields.Description.SanitizeCardDescription() != card.Description)
+				if (issue.Fields.Description != null && issue.Fields.Description != card.Description)
 				{
-					card.Description = issue.Fields.Description.SanitizeCardDescription();
+					card.Description = issue.Fields.Description;
 					saveCard = true;
 				}
 
@@ -410,7 +410,7 @@ namespace IntegrationService.Targets.JIRA
                 {
                     Active = true,
                     Title = issue.Fields.Summary,
-                    Description = issue.Fields.Description.SanitizeCardDescription(),
+                    Description = issue.Fields.Description,
                     Priority = issue.LeanKitPriority(),
                     TypeId = mappedCardType.Id,
                     TypeName = mappedCardType.Name,

@@ -10,6 +10,8 @@ using System.Reflection;
 using IntegrationService.Targets.GitHub;
 using IntegrationService.Targets.JIRA;
 using IntegrationService.Targets.TFS;
+using IntegrationService.Targets.Unfuddle;
+using IntegrationService.Targets.MicrosoftProject;
 using IntegrationService.Util;
 using ServiceStack.ServiceHost;
 
@@ -50,6 +52,16 @@ namespace IntegrationService.API
 					string.Format("Connecting to GitHub (Pulls) using {0}", request).Debug();
 					var githubpulls = new GitHubPullsConnection();
 					result = githubpulls.Connect(request.Host, request.User, request.Password);
+					break;
+				case "unfuddle":
+					string.Format("Connecting to Unfuddle using {0}", request).Debug();
+					var unfuddle = new UnfuddleConnection();
+					result = unfuddle.Connect(request.Host, request.User, request.Password);
+					break;
+				case "microsoftproject":
+					string.Format("Connecting to Microsoft Project using {0}", request).Debug();
+					var microsoftproject = new MicrosoftProjectConnection();
+					result = microsoftproject.Connect(request.Host, request.User, request.Password);
 					break;
 			}
 
@@ -115,6 +127,14 @@ namespace IntegrationService.API
 					break;
 				case "githubpulls":
 					target = new GitHubPullsConnection();
+					result = target.Connect(request.Host, request.User, request.Password);
+					break;
+				case "unfuddle":
+					target = new UnfuddleConnection();
+					result = target.Connect(request.Host, request.User, request.Password);
+					break;
+				case "microsoftproject":
+					target = new MicrosoftProjectConnection();
 					result = target.Connect(request.Host, request.User, request.Password);
 					break;
 				default:

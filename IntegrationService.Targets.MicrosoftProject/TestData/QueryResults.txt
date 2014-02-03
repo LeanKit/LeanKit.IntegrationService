@@ -1,0 +1,719 @@
+MPP file type: 14
+Project Header: StartDate=1/22/2014 1:00:00 PM FinishDate=6/4/2014 7:00:00 PM
+
+Resource:  (Unique ID=0) Start= Finish=
+Resource: Management (Unique ID=1) Start=Wed Jan 22 08:00:00 EST 2014 Finish=Thu Mar 06 17:00:00 EST 2014
+Resource: Project Manager (Unique ID=2) Start=Thu Jan 23 13:00:00 EST 2014 Finish=Wed Jun 04 15:00:00 EDT 2014
+Resource: Analyst (Unique ID=3) Start=Mon Jan 27 13:00:00 EST 2014 Finish=Mon Mar 03 12:00:00 EST 2014
+Resource: Developer (Unique ID=4) Start=Fri Mar 07 08:00:00 EST 2014 Finish=Mon Apr 07 15:00:00 EDT 2014
+Resource: Testers (Unique ID=5) Start=Fri Mar 07 08:00:00 EST 2014 Finish=Wed May 14 15:00:00 EDT 2014
+Resource: Trainers (Unique ID=6) Start=Fri Mar 07 08:00:00 EST 2014 Finish=Fri May 09 15:00:00 EDT 2014
+Resource: Technical Communicators (Unique ID=7) Start=Fri Mar 07 08:00:00 EST 2014 Finish=Fri Apr 18 12:00:00 EDT 2014
+Resource: Deployment Team (Unique ID=8) Start=Wed May 14 15:00:00 EDT 2014 Finish=Fri May 30 15:00:00 EDT 2014
+
+Task: Software Development ID=0 Unique ID=0 (Start Date=1/22/2014 1:00:00 PM Finish Date=6/4/2014 7:00:00 PM Duration=95.75d Baseline Duration=0.0d Outline Level=0 Outline Number=0 Recurring=False)
+Task: Scope ID=1 Unique ID=1 (Start Date=1/22/2014 1:00:00 PM Finish Date=1/27/2014 5:00:00 PM Duration=3.5d Baseline Duration=0.0d Outline Level=1 Outline Number=1 Recurring=False)
+Task: Determine project scope ID=2 Unique ID=2 (Start Date=1/22/2014 1:00:00 PM Finish Date=1/22/2014 5:00:00 PM Duration=4.0h Baseline Duration=0.0d Outline Level=2 Outline Number=1.1 Recurring=False)
+Task: Secure project sponsorship ID=3 Unique ID=3 (Start Date=1/22/2014 6:00:00 PM Finish Date=1/23/2014 5:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=1.2 Recurring=False)
+Task: Define preliminary resources ID=4 Unique ID=4 (Start Date=1/23/2014 6:00:00 PM Finish Date=1/24/2014 5:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=1.3 Recurring=False)
+Task: Secure core resources ID=5 Unique ID=5 (Start Date=1/24/2014 6:00:00 PM Finish Date=1/27/2014 5:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=1.4 Recurring=False)
+Task: Scope complete ID=6 Unique ID=6 (Start Date=1/27/2014 5:00:00 PM Finish Date=1/27/2014 5:00:00 PM Duration=0.0d Baseline Duration=0.0d Outline Level=2 Outline Number=1.5 Recurring=False)
+Task: Analysis/Software Requirements ID=7 Unique ID=7 (Start Date=1/27/2014 6:00:00 PM Finish Date=2/14/2014 5:00:00 PM Duration=14.0d Baseline Duration=0.0d Outline Level=1 Outline Number=2 Recurring=False)
+Task: Conduct needs analysis ID=8 Unique ID=8 (Start Date=1/27/2014 6:00:00 PM Finish Date=2/3/2014 5:00:00 PM Duration=5.0d Baseline Duration=0.0d Outline Level=2 Outline Number=2.1 Recurring=False)
+Task: Draft preliminary software specifications ID=9 Unique ID=9 (Start Date=2/3/2014 6:00:00 PM Finish Date=2/6/2014 5:00:00 PM Duration=3.0d Baseline Duration=0.0d Outline Level=2 Outline Number=2.2 Recurring=False)
+Task: Develop preliminary budget ID=10 Unique ID=10 (Start Date=2/6/2014 6:00:00 PM Finish Date=2/10/2014 5:00:00 PM Duration=2.0d Baseline Duration=0.0d Outline Level=2 Outline Number=2.3 Recurring=False)
+Task: Review software specifications/budget with team ID=11 Unique ID=11 (Start Date=2/10/2014 6:00:00 PM Finish Date=2/10/2014 10:00:00 PM Duration=4.0h Baseline Duration=0.0d Outline Level=2 Outline Number=2.4 Recurring=False)
+Task: Incorporate feedback on software specifications ID=12 Unique ID=12 (Start Date=2/11/2014 1:00:00 PM Finish Date=2/11/2014 10:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=2.5 Recurring=False)
+Task: Develop delivery timeline ID=13 Unique ID=13 (Start Date=2/12/2014 1:00:00 PM Finish Date=2/12/2014 10:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=2.6 Recurring=False)
+Task: Obtain approvals to proceed (concept, timeline, budget) ID=14 Unique ID=14 (Start Date=2/13/2014 1:00:00 PM Finish Date=2/13/2014 5:00:00 PM Duration=4.0h Baseline Duration=0.0d Outline Level=2 Outline Number=2.7 Recurring=False)
+Task: Secure required resources ID=15 Unique ID=15 (Start Date=2/13/2014 6:00:00 PM Finish Date=2/14/2014 5:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=2.8 Recurring=False)
+Task: Analysis complete ID=16 Unique ID=16 (Start Date=2/14/2014 5:00:00 PM Finish Date=2/14/2014 5:00:00 PM Duration=0.0d Baseline Duration=0.0d Outline Level=2 Outline Number=2.9 Recurring=False)
+Task: Design ID=17 Unique ID=17 (Start Date=2/14/2014 6:00:00 PM Finish Date=3/6/2014 10:00:00 PM Duration=14.5d Baseline Duration=0.0d Outline Level=1 Outline Number=3 Recurring=False)
+Task: Review preliminary software specifications ID=18 Unique ID=18 (Start Date=2/14/2014 6:00:00 PM Finish Date=2/18/2014 5:00:00 PM Duration=2.0d Baseline Duration=0.0d Outline Level=2 Outline Number=3.1 Recurring=False)
+Task: Develop functional specifications ID=19 Unique ID=19 (Start Date=2/18/2014 6:00:00 PM Finish Date=2/25/2014 5:00:00 PM Duration=5.0d Baseline Duration=0.0d Outline Level=2 Outline Number=3.2 Recurring=False)
+Task: Develop prototype based on functional specifications ID=20 Unique ID=20 (Start Date=2/25/2014 6:00:00 PM Finish Date=3/3/2014 5:00:00 PM Duration=4.0d Baseline Duration=0.0d Outline Level=2 Outline Number=3.3 Recurring=False)
+Task: Review functional specifications ID=21 Unique ID=21 (Start Date=3/3/2014 6:00:00 PM Finish Date=3/5/2014 5:00:00 PM Duration=2.0d Baseline Duration=0.0d Outline Level=2 Outline Number=3.4 Recurring=False)
+Task: Incorporate feedback into functional specifications ID=22 Unique ID=22 (Start Date=3/5/2014 6:00:00 PM Finish Date=3/6/2014 5:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=3.5 Recurring=False)
+Task: Obtain approval to proceed ID=23 Unique ID=23 (Start Date=3/6/2014 6:00:00 PM Finish Date=3/6/2014 10:00:00 PM Duration=4.0h Baseline Duration=0.0d Outline Level=2 Outline Number=3.6 Recurring=False)
+Task: Design complete ID=24 Unique ID=24 (Start Date=3/6/2014 10:00:00 PM Finish Date=3/6/2014 10:00:00 PM Duration=0.0d Baseline Duration=0.0d Outline Level=2 Outline Number=3.7 Recurring=False)
+Task: Development ID=25 Unique ID=25 (Start Date=3/7/2014 1:00:00 PM Finish Date=4/7/2014 7:00:00 PM Duration=21.75d Baseline Duration=0.0d Outline Level=1 Outline Number=4 Recurring=False)
+Task: Review functional specifications ID=26 Unique ID=26 (Start Date=3/7/2014 1:00:00 PM Finish Date=3/7/2014 10:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=4.1 Recurring=False)
+Task: Identify modular/tiered design parameters ID=27 Unique ID=27 (Start Date=3/10/2014 12:00:00 PM Finish Date=3/10/2014 9:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=4.2 Recurring=False)
+Task: Assign development staff ID=28 Unique ID=28 (Start Date=3/11/2014 12:00:00 PM Finish Date=3/11/2014 9:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=4.3 Recurring=False)
+Task: Develop code ID=29 Unique ID=29 (Start Date=3/12/2014 12:00:00 PM Finish Date=4/1/2014 9:00:00 PM Duration=15.0d Baseline Duration=0.0d Outline Level=2 Outline Number=4.4 Recurring=False)
+Task: Developer testing (primary debugging) ID=30 Unique ID=30 (Start Date=3/17/2014 7:00:00 PM Finish Date=4/7/2014 7:00:00 PM Duration=15.0d Baseline Duration=0.0d Outline Level=2 Outline Number=4.5 Recurring=False)
+Task: Development complete ID=31 Unique ID=31 (Start Date=4/7/2014 7:00:00 PM Finish Date=4/7/2014 7:00:00 PM Duration=0.0d Baseline Duration=0.0d Outline Level=2 Outline Number=4.6 Recurring=False)
+Task: Testing ID=32 Unique ID=32 (Start Date=3/7/2014 1:00:00 PM Finish Date=5/14/2014 7:00:00 PM Duration=48.75d Baseline Duration=0.0d Outline Level=1 Outline Number=5 Recurring=False)
+Task: Develop unit test plans using product specifications ID=33 Unique ID=33 (Start Date=3/7/2014 1:00:00 PM Finish Date=3/12/2014 9:00:00 PM Duration=4.0d Baseline Duration=0.0d Outline Level=2 Outline Number=5.1 Recurring=False)
+Task: Develop integration test plans using product specifications ID=34 Unique ID=34 (Start Date=3/7/2014 1:00:00 PM Finish Date=3/12/2014 9:00:00 PM Duration=4.0d Baseline Duration=0.0d Outline Level=2 Outline Number=5.2 Recurring=False)
+Task: Unit Testing ID=35 Unique ID=35 (Start Date=4/7/2014 7:00:00 PM Finish Date=4/28/2014 7:00:00 PM Duration=15.0d Baseline Duration=0.0d Outline Level=2 Outline Number=5.3 Recurring=False)
+Task: Review modular code ID=36 Unique ID=36 (Start Date=4/7/2014 7:00:00 PM Finish Date=4/14/2014 7:00:00 PM Duration=5.0d Baseline Duration=0.0d Outline Level=3 Outline Number=5.3.1 Recurring=False)
+Task: Test component modules to product specifications ID=37 Unique ID=37 (Start Date=4/14/2014 7:00:00 PM Finish Date=4/16/2014 7:00:00 PM Duration=2.0d Baseline Duration=0.0d Outline Level=3 Outline Number=5.3.2 Recurring=False)
+Task: Identify anomalies to product specifications ID=38 Unique ID=38 (Start Date=4/16/2014 7:00:00 PM Finish Date=4/21/2014 7:00:00 PM Duration=3.0d Baseline Duration=0.0d Outline Level=3 Outline Number=5.3.3 Recurring=False)
+Task: Modify code ID=39 Unique ID=39 (Start Date=4/21/2014 7:00:00 PM Finish Date=4/24/2014 7:00:00 PM Duration=3.0d Baseline Duration=0.0d Outline Level=3 Outline Number=5.3.4 Recurring=False)
+Task: Re-test modified code ID=40 Unique ID=40 (Start Date=4/24/2014 7:00:00 PM Finish Date=4/28/2014 7:00:00 PM Duration=2.0d Baseline Duration=0.0d Outline Level=3 Outline Number=5.3.5 Recurring=False)
+Task: Unit testing complete ID=41 Unique ID=41 (Start Date=4/28/2014 7:00:00 PM Finish Date=4/28/2014 7:00:00 PM Duration=0.0d Baseline Duration=0.0d Outline Level=3 Outline Number=5.3.6 Recurring=False)
+Task: Integration Testing ID=42 Unique ID=42 (Start Date=4/28/2014 7:00:00 PM Finish Date=5/14/2014 7:00:00 PM Duration=12.0d Baseline Duration=0.0d Outline Level=2 Outline Number=5.4 Recurring=False)
+Task: Test module integration ID=43 Unique ID=43 (Start Date=4/28/2014 7:00:00 PM Finish Date=5/5/2014 7:00:00 PM Duration=5.0d Baseline Duration=0.0d Outline Level=3 Outline Number=5.4.1 Recurring=False)
+Task: Identify anomalies to specifications ID=44 Unique ID=44 (Start Date=5/5/2014 7:00:00 PM Finish Date=5/7/2014 7:00:00 PM Duration=2.0d Baseline Duration=0.0d Outline Level=3 Outline Number=5.4.2 Recurring=False)
+Task: Modify code ID=45 Unique ID=45 (Start Date=5/7/2014 7:00:00 PM Finish Date=5/12/2014 7:00:00 PM Duration=3.0d Baseline Duration=0.0d Outline Level=3 Outline Number=5.4.3 Recurring=False)
+Task: Re-test modified code ID=46 Unique ID=46 (Start Date=5/12/2014 7:00:00 PM Finish Date=5/14/2014 7:00:00 PM Duration=2.0d Baseline Duration=0.0d Outline Level=3 Outline Number=5.4.4 Recurring=False)
+Task: Integration testing complete ID=47 Unique ID=47 (Start Date=5/14/2014 7:00:00 PM Finish Date=5/14/2014 7:00:00 PM Duration=0.0d Baseline Duration=0.0d Outline Level=3 Outline Number=5.4.5 Recurring=False)
+Task: Training ID=48 Unique ID=48 (Start Date=3/7/2014 1:00:00 PM Finish Date=5/9/2014 7:00:00 PM Duration=45.75d Baseline Duration=0.0d Outline Level=1 Outline Number=6 Recurring=False)
+Task: Develop training specifications for end users ID=49 Unique ID=49 (Start Date=3/7/2014 1:00:00 PM Finish Date=3/11/2014 9:00:00 PM Duration=3.0d Baseline Duration=0.0d Outline Level=2 Outline Number=6.1 Recurring=False)
+Task: Develop training specifications for helpdesk support staff ID=50 Unique ID=50 (Start Date=3/7/2014 1:00:00 PM Finish Date=3/11/2014 9:00:00 PM Duration=3.0d Baseline Duration=0.0d Outline Level=2 Outline Number=6.2 Recurring=False)
+Task: Identify training delivery methodology (computer based training, classroom, etc.) ID=51 Unique ID=51 (Start Date=3/7/2014 1:00:00 PM Finish Date=3/10/2014 9:00:00 PM Duration=2.0d Baseline Duration=0.0d Outline Level=2 Outline Number=6.3 Recurring=False)
+Task: Develop training materials ID=52 Unique ID=52 (Start Date=4/7/2014 7:00:00 PM Finish Date=4/28/2014 7:00:00 PM Duration=3.0w Baseline Duration=0.0d Outline Level=2 Outline Number=6.4 Recurring=False)
+Task: Conduct training usability study ID=53 Unique ID=53 (Start Date=4/28/2014 7:00:00 PM Finish Date=5/2/2014 7:00:00 PM Duration=4.0d Baseline Duration=0.0d Outline Level=2 Outline Number=6.5 Recurring=False)
+Task: Finalize training materials ID=54 Unique ID=54 (Start Date=5/2/2014 7:00:00 PM Finish Date=5/7/2014 7:00:00 PM Duration=3.0d Baseline Duration=0.0d Outline Level=2 Outline Number=6.6 Recurring=False)
+Task: Develop training delivery mechanism ID=55 Unique ID=55 (Start Date=5/7/2014 7:00:00 PM Finish Date=5/9/2014 7:00:00 PM Duration=2.0d Baseline Duration=0.0d Outline Level=2 Outline Number=6.7 Recurring=False)
+Task: Training materials complete ID=56 Unique ID=56 (Start Date=5/9/2014 7:00:00 PM Finish Date=5/9/2014 7:00:00 PM Duration=0.0d Baseline Duration=0.0d Outline Level=2 Outline Number=6.8 Recurring=False)
+Task: Documentation ID=57 Unique ID=57 (Start Date=3/7/2014 1:00:00 PM Finish Date=4/18/2014 4:00:00 PM Duration=30.5d Baseline Duration=0.0d Outline Level=1 Outline Number=7 Recurring=False)
+Task: Develop Help specification ID=58 Unique ID=58 (Start Date=3/7/2014 1:00:00 PM Finish Date=3/7/2014 10:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=7.1 Recurring=False)
+Task: Develop Help system ID=59 Unique ID=59 (Start Date=3/21/2014 5:00:00 PM Finish Date=4/11/2014 4:00:00 PM Duration=3.0w Baseline Duration=0.0d Outline Level=2 Outline Number=7.2 Recurring=False)
+Task: Review Help documentation ID=60 Unique ID=60 (Start Date=4/11/2014 5:00:00 PM Finish Date=4/16/2014 4:00:00 PM Duration=3.0d Baseline Duration=0.0d Outline Level=2 Outline Number=7.3 Recurring=False)
+Task: Incorporate Help documentation feedback ID=61 Unique ID=61 (Start Date=4/16/2014 5:00:00 PM Finish Date=4/18/2014 4:00:00 PM Duration=2.0d Baseline Duration=0.0d Outline Level=2 Outline Number=7.4 Recurring=False)
+Task: Develop user manuals specifications ID=62 Unique ID=62 (Start Date=3/7/2014 1:00:00 PM Finish Date=3/10/2014 9:00:00 PM Duration=2.0d Baseline Duration=0.0d Outline Level=2 Outline Number=7.5 Recurring=False)
+Task: Develop user manuals ID=63 Unique ID=63 (Start Date=3/21/2014 5:00:00 PM Finish Date=4/11/2014 4:00:00 PM Duration=3.0w Baseline Duration=0.0d Outline Level=2 Outline Number=7.6 Recurring=False)
+Task: Review all user documentation ID=64 Unique ID=64 (Start Date=4/11/2014 5:00:00 PM Finish Date=4/15/2014 4:00:00 PM Duration=2.0d Baseline Duration=0.0d Outline Level=2 Outline Number=7.7 Recurring=False)
+Task: Incorporate user documentation feedback ID=65 Unique ID=65 (Start Date=4/15/2014 5:00:00 PM Finish Date=4/17/2014 4:00:00 PM Duration=2.0d Baseline Duration=0.0d Outline Level=2 Outline Number=7.8 Recurring=False)
+Task: Documentation complete ID=66 Unique ID=66 (Start Date=4/18/2014 4:00:00 PM Finish Date=4/18/2014 4:00:00 PM Duration=0.0d Baseline Duration=0.0d Outline Level=2 Outline Number=7.9 Recurring=False)
+Task: Pilot ID=67 Unique ID=67 (Start Date=2/14/2014 6:00:00 PM Finish Date=5/23/2014 7:00:00 PM Duration=70.25d Baseline Duration=0.0d Outline Level=1 Outline Number=8 Recurring=False)
+Task: Identify test group ID=68 Unique ID=68 (Start Date=2/14/2014 6:00:00 PM Finish Date=2/17/2014 5:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=8.1 Recurring=False)
+Task: Develop software delivery mechanism ID=69 Unique ID=69 (Start Date=2/17/2014 6:00:00 PM Finish Date=2/18/2014 5:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=8.2 Recurring=False)
+Task: Install/deploy software ID=70 Unique ID=70 (Start Date=5/14/2014 7:00:00 PM Finish Date=5/15/2014 7:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=8.3 Recurring=False)
+Task: Obtain user feedback ID=71 Unique ID=71 (Start Date=5/15/2014 7:00:00 PM Finish Date=5/22/2014 7:00:00 PM Duration=1.0w Baseline Duration=0.0d Outline Level=2 Outline Number=8.4 Recurring=False)
+Task: Evaluate testing information ID=72 Unique ID=72 (Start Date=5/22/2014 7:00:00 PM Finish Date=5/23/2014 7:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=8.5 Recurring=False)
+Task: Pilot complete ID=73 Unique ID=73 (Start Date=5/23/2014 7:00:00 PM Finish Date=5/23/2014 7:00:00 PM Duration=0.0d Baseline Duration=0.0d Outline Level=2 Outline Number=8.6 Recurring=False)
+Task: Deployment ID=74 Unique ID=74 (Start Date=5/23/2014 7:00:00 PM Finish Date=5/30/2014 7:00:00 PM Duration=5.0d Baseline Duration=0.0d Outline Level=1 Outline Number=9 Recurring=False)
+Task: Determine final deployment strategy ID=75 Unique ID=75 (Start Date=5/23/2014 7:00:00 PM Finish Date=5/26/2014 7:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=9.1 Recurring=False)
+Task: Develop deployment methodology ID=76 Unique ID=76 (Start Date=5/26/2014 7:00:00 PM Finish Date=5/27/2014 7:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=9.2 Recurring=False)
+Task: Secure deployment resources ID=77 Unique ID=77 (Start Date=5/27/2014 7:00:00 PM Finish Date=5/28/2014 7:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=9.3 Recurring=False)
+Task: Train support staff ID=78 Unique ID=78 (Start Date=5/28/2014 7:00:00 PM Finish Date=5/29/2014 7:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=9.4 Recurring=False)
+Task: Deploy software ID=79 Unique ID=79 (Start Date=5/29/2014 7:00:00 PM Finish Date=5/30/2014 7:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=9.5 Recurring=False)
+Task: Deployment complete ID=80 Unique ID=80 (Start Date=5/30/2014 7:00:00 PM Finish Date=5/30/2014 7:00:00 PM Duration=0.0d Baseline Duration=0.0d Outline Level=2 Outline Number=9.6 Recurring=False)
+Task: Post Implementation Review ID=81 Unique ID=81 (Start Date=5/30/2014 7:00:00 PM Finish Date=6/4/2014 7:00:00 PM Duration=3.0d Baseline Duration=0.0d Outline Level=1 Outline Number=10 Recurring=False)
+Task: Document lessons learned ID=82 Unique ID=82 (Start Date=5/30/2014 7:00:00 PM Finish Date=6/2/2014 7:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=10.1 Recurring=False)
+Task: Distribute to team members ID=83 Unique ID=83 (Start Date=6/2/2014 7:00:00 PM Finish Date=6/3/2014 7:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=10.2 Recurring=False)
+Task: Create software maintenance team ID=84 Unique ID=84 (Start Date=6/3/2014 7:00:00 PM Finish Date=6/4/2014 7:00:00 PM Duration=1.0d Baseline Duration=0.0d Outline Level=2 Outline Number=10.3 Recurring=False)
+Task: Post implementation review complete ID=85 Unique ID=85 (Start Date=6/4/2014 7:00:00 PM Finish Date=6/4/2014 7:00:00 PM Duration=0.0d Baseline Duration=0.0d Outline Level=2 Outline Number=10.4 Recurring=False)
+Task: Software development template complete ID=86 Unique ID=86 (Start Date=6/4/2014 7:00:00 PM Finish Date=6/4/2014 7:00:00 PM Duration=0.0d Baseline Duration=0.0d Outline Level=1 Outline Number=11 Recurring=False)
+
+Assignment: Task=Scope complete Resource=(null resource)
+Assignment: Task=Analysis complete Resource=(null resource)
+Assignment: Task=Design complete Resource=(null resource)
+Assignment: Task=Development complete Resource=(null resource)
+Assignment: Task=Unit testing complete Resource=(null resource)
+Assignment: Task=Integration testing complete Resource=(null resource)
+Assignment: Task=Training materials complete Resource=(null resource)
+Assignment: Task=Documentation complete Resource=(null resource)
+Assignment: Task=Develop software delivery mechanism Resource=(null resource)
+Assignment: Task=Pilot complete Resource=(null resource)
+Assignment: Task=Deployment complete Resource=(null resource)
+Assignment: Task=Post implementation review complete Resource=(null resource)
+Assignment: Task=Software development template complete Resource=(null resource)
+Assignment: Task=Determine project scope Resource=Management
+Assignment: Task=Secure project sponsorship Resource=Management
+Assignment: Task=Define preliminary resources Resource=Project Manager
+Assignment: Task=Secure core resources Resource=Project Manager
+Assignment: Task=Conduct needs analysis Resource=Analyst
+Assignment: Task=Draft preliminary software specifications Resource=Analyst
+Assignment: Task=Develop preliminary budget Resource=Project Manager
+Assignment: Task=Review software specifications/budget with team Resource=Project Manager
+Assignment: Task=Review software specifications/budget with team Resource=Analyst
+Assignment: Task=Incorporate feedback on software specifications Resource=Analyst
+Assignment: Task=Develop delivery timeline Resource=Project Manager
+Assignment: Task=Obtain approvals to proceed (concept, timeline, budget) Resource=Management
+Assignment: Task=Obtain approvals to proceed (concept, timeline, budget) Resource=Project Manager
+Assignment: Task=Secure required resources Resource=Project Manager
+Assignment: Task=Review preliminary software specifications Resource=Analyst
+Assignment: Task=Develop functional specifications Resource=Analyst
+Assignment: Task=Develop prototype based on functional specifications Resource=Analyst
+Assignment: Task=Review functional specifications Resource=Management
+Assignment: Task=Incorporate feedback into functional specifications Resource=Management
+Assignment: Task=Obtain approval to proceed Resource=Management
+Assignment: Task=Obtain approval to proceed Resource=Project Manager
+Assignment: Task=Review functional specifications Resource=Developer
+Assignment: Task=Identify modular/tiered design parameters Resource=Developer
+Assignment: Task=Assign development staff Resource=Developer
+Assignment: Task=Develop code Resource=Developer
+Assignment: Task=Developer testing (primary debugging) Resource=Developer
+Assignment: Task=Develop unit test plans using product specifications Resource=Testers
+Assignment: Task=Develop integration test plans using product specifications Resource=Testers
+Assignment: Task=Review modular code Resource=Testers
+Assignment: Task=Test component modules to product specifications Resource=Testers
+Assignment: Task=Identify anomalies to product specifications Resource=Testers
+Assignment: Task=Modify code Resource=Testers
+Assignment: Task=Re-test modified code Resource=Testers
+Assignment: Task=Test module integration Resource=Testers
+Assignment: Task=Identify anomalies to specifications Resource=Testers
+Assignment: Task=Modify code Resource=Testers
+Assignment: Task=Re-test modified code Resource=Testers
+Assignment: Task=Develop training specifications for end users Resource=Trainers
+Assignment: Task=Develop training specifications for helpdesk support staff Resource=Trainers
+Assignment: Task=Identify training delivery methodology (computer based training, classroom, etc.) Resource=Trainers
+Assignment: Task=Develop training materials Resource=Trainers
+Assignment: Task=Conduct training usability study Resource=Trainers
+Assignment: Task=Finalize training materials Resource=Trainers
+Assignment: Task=Develop training delivery mechanism Resource=Trainers
+Assignment: Task=Develop Help specification Resource=Technical Communicators
+Assignment: Task=Develop Help system Resource=Technical Communicators
+Assignment: Task=Review Help documentation Resource=Technical Communicators
+Assignment: Task=Incorporate Help documentation feedback Resource=Technical Communicators
+Assignment: Task=Develop user manuals specifications Resource=Technical Communicators
+Assignment: Task=Develop user manuals Resource=Technical Communicators
+Assignment: Task=Review all user documentation Resource=Technical Communicators
+Assignment: Task=Incorporate user documentation feedback Resource=Technical Communicators
+Assignment: Task=Identify test group Resource=Project Manager
+Assignment: Task=Install/deploy software Resource=Deployment Team
+Assignment: Task=Obtain user feedback Resource=Deployment Team
+Assignment: Task=Evaluate testing information Resource=Deployment Team
+Assignment: Task=Determine final deployment strategy Resource=Deployment Team
+Assignment: Task=Develop deployment methodology Resource=Deployment Team
+Assignment: Task=Secure deployment resources Resource=Deployment Team
+Assignment: Task=Train support staff Resource=Deployment Team
+Assignment: Task=Deploy software Resource=Deployment Team
+Assignment: Task=Document lessons learned Resource=Project Manager
+Assignment: Task=Distribute to team members Resource=Project Manager
+Assignment: Task=Create software maintenance team Resource=Project Manager
+
+Assignments for task Software Development:
+Assignments for task Scope:
+Assignments for task Determine project scope:
+   Management
+Assignments for task Secure project sponsorship:
+   Management
+Assignments for task Define preliminary resources:
+   Project Manager
+Assignments for task Secure core resources:
+   Project Manager
+Assignments for task Scope complete:
+   (null resource)
+Assignments for task Analysis/Software Requirements:
+Assignments for task Conduct needs analysis:
+   Analyst
+Assignments for task Draft preliminary software specifications:
+   Analyst
+Assignments for task Develop preliminary budget:
+   Project Manager
+Assignments for task Review software specifications/budget with team:
+   Project Manager
+   Analyst
+Assignments for task Incorporate feedback on software specifications:
+   Analyst
+Assignments for task Develop delivery timeline:
+   Project Manager
+Assignments for task Obtain approvals to proceed (concept, timeline, budget):
+   Management
+   Project Manager
+Assignments for task Secure required resources:
+   Project Manager
+Assignments for task Analysis complete:
+   (null resource)
+Assignments for task Design:
+Assignments for task Review preliminary software specifications:
+   Analyst
+Assignments for task Develop functional specifications:
+   Analyst
+Assignments for task Develop prototype based on functional specifications:
+   Analyst
+Assignments for task Review functional specifications:
+   Management
+Assignments for task Incorporate feedback into functional specifications:
+   Management
+Assignments for task Obtain approval to proceed:
+   Management
+   Project Manager
+Assignments for task Design complete:
+   (null resource)
+Assignments for task Development:
+Assignments for task Review functional specifications:
+   Developer
+Assignments for task Identify modular/tiered design parameters:
+   Developer
+Assignments for task Assign development staff:
+   Developer
+Assignments for task Develop code:
+   Developer
+Assignments for task Developer testing (primary debugging):
+   Developer
+Assignments for task Development complete:
+   (null resource)
+Assignments for task Testing:
+Assignments for task Develop unit test plans using product specifications:
+   Testers
+Assignments for task Develop integration test plans using product specifications:
+   Testers
+Assignments for task Unit Testing:
+Assignments for task Review modular code:
+   Testers
+Assignments for task Test component modules to product specifications:
+   Testers
+Assignments for task Identify anomalies to product specifications:
+   Testers
+Assignments for task Modify code:
+   Testers
+Assignments for task Re-test modified code:
+   Testers
+Assignments for task Unit testing complete:
+   (null resource)
+Assignments for task Integration Testing:
+Assignments for task Test module integration:
+   Testers
+Assignments for task Identify anomalies to specifications:
+   Testers
+Assignments for task Modify code:
+   Testers
+Assignments for task Re-test modified code:
+   Testers
+Assignments for task Integration testing complete:
+   (null resource)
+Assignments for task Training:
+Assignments for task Develop training specifications for end users:
+   Trainers
+Assignments for task Develop training specifications for helpdesk support staff:
+   Trainers
+Assignments for task Identify training delivery methodology (computer based training, classroom, etc.):
+   Trainers
+Assignments for task Develop training materials:
+   Trainers
+Assignments for task Conduct training usability study:
+   Trainers
+Assignments for task Finalize training materials:
+   Trainers
+Assignments for task Develop training delivery mechanism:
+   Trainers
+Assignments for task Training materials complete:
+   (null resource)
+Assignments for task Documentation:
+Assignments for task Develop Help specification:
+   Technical Communicators
+Assignments for task Develop Help system:
+   Technical Communicators
+Assignments for task Review Help documentation:
+   Technical Communicators
+Assignments for task Incorporate Help documentation feedback:
+   Technical Communicators
+Assignments for task Develop user manuals specifications:
+   Technical Communicators
+Assignments for task Develop user manuals:
+   Technical Communicators
+Assignments for task Review all user documentation:
+   Technical Communicators
+Assignments for task Incorporate user documentation feedback:
+   Technical Communicators
+Assignments for task Documentation complete:
+   (null resource)
+Assignments for task Pilot:
+Assignments for task Identify test group:
+   Project Manager
+Assignments for task Develop software delivery mechanism:
+   (null resource)
+Assignments for task Install/deploy software:
+   Deployment Team
+Assignments for task Obtain user feedback:
+   Deployment Team
+Assignments for task Evaluate testing information:
+   Deployment Team
+Assignments for task Pilot complete:
+   (null resource)
+Assignments for task Deployment:
+Assignments for task Determine final deployment strategy:
+   Deployment Team
+Assignments for task Develop deployment methodology:
+   Deployment Team
+Assignments for task Secure deployment resources:
+   Deployment Team
+Assignments for task Train support staff:
+   Deployment Team
+Assignments for task Deploy software:
+   Deployment Team
+Assignments for task Deployment complete:
+   (null resource)
+Assignments for task Post Implementation Review:
+Assignments for task Document lessons learned:
+   Project Manager
+Assignments for task Distribute to team members:
+   Project Manager
+Assignments for task Create software maintenance team:
+   Project Manager
+Assignments for task Post implementation review complete:
+   (null resource)
+Assignments for task Software development template complete:
+   (null resource)
+
+Assignments for resource :
+Assignments for resource Management:
+   Determine project scope
+   Secure project sponsorship
+   Obtain approvals to proceed (concept, timeline, budget)
+   Review functional specifications
+   Incorporate feedback into functional specifications
+   Obtain approval to proceed
+Assignments for resource Project Manager:
+   Define preliminary resources
+   Secure core resources
+   Develop preliminary budget
+   Review software specifications/budget with team
+   Develop delivery timeline
+   Obtain approvals to proceed (concept, timeline, budget)
+   Secure required resources
+   Obtain approval to proceed
+   Identify test group
+   Document lessons learned
+   Distribute to team members
+   Create software maintenance team
+Assignments for resource Analyst:
+   Conduct needs analysis
+   Draft preliminary software specifications
+   Review software specifications/budget with team
+   Incorporate feedback on software specifications
+   Review preliminary software specifications
+   Develop functional specifications
+   Develop prototype based on functional specifications
+Assignments for resource Developer:
+   Review functional specifications
+   Identify modular/tiered design parameters
+   Assign development staff
+   Develop code
+   Developer testing (primary debugging)
+Assignments for resource Testers:
+   Develop unit test plans using product specifications
+   Develop integration test plans using product specifications
+   Review modular code
+   Test component modules to product specifications
+   Identify anomalies to product specifications
+   Modify code
+   Re-test modified code
+   Test module integration
+   Identify anomalies to specifications
+   Modify code
+   Re-test modified code
+Assignments for resource Trainers:
+   Develop training specifications for end users
+   Develop training specifications for helpdesk support staff
+   Identify training delivery methodology (computer based training, classroom, etc.)
+   Develop training materials
+   Conduct training usability study
+   Finalize training materials
+   Develop training delivery mechanism
+Assignments for resource Technical Communicators:
+   Develop Help specification
+   Develop Help system
+   Review Help documentation
+   Incorporate Help documentation feedback
+   Develop user manuals specifications
+   Develop user manuals
+   Review all user documentation
+   Incorporate user documentation feedback
+Assignments for resource Deployment Team:
+   Install/deploy software
+   Obtain user feedback
+   Evaluate testing information
+   Determine final deployment strategy
+   Develop deployment methodology
+   Secure deployment resources
+   Train support staff
+   Deploy software
+
+Task: Software Development
+ Task: Scope
+  Task: Determine project scope
+  Task: Secure project sponsorship
+  Task: Define preliminary resources
+  Task: Secure core resources
+  Task: Scope complete
+ Task: Analysis/Software Requirements
+  Task: Conduct needs analysis
+  Task: Draft preliminary software specifications
+  Task: Develop preliminary budget
+  Task: Review software specifications/budget with team
+  Task: Incorporate feedback on software specifications
+  Task: Develop delivery timeline
+  Task: Obtain approvals to proceed (concept, timeline, budget)
+  Task: Secure required resources
+  Task: Analysis complete
+ Task: Design
+  Task: Review preliminary software specifications
+  Task: Develop functional specifications
+  Task: Develop prototype based on functional specifications
+  Task: Review functional specifications
+  Task: Incorporate feedback into functional specifications
+  Task: Obtain approval to proceed
+  Task: Design complete
+ Task: Development
+  Task: Review functional specifications
+  Task: Identify modular/tiered design parameters
+  Task: Assign development staff
+  Task: Develop code
+  Task: Developer testing (primary debugging)
+  Task: Development complete
+ Task: Testing
+  Task: Develop unit test plans using product specifications
+  Task: Develop integration test plans using product specifications
+  Task: Unit Testing
+   Task: Review modular code
+   Task: Test component modules to product specifications
+   Task: Identify anomalies to product specifications
+   Task: Modify code
+   Task: Re-test modified code
+   Task: Unit testing complete
+  Task: Integration Testing
+   Task: Test module integration
+   Task: Identify anomalies to specifications
+   Task: Modify code
+   Task: Re-test modified code
+   Task: Integration testing complete
+ Task: Training
+  Task: Develop training specifications for end users
+  Task: Develop training specifications for helpdesk support staff
+  Task: Identify training delivery methodology (computer based training, classroom, etc.)
+  Task: Develop training materials
+  Task: Conduct training usability study
+  Task: Finalize training materials
+  Task: Develop training delivery mechanism
+  Task: Training materials complete
+ Task: Documentation
+  Task: Develop Help specification
+  Task: Develop Help system
+  Task: Review Help documentation
+  Task: Incorporate Help documentation feedback
+  Task: Develop user manuals specifications
+  Task: Develop user manuals
+  Task: Review all user documentation
+  Task: Incorporate user documentation feedback
+  Task: Documentation complete
+ Task: Pilot
+  Task: Identify test group
+  Task: Develop software delivery mechanism
+  Task: Install/deploy software
+  Task: Obtain user feedback
+  Task: Evaluate testing information
+  Task: Pilot complete
+ Task: Deployment
+  Task: Determine final deployment strategy
+  Task: Develop deployment methodology
+  Task: Secure deployment resources
+  Task: Train support staff
+  Task: Deploy software
+  Task: Deployment complete
+ Task: Post Implementation Review
+  Task: Document lessons learned
+  Task: Distribute to team members
+  Task: Create software maintenance team
+  Task: Post implementation review complete
+ Task: Software development template complete
+
+
+
+0	Software Development		
+1	Scope		
+2	Determine project scope		3FS+95.57333333333334d
+3	Secure project sponsorship	2FS+95.57333333333334d	4FS+95.57333333333334d
+4	Define preliminary resources	3FS+95.57333333333334d	5FS+95.57333333333334d
+5	Secure core resources	4FS+95.57333333333334d	6FS+95.57333333333334d
+6	Scope complete	5FS+95.57333333333334d	8FS+95.57333333333334d
+7	Analysis/Software Requirements		
+8	Conduct needs analysis	6FS+95.57333333333334d	9FS+95.57333333333334d
+9	Draft preliminary software specifications	8FS+95.57333333333334d	10FS+95.57333333333334d
+10	Develop preliminary budget	9FS+95.57333333333334d	11FS+95.57333333333334d
+11	Review software specifications/budget with team	10FS+95.57333333333334d	12FS+95.57333333333334d
+12	Incorporate feedback on software specifications	11FS+95.57333333333334d	13FS+95.57333333333334d
+13	Develop delivery timeline	12FS+95.57333333333334d	14FS+95.57333333333334d
+14	Obtain approvals to proceed (concept, timeline, budget)	13FS+95.57333333333334d	15FS+95.57333333333334d
+15	Secure required resources	14FS+95.57333333333334d	16FS+95.57333333333334d
+16	Analysis complete	15FS+95.57333333333334d	"18FS+95.57333333333334d,68FS+95.57333333333334d"
+17	Design		
+18	Review preliminary software specifications	16FS+95.57333333333334d	19FS+95.57333333333334d
+19	Develop functional specifications	18FS+95.57333333333334d	20FS+95.57333333333334d
+20	Develop prototype based on functional specifications	19FS+95.57333333333334d	21FS+95.57333333333334d
+21	Review functional specifications	20FS+95.57333333333334d	22FS+95.57333333333334d
+22	Incorporate feedback into functional specifications	21FS+95.57333333333334d	23FS+95.57333333333334d
+23	Obtain approval to proceed	22FS+95.57333333333334d	24FS+95.57333333333334d
+24	Design complete	23FS+95.57333333333334d	"26FS+95.57333333333334d,33FS+95.57333333333334d,34FS+95.57333333333334d,49FS+95.57333333333334d,50FS+95.57333333333334d,51FS+95.57333333333334d,58FS+95.57333333333334d,62FS+95.57333333333334d"
+25	Development		
+26	Review functional specifications	24FS+95.57333333333334d	27FS+95.57333333333334d
+27	Identify modular/tiered design parameters	26FS+95.57333333333334d	28FS+95.57333333333334d
+28	Assign development staff	27FS+95.57333333333334d	29FS+95.57333333333334d
+29	Develop code	28FS+95.57333333333334d	"30FS+273.06645833333334d,59FS+273.06645833333334d,63FS+273.06645833333334d"
+30	Developer testing (primary debugging)	29FS+273.06645833333334d	31FS+95.57333333333334d
+31	Development complete	30FS+95.57333333333334d	"36FS+95.57333333333334d,37FS+95.57333333333334d,52FS+95.57333333333334d"
+32	Testing		
+33	Develop unit test plans using product specifications	24FS+95.57333333333334d	36FS+95.57333333333334d
+34	Develop integration test plans using product specifications	24FS+95.57333333333334d	
+35	Unit Testing		
+36	Review modular code	"33FS+95.57333333333334d,31FS+95.57333333333334d"	37FS+95.57333333333334d
+37	Test component modules to product specifications	"31FS+95.57333333333334d,36FS+95.57333333333334d"	38FS+95.57333333333334d
+38	Identify anomalies to product specifications	37FS+95.57333333333334d	39FS+95.57333333333334d
+39	Modify code	38FS+95.57333333333334d	40FS+95.57333333333334d
+40	Re-test modified code	39FS+95.57333333333334d	41FS+95.57333333333334d
+41	Unit testing complete	40FS+95.57333333333334d	43FS+95.57333333333334d
+42	Integration Testing		
+43	Test module integration	41FS+95.57333333333334d	44FS+95.57333333333334d
+44	Identify anomalies to specifications	43FS+95.57333333333334d	45FS+95.57333333333334d
+45	Modify code	44FS+95.57333333333334d	46FS+95.57333333333334d
+46	Re-test modified code	45FS+95.57333333333334d	47FS+95.57333333333334d
+47	Integration testing complete	46FS+95.57333333333334d	70FS+95.57333333333334d
+48	Training		
+49	Develop training specifications for end users	24FS+95.57333333333334d	52FS+95.57333333333334d
+50	Develop training specifications for helpdesk support staff	24FS+95.57333333333334d	52FS+95.57333333333334d
+51	Identify training delivery methodology (computer based training, classroom, etc.)	24FS+95.57333333333334d	52FS+95.57333333333334d
+52	Develop training materials	"49FS+95.57333333333334d,31FS+95.57333333333334d,50FS+95.57333333333334d,51FS+95.57333333333334d"	53FS+95.57333333333334d
+53	Conduct training usability study	52FS+95.57333333333334d	54FS+95.57333333333334d
+54	Finalize training materials	53FS+95.57333333333334d	55FS+95.57333333333334d
+55	Develop training delivery mechanism	54FS+95.57333333333334d	56FS+95.57333333333334d
+56	Training materials complete	55FS+95.57333333333334d	70FS+95.57333333333334d
+57	Documentation		
+58	Develop Help specification	24FS+95.57333333333334d	59FS+95.57333333333334d
+59	Develop Help system	"58FS+95.57333333333334d,29FS+273.06645833333334d"	60FS+95.57333333333334d
+60	Review Help documentation	59FS+95.57333333333334d	61FS+95.57333333333334d
+61	Incorporate Help documentation feedback	60FS+95.57333333333334d	66FS+95.57333333333334d
+62	Develop user manuals specifications	24FS+95.57333333333334d	63FS+95.57333333333334d
+63	Develop user manuals	"62FS+95.57333333333334d,29FS+273.06645833333334d"	64FS+95.57333333333334d
+64	Review all user documentation	63FS+95.57333333333334d	65FS+95.57333333333334d
+65	Incorporate user documentation feedback	64FS+95.57333333333334d	66FS+95.57333333333334d
+66	Documentation complete	"65FS+95.57333333333334d,61FS+95.57333333333334d"	70FS+95.57333333333334d
+67	Pilot		
+68	Identify test group	16FS+95.57333333333334d	69FS+95.57333333333334d
+69	Develop software delivery mechanism	68FS+95.57333333333334d	70FS+95.57333333333334d
+70	Install/deploy software	"47FS+95.57333333333334d,69FS+95.57333333333334d,66FS+95.57333333333334d,56FS+95.57333333333334d"	71FS+95.57333333333334d
+71	Obtain user feedback	70FS+95.57333333333334d	72FS+95.57333333333334d
+72	Evaluate testing information	71FS+95.57333333333334d	73FS+95.57333333333334d
+73	Pilot complete	72FS+95.57333333333334d	75FS+95.57333333333334d
+74	Deployment		
+75	Determine final deployment strategy	73FS+95.57333333333334d	76FS+95.57333333333334d
+76	Develop deployment methodology	75FS+95.57333333333334d	77FS+95.57333333333334d
+77	Secure deployment resources	76FS+95.57333333333334d	78FS+95.57333333333334d
+78	Train support staff	77FS+95.57333333333334d	79FS+95.57333333333334d
+79	Deploy software	78FS+95.57333333333334d	80FS+95.57333333333334d
+80	Deployment complete	79FS+95.57333333333334d	82FS+95.57333333333334d
+81	Post Implementation Review		
+82	Document lessons learned	80FS+95.57333333333334d	83FS+95.57333333333334d
+83	Distribute to team members	82FS+95.57333333333334d	84FS+95.57333333333334d
+84	Create software maintenance team	83FS+95.57333333333334d	85FS+95.57333333333334d
+85	Post implementation review complete	84FS+95.57333333333334d	86FS+95.57333333333334d
+86	Software development template complete	85FS+95.57333333333334d	
+
+Software Development Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Scope Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Determine project scope Total Slack=0.0h Start Slack=0.0h Finish Slack=0.0h
+Secure project sponsorship Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Define preliminary resources Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Secure core resources Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Scope complete Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Analysis/Software Requirements Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Conduct needs analysis Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Draft preliminary software specifications Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Develop preliminary budget Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Review software specifications/budget with team Total Slack=0.0h Start Slack=0.0h Finish Slack=0.0h
+Incorporate feedback on software specifications Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Develop delivery timeline Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Obtain approvals to proceed (concept, timeline, budget) Total Slack=0.0h Start Slack=0.0h Finish Slack=0.0h
+Secure required resources Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Analysis complete Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Design Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Review preliminary software specifications Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Develop functional specifications Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Develop prototype based on functional specifications Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Review functional specifications Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Incorporate feedback into functional specifications Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Obtain approval to proceed Total Slack=0.0h Start Slack=0.0h Finish Slack=0.0h
+Design complete Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Development Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Review functional specifications Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Identify modular/tiered design parameters Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Assign development staff Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Develop code Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Developer testing (primary debugging) Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Development complete Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Testing Total Slack=15.0d Start Slack=17.75d Finish Slack=15.0d
+Develop unit test plans using product specifications Total Slack=17.75d Start Slack=17.75d Finish Slack=17.75d
+Develop integration test plans using product specifications Total Slack=59.75d Start Slack=59.75d Finish Slack=59.75d
+Unit Testing Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Review modular code Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Test component modules to product specifications Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Identify anomalies to product specifications Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Modify code Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Re-test modified code Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Unit testing complete Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Integration Testing Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Test module integration Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Identify anomalies to specifications Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Modify code Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Re-test modified code Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Integration testing complete Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Training Total Slack=3.0d Start Slack=21.75d Finish Slack=3.0d
+Develop training specifications for end users Total Slack=21.75d Start Slack=21.75d Finish Slack=21.75d
+Develop training specifications for helpdesk support staff Total Slack=21.75d Start Slack=21.75d Finish Slack=21.75d
+Identify training delivery methodology (computer based training, classroom, etc.) Total Slack=22.75d Start Slack=22.75d Finish Slack=22.75d
+Develop training materials Total Slack=0.6w Start Slack=0.6w Finish Slack=0.6w
+Conduct training usability study Total Slack=3.0d Start Slack=3.0d Finish Slack=3.0d
+Finalize training materials Total Slack=3.0d Start Slack=3.0d Finish Slack=3.0d
+Develop training delivery mechanism Total Slack=3.0d Start Slack=3.0d Finish Slack=3.0d
+Training materials complete Total Slack=3.0d Start Slack=3.0d Finish Slack=3.0d
+Documentation Total Slack=18.25d Start Slack=27.75d Finish Slack=18.25d
+Develop Help specification Total Slack=27.75d Start Slack=27.75d Finish Slack=27.75d
+Develop Help system Total Slack=3.65w Start Slack=3.65w Finish Slack=3.65w
+Review Help documentation Total Slack=18.25d Start Slack=18.25d Finish Slack=18.25d
+Incorporate Help documentation feedback Total Slack=18.25d Start Slack=18.25d Finish Slack=18.25d
+Develop user manuals specifications Total Slack=27.75d Start Slack=27.75d Finish Slack=27.75d
+Develop user manuals Total Slack=3.85w Start Slack=3.85w Finish Slack=3.85w
+Review all user documentation Total Slack=19.25d Start Slack=19.25d Finish Slack=19.25d
+Incorporate user documentation feedback Total Slack=19.25d Start Slack=19.25d Finish Slack=19.25d
+Documentation complete Total Slack=18.25d Start Slack=18.25d Finish Slack=18.25d
+Pilot Total Slack=61.25d Start Slack=61.25d Finish Slack=0.0d
+Identify test group Total Slack=61.25d Start Slack=61.25d Finish Slack=61.25d
+Develop software delivery mechanism Total Slack=61.25d Start Slack=61.25d Finish Slack=61.25d
+Install/deploy software Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Obtain user feedback Total Slack=0.0w Start Slack=0.0w Finish Slack=0.0w
+Evaluate testing information Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Pilot complete Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Deployment Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Determine final deployment strategy Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Develop deployment methodology Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Secure deployment resources Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Train support staff Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Deploy software Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Deployment complete Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Post Implementation Review Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Document lessons learned Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Distribute to team members Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Create software maintenance team Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Post implementation review complete Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+Software development template complete Total Slack=0.0d Start Slack=0.0d Finish Slack=0.0d
+
+[ProjectCalendar
+   ID=1
+   name=Standard
+   baseCalendarName=
+   resource=
+   [Day Sunday
+      type=NON_WORKING
+      hours=[ProjectCalendarHours ]
+   ]
+   [Day Monday
+      type=WORKING
+      hours=[ProjectCalendarHours [DateRange start=Sat Dec 31 08:00:00 EST 1983 end=Sat Dec 31 12:00:00 EST 1983][DateRange start=Sat Dec 31 13:00:00 EST 1983 end=Sat Dec 31 17:00:00 EST 1983]]
+   ]
+   [Day Tuesday
+      type=WORKING
+      hours=[ProjectCalendarHours [DateRange start=Sat Dec 31 08:00:00 EST 1983 end=Sat Dec 31 12:00:00 EST 1983][DateRange start=Sat Dec 31 13:00:00 EST 1983 end=Sat Dec 31 17:00:00 EST 1983]]
+   ]
+   [Day Wednesday
+      type=WORKING
+      hours=[ProjectCalendarHours [DateRange start=Sat Dec 31 08:00:00 EST 1983 end=Sat Dec 31 12:00:00 EST 1983][DateRange start=Sat Dec 31 13:00:00 EST 1983 end=Sat Dec 31 17:00:00 EST 1983]]
+   ]
+   [Day Thursday
+      type=WORKING
+      hours=[ProjectCalendarHours [DateRange start=Sat Dec 31 08:00:00 EST 1983 end=Sat Dec 31 12:00:00 EST 1983][DateRange start=Sat Dec 31 13:00:00 EST 1983 end=Sat Dec 31 17:00:00 EST 1983]]
+   ]
+   [Day Friday
+      type=WORKING
+      hours=[ProjectCalendarHours [DateRange start=Sat Dec 31 08:00:00 EST 1983 end=Sat Dec 31 12:00:00 EST 1983][DateRange start=Sat Dec 31 13:00:00 EST 1983 end=Sat Dec 31 17:00:00 EST 1983]]
+   ]
+   [Day Saturday
+      type=NON_WORKING
+      hours=[ProjectCalendarHours ]
+   ]
+]
+

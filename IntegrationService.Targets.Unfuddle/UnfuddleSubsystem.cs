@@ -92,9 +92,9 @@ namespace IntegrationService.Targets.Unfuddle
 						isDirty = true;
 					}
 
-					if (updatedItems.Contains("Description") && ticketToUpdate.Description.SanitizeCardDescription() != updatedCard.Description)
+					if (updatedItems.Contains("Description") && ticketToUpdate.Description != updatedCard.Description)
 					{
-						var updatedDescription = updatedCard.Description;
+						string updatedDescription = updatedCard.Description;
 						if (!string.IsNullOrEmpty(updatedDescription))
 						{
 							updatedDescription = updatedDescription.Replace("<p>", "").Replace("</p>", "");
@@ -235,9 +235,9 @@ namespace IntegrationService.Targets.Unfuddle
 				saveCard = true;
 			}
 
-			if (ticket.Description.SanitizeCardDescription() != card.Description) 
+			if (ticket.Description != card.Description) 
 			{
-				card.Description = ticket.Description.SanitizeCardDescription();
+				card.Description = ticket.Description;
 				saveCard = true;
 			}
 
@@ -364,7 +364,7 @@ namespace IntegrationService.Targets.Unfuddle
                 {
                     Active = true,
                     Title = ticket.Summary,
-					Description = ticket.Description.SanitizeCardDescription(),
+                    Description = ticket.Description,
                     Priority = ticket.LeanKitPriority(),
                     TypeId = mappedCardType.Id,
                     TypeName = mappedCardType.Name,
