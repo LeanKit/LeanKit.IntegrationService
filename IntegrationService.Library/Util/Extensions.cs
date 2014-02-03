@@ -14,6 +14,14 @@ namespace IntegrationService.Util
 	{
 		private static readonly Logger Log = Logger.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+		public const int MaxCardDescriptionSize = 20000;
+
+		public static string SanitizeCardDescription(this string description)
+		{
+			if (string.IsNullOrEmpty(description)) return description;
+			return (description.Length < MaxCardDescriptionSize) ? description : description.Substring(0, MaxCardDescriptionSize);
+		}
+
 		public static string FormatSafely(this string input, params object[] args)
 		{
 			try

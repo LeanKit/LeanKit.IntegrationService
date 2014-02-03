@@ -6,6 +6,7 @@
 
 using System;
 using System.Linq;
+using IntegrationService.Util;
 using LeanKit.API.Client.Library.TransferObjects;
 using Microsoft.TeamFoundation.WorkItemTracking.Client;
 using RestSharp.Contrib;
@@ -35,9 +36,10 @@ namespace IntegrationService.Targets.TFS
         public static string LeanKitDescription(this WorkItem workItem, int tfsVersion)
         {
             if (workItem.Fields == null) return "";
-			return workItem.Fields.Contains("Repro Steps") 
+			var description = workItem.Fields.Contains("Repro Steps") 
 				? workItem.Fields["Repro Steps"].Value.ToString() 
 				: EnsureHtmlEncode(workItem.Fields["Description"].Value.ToString(), tfsVersion);
+	        return description.SanitizeCardDescription();
         }
 
 		private static string EnsureHtmlEncode(string text, int tfsVersion)

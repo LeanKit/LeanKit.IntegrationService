@@ -244,7 +244,6 @@ namespace IntegrationService.Targets
             Log.Debug("Finished Loading Configuration");
         }
 
-
         private void ReloadConfiguration()
 		{
 			// We need to stop all other processes and then restart them
@@ -288,7 +287,6 @@ namespace IntegrationService.Targets
             if (host == "kanban-cibuild") return "http://kanban-cibuild.localkanban.com";
             return "http://{0}.leankit.com";
         }
-
 
         protected void ConfigureDefaults()
         {
@@ -669,5 +667,6 @@ namespace IntegrationService.Targets
 			}
 			LocalStorage.Save(AppSettings);
 		}
+
     }
 }
