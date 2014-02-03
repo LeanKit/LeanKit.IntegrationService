@@ -42,11 +42,11 @@ namespace IntegrationService.Targets.MicrosoftProject
 			// for now we'll only get child tasks. 
 			// TODO: add tasks as a card, add any child tasks to a taskboard on the card
 			var tasks = (from Task task in mpx.AllTasks.ToIEnumerable() 
-								let date = task.Start 
-								where date != null && 
-									(task.ChildTasks == null || task.ChildTasks.isEmpty())
-								let startDate = date.ToDateTime() 
-								where startDate < futureDate
+								where ((task.Start != null && task.Start.ToDateTime() < futureDate)
+										|| (task.BaselineStart != null && task.BaselineStart.ToDateTime() < futureDate)
+										|| (task.EarlyStart != null && task.EarlyStart.ToDateTime() < futureDate))
+									&& (task.Summary || task.Milestone) 
+									&& (task.ChildTasks == null || task.ChildTasks.isEmpty())
 								select task).ToList();
 
 			if (!tasks.Any())
@@ -59,21 +59,21 @@ namespace IntegrationService.Targets.MicrosoftProject
 
 			foreach (var task in tasks) 
 			{
-				if (task.ID.ToNullableInt() > 0) 
+				if (task.UniqueID.ToNullableInt() > 0) 
 				{
-					Log.Info("Issue [{0}]: {1}, {2}, {3}", task.ID.ToString(), task.Name, "", task.ResourceGroup);
+					Log.Info("Task [{0}]: {1}, {2}, {3}", task.UniqueID.ToString(), task.Name, "", task.ResourceGroup);
 
 					//does this task have a corresponding card?
-					var card = LeanKit.GetCardByExternalId(boardMapping.Identity.LeanKit, task.ID.ToString());
+					var card = LeanKit.GetCardByExternalId(boardMapping.Identity.LeanKit, task.UniqueID.ToString());
 
 					if (card == null || card.ExternalSystemName != ServiceName) 
 					{
-						Log.Debug("Create new card for Task [{0}]", task.ID.ToString());
+						Log.Debug("Create new card for Task [{0}]", task.UniqueID.ToString());
 						CreateCardFromTask(boardMapping, task);
 					} 
 					else 
 					{
-						Log.Debug("Previously created a card for Task [{0}]", task.ID.ToString());
+						Log.Debug("Previously created a card for Task [{0}]", task.UniqueID.ToString());
 							if (boardMapping.UpdateCards)
 								TaskUpdated(task, card, boardMapping);
 							else
@@ -101,7 +101,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 				TypeId = mappedCardType.Id,
 				TypeName = mappedCardType.Name,
 				LaneId = laneId,
-				ExternalCardID = task.ID.ToString(),
+				ExternalCardID = task.UniqueID.ToString(),
 				ExternalSystemName = ServiceName				
 			};
 
@@ -111,22 +111,27 @@ namespace IntegrationService.Targets.MicrosoftProject
 				dateFormat = CurrentUser.DateFormat ?? "MM/dd/yyyy";
 			}
 
-			if (task.Finish != null) 
+			if (task.GetDueDate().HasValue) 
 			{
-				card.DueDate = task.Finish.ToDateTime().ToString(dateFormat);
+				card.DueDate = task.GetDueDate().Value.ToString(dateFormat);
 			}
 
-			if (task.Start != null)
+			if (task.GetStartDate().HasValue)
 			{
-				card.StartDate = task.Start.ToDateTime().ToString(dateFormat);
+				card.StartDate = task.GetStartDate().Value.ToString(dateFormat);
 			}
 
-			if (task.Work != null && task.Work.Duration >= 1)
+			if (task.GetSize() > 0)
 			{
-				card.Size = (int)task.Work.Duration;
+				card.Size = task.GetSize();
 			}
 
-			Log.Info("Creating a card of type [{0}] for Task [{1}] on Board [{2}] on Lane [{3}]", mappedCardType.Name, task.ID.toString(), boardId, laneId);
+			if (!string.IsNullOrEmpty(task.Hyperlink)) 
+			{
+				card.ExternalSystemUrl = task.Hyperlink;
+			}
+
+			Log.Info("Creating a card of type [{0}] for Task [{1}] on Board [{2}] on Lane [{3}]", mappedCardType.Name, task.UniqueID.toString(), boardId, laneId);
 
 			CardAddResult cardAddResult = null;
 
@@ -136,7 +141,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 			{
 				if (tries > 0) 
 				{
-					Log.Error(string.Format("Attempting to create card for issue [{0}] attempt number [{1}]", task.ID.toString(),
+					Log.Error(string.Format("Attempting to create card for Task [{0}] attempt number [{1}]", task.UniqueID.toString(),
 											 tries));
 					// wait 5 seconds before trying again
 					Thread.Sleep(new TimeSpan(0, 0, 5));
@@ -152,12 +157,12 @@ namespace IntegrationService.Targets.MicrosoftProject
 			}
 			card.Id = cardAddResult.CardId;
 
-			Log.Info("Created a card [{0}] of type [{1}] for Issue [{2}] on Board [{3}] on Lane [{4}]", card.Id, mappedCardType.Name, task.ID.toString(), boardId, laneId);
+			Log.Info("Created a card [{0}] of type [{1}] for Task [{2}] on Board [{3}] on Lane [{4}]", card.Id, mappedCardType.Name, task.UniqueID.toString(), boardId, laneId);
 		}
 
 		private void TaskUpdated(Task task, Card card, BoardMapping boardMapping) 
 		{
-			Log.Info("Task [{0}] updated, comparing to corresponding card...", task.ID.toString());
+			Log.Info("Task [{0}] updated, comparing to corresponding card...", task.UniqueID.toString());
 
 			long boardId = boardMapping.Identity.LeanKit;
 
@@ -187,9 +192,9 @@ namespace IntegrationService.Targets.MicrosoftProject
 				dateFormat = CurrentUser.DateFormat ?? "MM/dd/yyyy";
 			}
 
-			if (task.Finish != null) 
+			if (task.GetDueDate().HasValue) 
 			{
-				var dueDateString = task.Finish.ToDateTime().ToString(dateFormat);
+				var dueDateString = task.GetDueDate().Value.ToString(dateFormat);
 				if (card.DueDate != dueDateString) 
 				{
 					card.DueDate = dueDateString;
@@ -202,9 +207,9 @@ namespace IntegrationService.Targets.MicrosoftProject
 				saveCard = true;
 			}
 
-			if (task.Start != null) 
+			if (task.GetStartDate().HasValue) 
 			{
-				var startDateString = task.Start.ToDateTime().ToString(dateFormat);
+				var startDateString = task.GetStartDate().Value.ToString(dateFormat);
 				if (card.StartDate != startDateString) 
 				{
 					card.StartDate = startDateString;
