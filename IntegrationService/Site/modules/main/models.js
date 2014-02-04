@@ -151,12 +151,12 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             var lanes = _.keys(lsm);
             var state, lane, idx;
             for (var i = 0; i < queryStates.length; i++) {
-                state = queryStates[i];
+                state = queryStates[i].toLowerCase();
                 for (var j = 0; j < lanes.length; j++) {
                     lane = lanes[j];
-                    if (lsm[lane].indexOf(state) >= 0) {
+                    if (lsm[lane].map(function (elem) { return elem.toLowerCase(); }).indexOf(state) >= 0) {
                         // found, remove from unassignedStates
-                        idx = this.unassignedStates.indexOf(state);
+                        idx = this.unassignedStates.map(function (elem) { return elem.toLowerCase(); }).indexOf(state);
                         if (idx >= 0) {
                             this.unassignedStates.splice(idx, 1);
                         }
