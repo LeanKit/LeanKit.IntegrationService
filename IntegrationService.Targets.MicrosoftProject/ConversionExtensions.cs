@@ -56,7 +56,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 
         public static CardType LeanKitCardType(this Task task, BoardMapping project)
         {
-            return CalculateLeanKitCardType(project, "");
+            return CalculateLeanKitCardType(project, task.GetText(1));
         }
 
 		public static CardType CalculateLeanKitCardType(BoardMapping project, string issueTypeName) 

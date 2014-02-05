@@ -41,8 +41,9 @@ namespace IntegrationService.Targets.MicrosoftProject
 
 			// for now we'll only get child tasks. 
 			// TODO: add tasks as a card, add any child tasks to a taskboard on the card
+			// Flag2 = Exclude from LeanKit
 			var tasks = (from Task task in mpx.AllTasks.ToIEnumerable() 
-								where ((task.Start != null && task.Start.ToDateTime() < futureDate)
+								where (!task.GetFlag(2) && (task.Start != null && task.Start.ToDateTime() < futureDate)
 										|| (task.BaselineStart != null && task.BaselineStart.ToDateTime() < futureDate)
 										|| (task.EarlyStart != null && task.EarlyStart.ToDateTime() < futureDate))
 									&& (task.Summary || task.Milestone) 
@@ -91,7 +92,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 			var boardId = project.Identity.LeanKit;
 
 			var mappedCardType = task.LeanKitCardType(project);
-			var laneId = project.LanesFromState("").First();
+			var laneId = project.LanesFromState("Ready").First();
 			var card = new Card
 			{
 				Active = true,
@@ -121,6 +122,27 @@ namespace IntegrationService.Targets.MicrosoftProject
 				card.StartDate = task.GetStartDate().Value.ToString(dateFormat);
 			}
 
+			// Flag3 = IsBlocked, Text3 = Blocked Reason
+			if (task.GetFlag(3))
+			{
+				card.IsBlocked = true;
+				card.BlockReason = task.GetText(3) ?? "Task is blocked in Microsoft Project.";
+			}
+
+			// Text2 = Class of Service
+			if (!string.IsNullOrEmpty(task.GetText(2)))
+			{
+				var board = LeanKit.GetBoard(boardId);
+				if (board != null && board.ClassOfServiceEnabled)
+				{
+					var classOfService = board.ClassesOfService.FirstOrDefault(x => x.Title.ToLowerInvariant() == task.GetText(2).ToLowerInvariant());
+					if (classOfService != null)
+					{
+						card.ClassOfServiceId = classOfService.Id;
+					}
+				}
+			}
+
 			if (task.GetSize() > 0)
 			{
 				card.Size = task.GetSize();
@@ -129,6 +151,39 @@ namespace IntegrationService.Targets.MicrosoftProject
 			if (!string.IsNullOrEmpty(task.Hyperlink)) 
 			{
 				card.ExternalSystemUrl = task.Hyperlink;
+			}
+
+			// Text4 = tags
+			if (!string.IsNullOrEmpty(task.GetText(4)))
+			{
+				card.Tags = task.getText(4);
+			}
+
+			if (task.ResourceAssignments != null)
+			{
+				var assignedUserIds = new List<long>();
+
+				var emails = task.ResourceAssignments.ToIEnumerable<ResourceAssignment>()
+				                       .Where(x => x != null && 
+												   x.Resource != null && 
+												   !string.IsNullOrEmpty(x.Resource.EmailAddress))
+									   .Select(x => x.Resource.EmailAddress)
+									   .ToList();
+
+				foreach (var email in emails)
+				{
+					var assignedUserId = CalculateAssignedUserId(boardId, email);
+					if (assignedUserId > 0)
+					{
+						if (!assignedUserIds.Contains(assignedUserId))
+						{
+							assignedUserIds.Add(assignedUserId);
+						}
+					}
+				}
+
+				if (assignedUserIds.Any())
+					card.AssignedUserIds = assignedUserIds.ToArray();
 			}
 
 			Log.Info("Creating a card of type [{0}] for Task [{1}] on Board [{2}] on Lane [{3}]", mappedCardType.Name, task.UniqueID.toString(), boardId, laneId);
@@ -222,6 +277,95 @@ namespace IntegrationService.Targets.MicrosoftProject
 				saveCard = true;
 			}
 
+			// Text4 = tags
+			if (!string.IsNullOrEmpty(task.GetText(4))) 
+			{
+				if (card.Tags != task.GetText(4))
+				{
+					card.Tags = task.GetText(4);
+					saveCard = true;
+				}
+			}
+			else if (!string.IsNullOrEmpty(card.Tags))
+			{
+				card.Tags = "";
+				saveCard = true;
+			}
+
+			if ((card.Tags == null || !card.Tags.Contains(ServiceName)) && boardMapping.TagCardsWithTargetSystemName) 
+			{
+				if (string.IsNullOrEmpty(card.Tags))
+					card.Tags = ServiceName;
+				else
+					card.Tags += "," + ServiceName;
+				saveCard = true;
+			}
+
+			// Flag3 = IsBlocked, Text3 = Blocked Reason
+			var isBlocked = task.GetFlag(3);
+			if (card.IsBlocked != isBlocked)
+			{
+				card.IsBlocked = isBlocked;
+				card.BlockReason = task.GetText(3) ?? "Task is blocked/unblocked in Microsoft Project.";
+				saveCard = true;
+			}			
+
+			// Text2 = Class of Service
+			if (!string.IsNullOrEmpty(task.GetText(2))) 
+			{
+				var board = LeanKit.GetBoard(boardId);
+				if (board != null && board.ClassOfServiceEnabled) 
+				{
+					var classOfService = board.ClassesOfService.FirstOrDefault(x => x.Title.ToLowerInvariant() == task.GetText(2).ToLowerInvariant());
+					if (classOfService != null && card.ClassOfServiceId != classOfService.Id) 
+					{
+						card.ClassOfServiceId = classOfService.Id;
+						saveCard = true;
+					}
+				}
+			}
+			else if (card.ClassOfServiceId.HasValue)
+			{
+				card.ClassOfServiceId = null;
+				saveCard = true;
+			}
+
+			var assignedUserIds = new List<long>();
+			if (task.ResourceAssignments != null) 
+			{
+
+				var emails = task.ResourceAssignments.ToIEnumerable<ResourceAssignment>()
+									   .Where(x => x != null &&
+												   x.Resource != null &&
+												   !string.IsNullOrEmpty(x.Resource.EmailAddress))
+									   .Select(x => x.Resource.EmailAddress)
+									   .ToList();
+
+				foreach (var email in emails) {
+					var assignedUserId = CalculateAssignedUserId(boardId, email);
+					if (assignedUserId > 0) 
+					{
+						if (!assignedUserIds.Contains(assignedUserId)) 
+						{
+							assignedUserIds.Add(assignedUserId);
+						}
+					}
+				}
+			}
+			if (assignedUserIds.Any())
+			{
+				if (card.AssignedUserIds != assignedUserIds.ToArray())
+				{
+					card.AssignedUserIds = assignedUserIds.ToArray();
+					saveCard = true;
+				}
+			}
+			else if (card.AssignedUserIds.Any())
+			{
+				card.AssignedUserIds = new long[0];
+				saveCard = true;
+			}							
+
 			if (saveCard) {
 				Log.Info("Updating card [{0}]", card.Id);
 				LeanKit.UpdateCard(boardId, card);
@@ -241,6 +385,21 @@ namespace IntegrationService.Targets.MicrosoftProject
 		protected override void CreateNewItem(LeanKit.API.Client.Library.TransferObjects.Card card, BoardMapping boardMapping) 
 		{
 			Log.Debug(String.Format("TODO: Create a Task from Card [{0}]", card.Id));
+		}
+
+		private long CalculateAssignedUserId(long boardId, string emailAddress)
+		{
+			long userId = 0;
+
+			if (!string.IsNullOrEmpty(emailAddress))
+			{
+				var lkUser = LeanKit.GetBoard(boardId).BoardUsers.FirstOrDefault(x => x != null &&
+											(((!String.IsNullOrEmpty(x.EmailAddress)) && x.EmailAddress.ToLowerInvariant() == emailAddress.ToLowerInvariant())));
+				if (lkUser != null)
+					userId = lkUser.Id;				
+			}
+
+			return userId;
 		}
 
 

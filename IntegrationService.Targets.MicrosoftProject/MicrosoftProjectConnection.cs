@@ -63,13 +63,45 @@ namespace IntegrationService.Targets.MicrosoftProject
 				projects.Add(new Project(
 								topTask.UniqueID.intValue().ToString(), 
 								topTask.Name, 
-								new List<Type>() { new Type("Task")}, 
-								new List<State>() { new State("Ready"), 
-													new State("In Process"), 
-													new State("Closed")}));
+								GetTaskTypes(mpx), 
+								GetStates(mpx)
+							));
 			}
 
 			return projects;
         }		
+
+		private List<Type> GetTaskTypes(ProjectFile mpx)
+		{
+			var taskTypes = new List<Type>();
+
+			var projTaskTypes = (from Task task in mpx.AllTasks.ToIEnumerable<Task>()
+			                 select task.GetText(1))
+							 .Where(x => !string.IsNullOrEmpty(x))
+							 .Distinct()
+							 .ToList();
+
+			if (projTaskTypes.Any())
+			{
+				taskTypes.AddRange(projTaskTypes.Select(projTaskType => new Type(projTaskType)));
+			}
+
+			return taskTypes;
+		}
+
+		private List<State> GetStates(ProjectFile mpx)
+		{
+			return new List<State>()
+				{
+					new State("All Tasks")
+				};
+
+			//return new List<State>()
+			//	{
+			//		new State("Ready"),
+			//		new State("In Process"),
+			//		new State("Completed")
+			//	};
+		}
     }
 }
