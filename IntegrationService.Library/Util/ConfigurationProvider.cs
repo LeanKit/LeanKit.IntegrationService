@@ -57,8 +57,8 @@ namespace IntegrationService.Util
             if (config.LeanKit.Password == null) throw new ConfigurationErrorsException("Configuration is missing LeanKit Password definition.");
             if (config.Target == null) throw new ConfigurationErrorsException("Configuration is missing Target section.");
             if (config.Target.Url == null) throw new ConfigurationErrorsException("Configuration is missing Target Host definition.");
-            if (config.Target.User == null) throw new ConfigurationErrorsException("Configuration is missing Target User definition.");
-            if (config.Target.Password == null) throw new ConfigurationErrorsException("Configuration is missing Target Password definition.");
+            //if (config.Target.User == null) throw new ConfigurationErrorsException("Configuration is missing Target User definition.");
+            //if (config.Target.Password == null) throw new ConfigurationErrorsException("Configuration is missing Target Password definition.");
             if (config.Mappings == null) throw new ConfigurationErrorsException("Configuration is missing Mappings section.");
             foreach (var mapping in config.Mappings)
             {
