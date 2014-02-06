@@ -60,7 +60,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 
 			foreach (var task in tasks) 
 			{
-				if (task.UniqueID.ToNullableInt() > 0) 
+				if (task.UniqueID.intValue() > 0) 
 				{
 					Log.Info("Task [{0}]: {1}, {2}, {3}", task.UniqueID.ToString(), task.Name, "", task.ResourceGroup);
 
@@ -122,8 +122,8 @@ namespace IntegrationService.Targets.MicrosoftProject
 				card.StartDate = task.GetStartDate().Value.ToString(dateFormat);
 			}
 
-			// Flag3 = IsBlocked, Text3 = Blocked Reason
-			if (task.GetFlag(3))
+			// Flag3/Text5 = IsBlocked, Text3 = Blocked Reason
+			if (IsBlocked(task))
 			{
 				card.IsBlocked = true;
 				card.BlockReason = task.GetText(3) ?? "Task is blocked in Microsoft Project.";
@@ -301,8 +301,8 @@ namespace IntegrationService.Targets.MicrosoftProject
 				saveCard = true;
 			}
 
-			// Flag3 = IsBlocked, Text3 = Blocked Reason
-			var isBlocked = task.GetFlag(3);
+			// Flag3/Text4 = IsBlocked, Text3 = Blocked Reason
+			var isBlocked = IsBlocked(task);
 			if (card.IsBlocked != isBlocked)
 			{
 				card.IsBlocked = isBlocked;
@@ -402,6 +402,22 @@ namespace IntegrationService.Targets.MicrosoftProject
 			return userId;
 		}
 
+		private bool IsBlocked(Task task)
+		{
+			// we ought to be using Flag3 as the IsBlocked indicator
+			// but there is a bug where mpxj is not getting those values properly
+			// so instead for the mean time we'll be using Yes/No values in Text5
+			var blocked = task.GetFlag(3);
+			if (!string.IsNullOrEmpty(task.GetText(5)))
+			{
+				if (task.GetText(5).ToLowerInvariant() == "yes")
+				{
+					return true;
+				}
+				return false;
+			}
+			return blocked;
+		}
 
 	}
 }
