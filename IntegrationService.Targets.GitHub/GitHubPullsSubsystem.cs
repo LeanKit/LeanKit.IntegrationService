@@ -95,7 +95,7 @@ namespace IntegrationService.Targets.GitHub
 						isDirty = true;
 					}
 
-					if (updatedItems.Contains("Description") && pullToUpdate.Body != updatedCard.Description) 
+					if (updatedItems.Contains("Description") && pullToUpdate.Body.SanitizeCardDescription() != updatedCard.Description) 
 					{
 						pullToUpdate.Body = updatedCard.Description;
 						isDirty = true;
@@ -156,9 +156,9 @@ namespace IntegrationService.Targets.GitHub
 				saveCard = true;
 			}
 
-			if (pull.Body != card.Description) 
+			if (pull.Body.SanitizeCardDescription() != card.Description) 
 			{
-				card.Description = pull.Body;
+				card.Description = pull.Body.SanitizeCardDescription();
 				saveCard = true;
 			}
 
@@ -251,7 +251,7 @@ namespace IntegrationService.Targets.GitHub
             {
 			    Active = true,
                 Title = pull.Title,
-                Description = pull.Body,
+				Description = pull.Body.SanitizeCardDescription(),
 				Priority = pull.LeanKitPriority(),
                 TypeId = mappedCardType.Id,
                 TypeName = mappedCardType.Name,

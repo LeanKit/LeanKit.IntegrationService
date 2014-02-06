@@ -19,8 +19,8 @@ String.prototype.toId = function (includeHashSymbol) {
     var str = this;
     // convert to lowercase
     str = str.toLowerCase();
-    // replace spaces with dashes
-    str = str.replace(/ /g, "-");
+    // replace spaces with double underscores
+    str = str.replace(/ /g, "__");
     
     if (includeHashSymbol) str = "#" + str;
     
@@ -29,8 +29,8 @@ String.prototype.toId = function (includeHashSymbol) {
 
 String.prototype.fromId = function () {
     var str = this;
-    // replace dashes with spaces
-    str = str.replace(/-/g, " ");
+    // replace double underscores with spaces
+    str = str.replace(/__/g, " ");
 
     // trim and convert to Uppercase first letter
     str = str.replace(/\w\S*/g, function(txt) {

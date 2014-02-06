@@ -549,6 +549,38 @@ namespace IntegrationService.Targets.TFS
 				}
             }
 
+			if (workItem.Fields != null && (workItem.Fields.Contains("Original Estimate") || workItem.Fields.Contains("Story Points"))) 
+			{
+				if (workItem.Fields.Contains("Original Estimate") && workItem.Fields["Original Estimate"] != null && workItem.Fields["Original Estimate"].Value != null) 
+				{
+					double cardSize;
+					var isNumber = Double.TryParse(workItem.Fields["Original Estimate"].Value.ToString(), out cardSize);
+					if (isNumber)
+					{
+						var size = (int) cardSize;
+						if (card.Size != size)
+						{
+							card.Size = size;
+							saveCard = true;
+						}
+					}
+				} 
+				else if (workItem.Fields.Contains("Story Points") && workItem.Fields["Story Points"] != null && workItem.Fields["Story Points"].Value != null) 
+				{
+					double cardSize;
+					var isNumber = Double.TryParse(workItem.Fields["Story Points"].Value.ToString(), out cardSize);
+					if (isNumber)
+					{
+						var size = (int)cardSize;
+						if (card.Size != size) 
+						{
+							card.Size = size;
+							saveCard = true;
+						}
+					}
+				}
+			}
+
 			if ((card.Tags == null || !card.Tags.Contains(ServiceName)) && project.TagCardsWithTargetSystemName) 
 			{
 				if (string.IsNullOrEmpty(card.Tags))

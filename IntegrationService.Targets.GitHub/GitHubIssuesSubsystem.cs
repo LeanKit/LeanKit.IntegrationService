@@ -92,7 +92,7 @@ namespace IntegrationService.Targets.GitHub
 
 			        string updateJson = "{ \"title\": \"" + issueToUpdate.Title + "\"";
 
-			        if (updatedItems.Contains("Description") && issueToUpdate.Body != updatedCard.Description)
+			        if (updatedItems.Contains("Description") && issueToUpdate.Body.SanitizeCardDescription() != updatedCard.Description)
 			        {
 				        updateJson += ", \"body\": \"" + updatedCard.Description + "\"";
 				        isDirty = true;
@@ -218,9 +218,9 @@ namespace IntegrationService.Targets.GitHub
 				saveCard = true;
 			}
 
-			if (issue.Body != card.Description) 
+			if (issue.Body.SanitizeCardDescription() != card.Description) 
 			{
-				card.Description = issue.Body;
+				card.Description = issue.Body.SanitizeCardDescription();
 				saveCard = true;
 			}
 
@@ -348,7 +348,7 @@ namespace IntegrationService.Targets.GitHub
             {
 			    Active = true,
                 Title = issue.Title,
-                Description = issue.Body,
+				Description = issue.Body.SanitizeCardDescription(),
                 Priority = issue.LeanKitPriority(),
                 TypeId = mappedCardType.Id,
                 TypeName = mappedCardType.Name,
