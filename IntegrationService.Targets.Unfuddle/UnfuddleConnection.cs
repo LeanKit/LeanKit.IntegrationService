@@ -24,7 +24,7 @@ namespace IntegrationService.Targets.Unfuddle
 			_restClient = restClient;
 		}
 
-        public ConnectionResult Connect(string host, string user, string password)
+        public ConnectionResult Connect(string protocol, string host, string user, string password)
         {
 			throw new NotImplementedException();
         }

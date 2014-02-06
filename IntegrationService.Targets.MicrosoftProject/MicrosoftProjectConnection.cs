@@ -19,56 +19,74 @@ namespace IntegrationService.Targets.MicrosoftProject
     {
 		protected string FilePath;
 
-        public ConnectionResult Connect(string host, string user, string password)
+        public ConnectionResult Connect(string protocol, string host, string user, string password)
         {
 			string.Format("Connecting to Microsoft Project '{0}'", host).Debug();
 
-			FilePath = host;
+	        if (protocol.ToLowerInvariant().StartsWith("file"))
+	        {
+		        FilePath = host;
+	        }
 
-			try 
-			{
-				if (!File.Exists(host))
-				{
-					string.Format("File does not exist '{0}'", host).Error();
-					return ConnectionResult.FailedToConnect;
-				}
-			} 
-			catch (Exception) 
-			{
-				return ConnectionResult.FailedToConnect;
-			}
+	        if (!string.IsNullOrEmpty(FilePath))
+	        {
+		        try
+		        {
+			        if (!File.Exists(host))
+			        {
+				        string.Format("File does not exist '{0}'", host).Error();
+				        return ConnectionResult.FailedToConnect;
+			        }
+		        }
+		        catch (Exception)
+		        {
+			        return ConnectionResult.FailedToConnect;
+		        }
+	        }
+	        else
+	        {
+		        // connect to project server
+				return ConnectionResult.InvalidUrl;
+	        }
 
-			return ConnectionResult.Success;
+	        return ConnectionResult.Success;
         }
 
         public List<Project> GetProjects()
         {
 			var projects = new List<Project>();
 
-			ProjectReader reader = ProjectReaderUtility.getProjectReader(FilePath);
-			ProjectFile mpx = reader.read(FilePath);
+	        if (!string.IsNullOrEmpty(FilePath))
+	        {
+		        ProjectReader reader = ProjectReaderUtility.getProjectReader(FilePath);
+		        ProjectFile mpx = reader.read(FilePath);
 
-			// Get the top level task
-			var topTask = (from Task task in mpx.AllTasks.ToIEnumerable()
-						 where task.ID.intValue() == 0
-						 select task).FirstOrDefault();
+		        // Get the top level task
+		        var topTask = (from Task task in mpx.AllTasks.ToIEnumerable()
+		                       where task.ID.intValue() == 0
+		                       select task).FirstOrDefault();
 
-			if (topTask == null)
-			{
-				("No project found in file.").Error();
-			}
-			else
-			{
-				// add types and states
-				projects.Add(new Project(
-								topTask.UniqueID.intValue().ToString(), 
-								topTask.Name, 
-								GetTaskTypes(mpx), 
-								GetStates(mpx)
-							));
-			}
+		        if (topTask == null)
+		        {
+			        ("No project found in file.").Error();
+		        }
+		        else
+		        {
+			        // add types and states
+			        projects.Add(new Project(
+				                     topTask.UniqueID.intValue().ToString(),
+				                     topTask.Name,
+				                     GetTaskTypes(mpx),
+				                     GetStates(mpx)
+				                     ));
+		        }
+	        }
+	        else
+	        {
+		        // connect to project server
+	        }
 
-			return projects;
+	        return projects;
         }		
 
 		private List<Type> GetTaskTypes(ProjectFile mpx)

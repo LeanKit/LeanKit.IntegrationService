@@ -10,7 +10,7 @@ namespace IntegrationService
 {
 	public interface IConnection
 	{
-		ConnectionResult Connect(string host, string user, string password);
+		ConnectionResult Connect(string protocol, string host, string user, string password);
 		List<Project> GetProjects();
 	}
 

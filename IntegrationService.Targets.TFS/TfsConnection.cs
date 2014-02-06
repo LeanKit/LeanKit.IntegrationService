@@ -26,9 +26,15 @@ namespace IntegrationService.Targets.TFS
 		private BasicAuthCredential _basicAuthCredential;
 		private TfsClientCredentials _tfsClientCredentials;
 
-		public ConnectionResult Connect(string host, string user, string password)
+		public ConnectionResult Connect(string protocol, string host, string user, string password)
 		{
 			string.Format("Connecting to TFS '{0}'", host).Debug();
+
+			if (protocol.ToLowerInvariant().StartsWith("file"))
+			{
+				string.Format("TFS integration cannot use a file datasource '{0}'.", host).Error();
+				return ConnectionResult.InvalidUrl;
+			}
 
 			try
 			{

@@ -40,7 +40,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 			var futureDate = DateTime.Now.AddDays(7);
 
 			// for now we'll only get child tasks. 
-			// TODO: add tasks as a card, add any child tasks to a taskboard on the card
+			// TODO: add tasks as a card, add any child tasks to a taskboard on the card?
 			// Flag2 = Exclude from LeanKit
 			var tasks = (from Task task in mpx.AllTasks.ToIEnumerable() 
 								where (!task.GetFlag(2) && (task.Start != null && task.Start.ToDateTime() < futureDate)
