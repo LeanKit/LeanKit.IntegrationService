@@ -14,20 +14,29 @@ using System.Threading;
 using IntegrationService.Targets;
 using IntegrationService.Util;
 using ServiceStack.Text;
+using Topshelf;
 
 namespace IntegrationService
 {
-	public class IntegrationService
+	public class IntegrationService : ServiceControl
 	{
 		private IBoardSubscriptionManager _subscriptions = new BoardSubscriptionManager();
 		private TargetBase _target;
 		private ConfigurationService _configurationService;
 		public static IntegrationService Instance { get; private set; }
+		private bool _runOnce;
+		private HostControl _hostControl;
 
 		public IntegrationService() { Instance = this; }
 
-		public void Start()
+		public void Start(bool runOnce) { Start(null, runOnce); }
+
+		public bool Start(HostControl hostControl) { return Start(hostControl, false); }
+
+		public bool Start(HostControl hostControl, bool runOnce)
 		{
+			_hostControl = hostControl;
+			_runOnce = runOnce;
 			var types = GetAllTypes();
 
 			// model mapping configuration
@@ -40,10 +49,12 @@ namespace IntegrationService
 			}
 
 			_configurationService = (ConfigurationService) Activator.CreateInstance(typeof (ConfigurationService));
-			new Thread(_configurationService.Process).Start();
+			
+			if (!runOnce) new Thread(_configurationService.Process).Start();
 
 			StartIntegration(types);
 
+			return true;
 		}
 
 		private static List<System.Type> GetAllTypes()
@@ -67,7 +78,7 @@ namespace IntegrationService
 				return;
 			}
 
-			Instance.Stop();
+			Instance.Stop(null);
 
 			// copy new config file
 			var dir = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
@@ -84,7 +95,7 @@ namespace IntegrationService
 			Instance.StartIntegration(types);
 		}
 
-		public void Stop()
+		public bool Stop(HostControl hostControl)
 		{
 			if (_target != null)
 			{
@@ -93,6 +104,7 @@ namespace IntegrationService
 			}
 			_subscriptions.Shutdown();
 			_subscriptions = new BoardSubscriptionManager();
+			return true;
 		}
 
 		public void StartConfigService()
@@ -137,6 +149,8 @@ namespace IntegrationService
 				if (implementation != null)
 				{
 					_target = (TargetBase) Activator.CreateInstance(implementation, _subscriptions);
+					_target.RunOnce = _runOnce;
+					_target.StopIntegration += TargetOnStopIntegration;
 					new Thread(_target.Process).Start();
 				}
 				else
@@ -148,8 +162,17 @@ namespace IntegrationService
 			}
 			else
 			{
-				noConfigMessage.Print();
+				if (!_runOnce) noConfigMessage.Print();
+				else
+				{
+					"You must configure this service before running an integration.".Print();
+				}
 			}
+		}
+
+		private void TargetOnStopIntegration(object sender, EventArgs eventArgs)
+		{
+			if (_hostControl != null) _hostControl.Stop();
 		}
 
 		private Configuration LoadConfiguration()
@@ -164,5 +187,6 @@ namespace IntegrationService
 				return null;
 			}
 		}
+
 	}
 }

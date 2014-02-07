@@ -39,9 +39,18 @@ namespace IntegrationService.Targets
         protected LeanKitAccountAuth LeanKitAccount { get; set; }
         protected ILeanKitApi LeanKit { get; set; }
         public DateTime QueryDate { get; set; }
+		public bool RunOnce { get; set; }
 	    private FileSystemWatcher _configWatcher;
 
 	    private AppSettings _appSettings;
+
+		public event EventHandler StopIntegration;
+
+	    public void OnStopIntegration()
+	    {
+		    var handler = StopIntegration;
+		    if (null != handler) handler(this, EventArgs.Empty);
+	    }
 
         protected AppSettings AppSettings
 	    {
@@ -62,21 +71,20 @@ namespace IntegrationService.Targets
 	    {
 		    get
 		    {
-			    if (_currentUser == null)
+			    if (_currentUser != null) return _currentUser;
+
+			    // This is a hack, we shouldn't need to call GetCurrentUser(boardId)
+			    // we should be able to just get the current user, we know the user name from auth in wrapper
+			    // we should be able to just call GetCurrentUser()
+			    if (Configuration != null &&
+			        Configuration.Mappings != null &&
+			        Configuration.Mappings[0] != null &&
+			        Configuration.Mappings[0].Identity != null)
 			    {
-					// This is a hack, we shouldn't need to call GetCurrentUser(boardId)
-					// we should be able to just get the current user, we know the user name from auth in wrapper
-					// we should be able to just call GetCurrentUser()
-				    if (Configuration != null &&
-				        Configuration.Mappings != null &&
-				        Configuration.Mappings[0] != null &&
-				        Configuration.Mappings[0].Identity != null)
+				    var curUser = LeanKit.GetCurrentUser(Configuration.Mappings[0].Identity.LeanKit);
+				    if (curUser != null)
 				    {
-					    var curUser = LeanKit.GetCurrentUser(Configuration.Mappings[0].Identity.LeanKit);
-					    if (curUser != null)
-					    {
-						    _currentUser = curUser;
-					    }
+					    _currentUser = curUser;
 				    }
 			    }
 			    return _currentUser;
@@ -152,6 +160,13 @@ namespace IntegrationService.Targets
 						{
 							Log.Error("An error occurred: {0} - {1} - {2}", ex.GetType(), ex.Message, ex.StackTrace);
 						}
+					}
+
+					if (RunOnce)
+					{
+						Shutdown();
+						Subscriptions.Shutdown();
+						OnStopIntegration();
 					}
 
 					if (StopEvent.WaitOne(Configuration.PollingFrequency))
