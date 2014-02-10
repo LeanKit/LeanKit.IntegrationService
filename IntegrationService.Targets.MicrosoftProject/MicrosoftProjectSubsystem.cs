@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using IntegrationService.Util;
@@ -34,8 +35,8 @@ namespace IntegrationService.Targets.MicrosoftProject
 		{
 			Log.Debug("Polling Microsoft Project for Tasks");
 
-			ProjectReader reader = ProjectReaderUtility.getProjectReader(Configuration.Target.Host);
-			ProjectFile mpx = reader.read(Configuration.Target.Host);
+			ProjectReader reader = ProjectReaderUtility.getProjectReader(Path.Combine(Configuration.Target.Host, boardMapping.Identity.Target));
+			ProjectFile mpx = reader.read(Path.Combine(Configuration.Target.Host, boardMapping.Identity.Target));
 
 			var futureDate = DateTime.Now.AddDays(7);
 

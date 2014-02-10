@@ -17,7 +17,8 @@ namespace IntegrationService.Targets.MicrosoftProject
 {
     public class MicrosoftProjectConnection : IConnection
     {
-		protected string FilePath;
+	    protected string FolderPath;
+		protected string File;
 
         public ConnectionResult Connect(string protocol, string host, string user, string password)
         {
@@ -25,16 +26,16 @@ namespace IntegrationService.Targets.MicrosoftProject
 
 	        if (protocol.ToLowerInvariant().StartsWith("file"))
 	        {
-		        FilePath = host;
+		        FolderPath = host;
 	        }
 
-	        if (!string.IsNullOrEmpty(FilePath))
+	        if (!string.IsNullOrEmpty(FolderPath))
 	        {
 		        try
 		        {
-			        if (!File.Exists(host))
+			        if (!Directory.Exists(host))
 			        {
-				        string.Format("File does not exist '{0}'", host).Error();
+				        string.Format("Folder does not exist '{0}'", host).Error();
 				        return ConnectionResult.FailedToConnect;
 			        }
 		        }
@@ -56,29 +57,36 @@ namespace IntegrationService.Targets.MicrosoftProject
         {
 			var projects = new List<Project>();
 
-	        if (!string.IsNullOrEmpty(FilePath))
+	        if (!string.IsNullOrEmpty(FolderPath))
 	        {
-		        ProjectReader reader = ProjectReaderUtility.getProjectReader(FilePath);
-		        ProjectFile mpx = reader.read(FilePath);
-
-		        // Get the top level task
-		        var topTask = (from Task task in mpx.AllTasks.ToIEnumerable()
-		                       where task.ID.intValue() == 0
-		                       select task).FirstOrDefault();
-
-		        if (topTask == null)
+		        foreach (var projectFile in Directory.GetFiles(FolderPath))
 		        {
-			        ("No project found in file.").Error();
-		        }
-		        else
-		        {
-			        // add types and states
-			        projects.Add(new Project(
-				                     topTask.UniqueID.intValue().ToString(),
-				                     topTask.Name,
-				                     GetTaskTypes(mpx),
-				                     GetStates(mpx)
-				                     ));
+			        if (projectFile.ToLower().EndsWith("mpx")
+			            || projectFile.ToLower().EndsWith("mpp")
+			            || projectFile.ToLower().EndsWith("mpt"))
+			        {
+						string projectFileName = projectFile.Substring(FolderPath.Length + 1);
+
+						ProjectReader reader = ProjectReaderUtility.getProjectReader(projectFile);
+						ProjectFile mpx = reader.read(projectFile);
+
+						// Get the top level task
+						var topTask = (from Task task in mpx.AllTasks.ToIEnumerable()
+									   where task.ID.intValue() == 0
+									   select task).FirstOrDefault();
+
+						if (topTask == null) {
+							string.Format("No project found in file: '{0}'.", projectFile).Debug();
+						} else {
+							// add types and states
+							projects.Add(new Project(
+											 projectFileName,
+											 projectFileName,
+											 GetTaskTypes(mpx),
+											 GetStates(mpx)
+											 ));
+						}				        
+			        }
 		        }
 	        }
 	        else
