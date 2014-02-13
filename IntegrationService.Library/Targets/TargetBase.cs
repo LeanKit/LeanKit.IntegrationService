@@ -141,10 +141,13 @@ namespace IntegrationService.Targets
 
 			if (Configuration != null && Configuration.Mappings != null)
 			{
+				bool usePollingTime = Configuration.PollingTime.HasValue;
+
 				QueryDate = Configuration.EarliestSyncDate.ToUniversalTime();
 
 				int i = 0;
-				while (true)
+				bool cont = true;
+				while (cont)
 				{
 					i++;
 					if (i%10 == 0)
@@ -162,17 +165,40 @@ namespace IntegrationService.Targets
 						}
 					}
 
+					QueryDate = DateTime.Now;
+
 					if (RunOnce)
 					{
 						Shutdown();
 						Subscriptions.Shutdown();
 						OnStopIntegration();
+						cont = false;
 					}
+					else if (usePollingTime)
+					{
+						// determine next time to run this. 						
+						var nextRunTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).Add(Configuration.PollingTime.Value);
+						if (nextRunTime < DateTime.Now)
+							nextRunTime = nextRunTime.AddDays(1);
 
-					if (StopEvent.WaitOne(Configuration.PollingFrequency))
-						break;
-
-					QueryDate = DateTime.Now;
+						Log.Info("Next run time is " + nextRunTime.ToShortDateString() + " at " + nextRunTime.ToLongTimeString());
+						while (DateTime.Now < nextRunTime)
+						{
+							if (StopEvent.WaitOne(Configuration.GetEffectivePollingFrequency()))
+							{
+								cont = false;
+								break;
+							}
+						}
+					}
+					else
+					{
+						if (StopEvent.WaitOne(Configuration.GetEffectivePollingFrequency()))
+						{
+							//cont = false;
+							break;
+						}
+					}					
 				}
 			}
 		}

@@ -335,7 +335,7 @@ namespace IntegrationService.Targets.JIRA
         {
             Log.Debug("Polling Jira for Issues");
 
-			var queryAsOfDate = QueryDate.AddMilliseconds(Configuration.PollingFrequency * -1.5);
+			var queryAsOfDate = QueryDate.AddMilliseconds(Configuration.GetEffectivePollingFrequency() * -1.5);
 
 	        string jqlQuery;
 			if (!string.IsNullOrEmpty(project.Query))

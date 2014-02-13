@@ -233,7 +233,9 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         url: "/settings",
         defaults: {
             PollingFrequency: 5000,
-            EarliestSyncDate: "1/1/2007"
+            EarliestSyncDate: "1/1/2007",
+            PollingUnits: "milliseconds",
+            PollingTime: null
         }
     });
     

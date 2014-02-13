@@ -69,7 +69,7 @@ namespace IntegrationService.Targets.TFS
 		        iterationQuery = string.Format(" AND [System.IterationPath] UNDER '{0}' ", project.IterationPath);
 	        }
 
-	        var queryAsOfDate = QueryDate.AddMilliseconds(Configuration.PollingFrequency*-1.5).ToString("o");
+	        var queryAsOfDate = QueryDate.AddMilliseconds(Configuration.GetEffectivePollingFrequency() *-1.5).ToString("o");
 
 			string tfsQuery;
 			if (!string.IsNullOrEmpty(project.Query)) 

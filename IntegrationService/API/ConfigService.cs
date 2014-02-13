@@ -134,6 +134,8 @@ namespace IntegrationService.API
 			{
 				config.PollingFrequency = request.PollingFrequency;
 				config.EarliestSyncDate = request.EarliestSyncDate;
+				config.PollingTime = request.PollingTime;
+				config.PollingUnits = request.PollingUnits;
 
 				configStore.Save(config);
 			}

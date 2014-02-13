@@ -46,6 +46,8 @@ namespace IntegrationService.API.Models
     public class ConfigurationSettingsModel
     {
         public int PollingFrequency { get; set; }
+		public string PollingUnits { get; set; }
+		public TimeSpan? PollingTime { get; set; }
         public DateTime EarliestSyncDate { get; set; }
         public string LocalStoragePath { get; set; }
     }
@@ -169,7 +171,9 @@ namespace IntegrationService.API.Models
                 {
                     EarliestSyncDate = configuration.EarliestSyncDate,
                     LocalStoragePath = configuration.LocalStoragePath,
-                    PollingFrequency = configuration.PollingFrequency
+                    PollingFrequency = configuration.PollingFrequency, 
+					PollingTime = configuration.PollingTime,
+					PollingUnits = configuration.PollingUnits
                 };
         }
     }
