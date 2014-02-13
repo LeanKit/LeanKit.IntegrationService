@@ -14,12 +14,76 @@ namespace IntegrationService
 		List<Project> GetProjects();
 	}
 
+	public interface IConfigurableFieldsConnection
+	{
+		List<ConfigurableField> GetConfigurableFields();
+	}
+
 	public enum ConnectionResult 
 	{
 		InvalidUrl = 0,
 		FailedToConnect = 1,
 		Success = 2,
 		UnknownTarget = 3
+	}
+
+
+	public class ConfigurableField
+	{
+		public string Description { get; set; }
+		public SyncDirection SyncDirection { get; set; }
+		public LeanKitField LeanKitField { get; set; }
+		public List<TargetField> TargetFields { get; set; } 
+
+		public ConfigurableField()
+		{
+			LeanKitField = LeanKitField.None;
+			Description = "";
+			SyncDirection = SyncDirection.None;
+			TargetFields = new List<TargetField>();
+		}
+
+		public ConfigurableField(LeanKitField leanKitField, List<TargetField> targetFields, SyncDirection syncDirection, string description)
+		{
+			Description = description;
+			SyncDirection = syncDirection;
+			LeanKitField = leanKitField;
+			TargetFields = targetFields;
+		}
+	}
+
+	public enum SyncDirection
+	{
+		None, 
+		ToLeanKit,
+		ToTarket,
+		//Both
+	}
+
+	public class TargetField
+	{
+		public string Name { get; set; }
+		public bool IsDefault { get; set; }
+	}
+
+	public enum LeanKitField 
+	{
+		None,
+		CardType,
+		ClassOfService,
+		IsBlocked,
+		BlockedReason,
+		ExcludeFromLeankit,
+		Tags, 
+		StartDate, 
+		DueDate, 
+		Title, 
+		Description, 
+		Priority, 
+		Size, 
+		ExternalId, 
+		Id, 
+		Permalink
 	}
 
 	public class Project 

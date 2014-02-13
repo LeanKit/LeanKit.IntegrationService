@@ -19,6 +19,7 @@ namespace IntegrationService
 		public BoardMapping()
 		{
 			Types=new List<WorkItemType>();
+			FieldMappings = new List<FieldMap>();
 			LaneToStatesMap = new Dictionary<long, List<string>>();
 		}
 
@@ -26,6 +27,7 @@ namespace IntegrationService
 		public Identity Identity { get; set; }
 		public List<string> QueryStates { get; set; }
 		public Dictionary<long, List<string>> LaneToStatesMap { get; set; }
+		public List<FieldMap> FieldMappings { get; set; } 
 		public List<WorkItemType> Types { get; set; }
 		public string Excludes { get; set; }
 		public string Query { get; set; }
@@ -54,6 +56,29 @@ namespace IntegrationService
 			return ValidLanes.Select(x => x.Id).ToList();			
 		}
 
+		public List<string> GetTargetFieldFor(LeanKitField leanKitField, SyncDirection syncDirection)
+		{
+			var targets = new List<string>();
+
+			if (FieldMappings.Any())
+			{
+				var field = FieldMappings.FirstOrDefault(x => (x.LeanKitField.ToLowerInvariant() == leanKitField.ToString().ToLowerInvariant()) 
+													&& (x.SyncDirection.ToLowerInvariant() == syncDirection.ToString().ToLowerInvariant()));
+				if (field != null)
+				{
+					var selectedFields = field.TargetFields.Where(x => x.IsSelected).Select(x => x.Name);
+					if (selectedFields.Any())
+						return selectedFields.ToList();
+
+					var defaultFields = field.TargetFields.Where(x => x.IsDefault).Select(x => x.Name);
+					if (defaultFields.Any())
+						return defaultFields.ToList();
+				}
+			}
+
+			return targets;
+		}
+
 		public override string ToString() 
 		{
 			var sb = new StringBuilder();
@@ -69,6 +94,12 @@ namespace IntegrationService
 						sb.Append(state + ", ");
 					sb.Append(Environment.NewLine);
 				}
+			}
+
+			sb.Append(Environment.NewLine);
+			sb.Append("     Field Mappings   :        " + Environment.NewLine);
+			foreach (var fieldMapping in FieldMappings) {
+				sb.Append(fieldMapping);
 			}
 
 			sb.Append(Environment.NewLine);
@@ -110,5 +141,38 @@ namespace IntegrationService
 			sb.AppendLine("     UpdateTargetItems :             " + UpdateTargetItems);
 			return sb.ToString();
 		}
+	}
+
+	public class FieldMap
+	{
+		public FieldMap() 
+		{
+			TargetFields = new List<TargetFieldMap>();
+		}
+
+		public string LeanKitField { get; set; }
+		public string SyncDirection { get; set; }
+		public List<TargetFieldMap> TargetFields { get; set; }
+
+		public override string ToString() 
+		{
+			var sb = new StringBuilder();
+			sb.AppendLine("     LeanKitField :       " + LeanKitField);
+			sb.AppendLine("     SyncDirection:       " + SyncDirection);
+			if (TargetFields.Any()) {
+				sb.AppendLine("      TargetFields:   ");
+				foreach (var item in TargetFields) {
+					sb.AppendLine("        " + item.Name + ", IsDefault: " + item.IsDefault + ", IsSelected: " + item.IsSelected);
+				}
+			}
+			return sb.ToString();
+		}
+	}
+
+	public class TargetFieldMap 
+	{
+		public string Name { get; set; }
+		public bool IsDefault { get; set; }
+		public bool IsSelected { get; set; }
 	}
 }

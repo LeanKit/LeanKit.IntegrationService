@@ -21,6 +21,20 @@ namespace IntegrationService.API.Models
         public string PathFilter { get; set; }
     }
 
+	public class ConfigurableFieldModel
+	{
+		public string Description { get; set; }
+		public string SyncDirection { get; set; }
+		public string LeanKitField { get; set; }
+		public List<TargetFieldModel> TargetFields { get; set; } 
+	}
+
+	public class TargetFieldModel
+	{
+		public string Name { get; set; }
+		public bool IsDefault { get; set; }
+	}
+
     public class ConfigurationModel
     {
         public ServerConfigurationModel Target { get; set; }
@@ -51,6 +65,21 @@ namespace IntegrationService.API.Models
         public string LeanKitType { get; set; }
         public string TargetType { get; set; }
     }
+
+	public class FieldMapModel
+	{
+		public string LeanKitField { get; set; }
+		public string SyncDirection { get; set; }
+		public List<TargetFieldMapModel> TargetFields { get; set; }
+	}
+
+	public class TargetFieldMapModel 
+	{
+		public string Name { get; set; }
+		public bool IsDefault { get; set; }
+		public bool IsSelected { get; set; }
+	}
+
     public class BoardMappingModel
     {
         public int Id { get; set; }
@@ -64,7 +93,8 @@ namespace IntegrationService.API.Models
 		public bool CreateCards { get; set; }
 		public bool CreateTargetItems { get; set; }
         public Dictionary<long, List<string>> LaneToStatesMap { get; set; }
-        public List<TypeMapModel> TypeMap { get; set; } 
+        public List<TypeMapModel> TypeMap { get; set; }
+		public List<FieldMapModel> FieldMap { get; set; } 
         public string Query { get; set; }
         public string IterationPath { get; set; }
         public List<string> QueryStates { get; set; }
@@ -87,6 +117,26 @@ namespace IntegrationService.API.Models
             Mapper.CreateMap<ServerConfiguration, ServerConfigurationModel>()
                 .ForMember(m => m.Url, opt => opt.Ignore());
 
+	        Mapper.CreateMap<TargetFieldMap, TargetFieldMapModel>()
+	            .ForMember(x => x.Name, opt => opt.MapFrom(s => s.Name))
+	            .ForMember(x => x.IsSelected, opt => opt.MapFrom(s => s.IsSelected))
+	            .ForMember(x => x.IsDefault, opt => opt.MapFrom(s => s.IsDefault));
+
+			Mapper.CreateMap<TargetFieldMapModel, TargetFieldMap>()
+	            .ForMember(x => x.Name, opt => opt.MapFrom(s => s.Name))
+	            .ForMember(x => x.IsSelected, opt => opt.MapFrom(s => s.IsSelected))
+	            .ForMember(x => x.IsDefault, opt => opt.MapFrom(s => s.IsDefault));
+
+	        Mapper.CreateMap<FieldMap, FieldMapModel>()
+	            .ForMember(x => x.LeanKitField, opt => opt.MapFrom(s => s.LeanKitField))
+	            .ForMember(x => x.SyncDirection, opt => opt.MapFrom(s => s.SyncDirection))
+	            .ForMember(x => x.TargetFields, opt => opt.MapFrom(s => s.TargetFields));
+
+			Mapper.CreateMap<FieldMapModel, FieldMap>()
+				.ForMember(x => x.LeanKitField, opt => opt.MapFrom(s => s.LeanKitField))
+				.ForMember(x => x.SyncDirection, opt => opt.MapFrom(s => s.SyncDirection))
+				.ForMember(x => x.TargetFields, opt => opt.MapFrom(s => s.TargetFields.Where(f => f.IsDefault || f.IsSelected)));
+
             Mapper.CreateMap<WorkItemType, TypeMapModel>()
                 .ForMember(m => m.LeanKitType, opt => opt.MapFrom(s => s.LeanKit))
                 .ForMember(m => m.TargetType, opt => opt.MapFrom(s => s.Target));
@@ -96,14 +146,16 @@ namespace IntegrationService.API.Models
                 .ForMember(m => m.BoardId, opt => opt.MapFrom(s => s.Identity.LeanKit))
                 .ForMember(m => m.TargetProjectId, opt => opt.MapFrom(s => s.Identity.Target))
                 .ForMember(m => m.TypeMap, opt=>opt.MapFrom(s=>s.Types))
+				.ForMember(m => m.FieldMap, opt => opt.MapFrom(s=>s.FieldMappings))
                 .ForMember(m => m.TargetProjectName, opt=>opt.MapFrom(s=>s.Identity.TargetName))
-	              .ForMember(m => m.Title, opt => opt.MapFrom(s => s.Identity.LeanKitTitle));
+	            .ForMember(m => m.Title, opt => opt.MapFrom(s => s.Identity.LeanKitTitle));
 
             Mapper.CreateMap<BoardMappingModel, BoardMapping>()
                 .ForMember(m => m.Identity, opt => opt.ResolveUsing(board => new Identity { LeanKit = board.BoardId, LeanKitTitle = board.Title, Target = board.TargetProjectId, TargetName = board.TargetProjectName }))
                 .ForMember(m => m.Types, opt => opt.ResolveUsing(board => board.TypeMap==null?null:board.TypeMap
                                                                                 .Where(item=>!string.IsNullOrEmpty(item.LeanKitType)&& !string.IsNullOrEmpty(item.TargetType))
                                                                                 .Select(item => new WorkItemType { LeanKit = item.LeanKitType, Target = item.TargetType })))
+				.ForMember(m => m.FieldMappings, opt => opt.MapFrom(board => board.FieldMap))
                 .ForMember(m => m.ExcludedTypeQuery, opt => opt.Ignore())
                 .ForMember(m => m.ValidLanes, opt => opt.Ignore())
                 .ForMember(m => m.ValidCardTypes, opt => opt.Ignore())

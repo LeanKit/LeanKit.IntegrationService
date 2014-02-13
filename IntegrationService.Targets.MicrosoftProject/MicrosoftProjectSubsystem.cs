@@ -38,15 +38,28 @@ namespace IntegrationService.Targets.MicrosoftProject
 			ProjectReader reader = ProjectReaderUtility.getProjectReader(Path.Combine(Configuration.Target.Host, boardMapping.Identity.Target));
 			ProjectFile mpx = reader.read(Path.Combine(Configuration.Target.Host, boardMapping.Identity.Target));
 
-			var futureDate = DateTime.Now.AddDays(7);
+			var futureDate = DateTime.Now.AddDays(60);
+
+			var importFields = GetImportFields(boardMapping);
+
+			bool useExclude = false;
+			string excludeField = "";
+			var excludeFields = importFields.GetTargetFieldsFor(LeanKitField.ExcludeFromLeankit);
+			if (excludeFields.Any())
+			{
+				excludeField = excludeFields.FirstOrDefault();
+				if (!string.IsNullOrEmpty(excludeField))
+					useExclude = true;
+			}
+			var startDates = importFields.GetTargetFieldsFor(LeanKitField.StartDate);
 
 			// for now we'll only get child tasks. 
 			// TODO: add tasks as a card, add any child tasks to a taskboard on the card?
-			// Flag2 = Exclude from LeanKit
 			var tasks = (from Task task in mpx.AllTasks.ToIEnumerable() 
-								where (!task.GetFlag(2) && (task.Start != null && task.Start.ToDateTime() < futureDate)
-										|| (task.BaselineStart != null && task.BaselineStart.ToDateTime() < futureDate)
-										|| (task.EarlyStart != null && task.EarlyStart.ToDateTime() < futureDate))
+								where ((!useExclude || (string.IsNullOrEmpty(task.GetText(excludeField)) || task.GetText(excludeField).ToLowerInvariant() != "yes")) 
+										&& (startDates.Contains("Start") && task.Start != null && task.Start.ToDateTime() < futureDate)
+										|| (startDates.Contains("BaselineStart") && task.BaselineStart != null && task.BaselineStart.ToDateTime() < futureDate)
+										|| (startDates.Contains("EarlyStart") && task.EarlyStart != null && task.EarlyStart.ToDateTime() < futureDate))
 									&& (task.Summary || task.Milestone) 
 									&& (task.ChildTasks == null || task.ChildTasks.isEmpty())
 								select task).ToList();
@@ -71,13 +84,13 @@ namespace IntegrationService.Targets.MicrosoftProject
 					if (card == null || card.ExternalSystemName != ServiceName) 
 					{
 						Log.Debug("Create new card for Task [{0}]", task.UniqueID.ToString());
-						CreateCardFromTask(boardMapping, task);
+						CreateCardFromTask(boardMapping, task, importFields);
 					} 
 					else 
 					{
 						Log.Debug("Previously created a card for Task [{0}]", task.UniqueID.ToString());
 							if (boardMapping.UpdateCards)
-								TaskUpdated(task, card, boardMapping);
+								TaskUpdated(task, card, boardMapping, importFields);
 							else
 								Log.Info("Skipped card update because 'UpdateCards' is disabled.");
 					}
@@ -86,13 +99,13 @@ namespace IntegrationService.Targets.MicrosoftProject
 			Log.Info("{0} item(s) queried.\n", tasks.Count);
 		}
 
-		private void CreateCardFromTask(BoardMapping project, Task task) 
+		private void CreateCardFromTask(BoardMapping project, Task task, Dictionary<LeanKitField, List<string>> importFields) 
 		{
 			if (task == null) return;
 
 			var boardId = project.Identity.LeanKit;
 
-			var mappedCardType = task.LeanKitCardType(project);
+			var mappedCardType = task.LeanKitCardType(project, importFields);
 			var laneId = project.LanesFromState("Ready").First();
 			var card = new Card
 			{
@@ -113,30 +126,31 @@ namespace IntegrationService.Targets.MicrosoftProject
 				dateFormat = CurrentUser.DateFormat ?? "MM/dd/yyyy";
 			}
 
-			if (task.GetDueDate().HasValue) 
+			var dueDate = task.GetDueDate(importFields);
+			if (dueDate.HasValue) 
 			{
-				card.DueDate = task.GetDueDate().Value.ToString(dateFormat);
+				card.DueDate = dueDate.Value.ToString(dateFormat);
 			}
 
-			if (task.GetStartDate().HasValue)
+			var startDate = task.GetStartDate(importFields);
+			if (startDate.HasValue)
 			{
-				card.StartDate = task.GetStartDate().Value.ToString(dateFormat);
+				card.StartDate = startDate.Value.ToString(dateFormat);
 			}
 
-			// Flag3/Text5 = IsBlocked, Text3 = Blocked Reason
-			if (IsBlocked(task))
+			if (task.GetIsBlocked(importFields))
 			{
 				card.IsBlocked = true;
-				card.BlockReason = task.GetText(3) ?? "Task is blocked in Microsoft Project.";
+				card.BlockReason = task.GetBlockedReason(importFields) ?? "Task is blocked in Microsoft Project.";
 			}
 
-			// Text2 = Class of Service
-			if (!string.IsNullOrEmpty(task.GetText(2)))
+			var cos = task.GetClassOfService(importFields);
+			if (!string.IsNullOrEmpty(cos))
 			{
 				var board = LeanKit.GetBoard(boardId);
 				if (board != null && board.ClassOfServiceEnabled)
 				{
-					var classOfService = board.ClassesOfService.FirstOrDefault(x => x.Title.ToLowerInvariant() == task.GetText(2).ToLowerInvariant());
+					var classOfService = board.ClassesOfService.FirstOrDefault(x => x.Title.ToLowerInvariant() == cos);
 					if (classOfService != null)
 					{
 						card.ClassOfServiceId = classOfService.Id;
@@ -144,9 +158,10 @@ namespace IntegrationService.Targets.MicrosoftProject
 				}
 			}
 
-			if (task.GetSize() > 0)
+			var size = task.GetSize(importFields);
+			if (size > 0)
 			{
-				card.Size = task.GetSize();
+				card.Size = size;
 			}
 
 			if (!string.IsNullOrEmpty(task.Hyperlink)) 
@@ -154,10 +169,10 @@ namespace IntegrationService.Targets.MicrosoftProject
 				card.ExternalSystemUrl = task.Hyperlink;
 			}
 
-			// Text4 = tags
-			if (!string.IsNullOrEmpty(task.GetText(4)))
+			var tags = task.GetTags(importFields);
+			if (!string.IsNullOrEmpty(tags))
 			{
-				card.Tags = task.getText(4);
+				card.Tags = tags;
 			}
 
 			if (task.ResourceAssignments != null)
@@ -216,7 +231,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 			Log.Info("Created a card [{0}] of type [{1}] for Task [{2}] on Board [{3}] on Lane [{4}]", card.Id, mappedCardType.Name, task.UniqueID.toString(), boardId, laneId);
 		}
 
-		private void TaskUpdated(Task task, Card card, BoardMapping boardMapping) 
+		private void TaskUpdated(Task task, Card card, BoardMapping boardMapping, Dictionary<LeanKitField, List<string>> importFields) 
 		{
 			Log.Info("Task [{0}] updated, comparing to corresponding card...", task.UniqueID.toString());
 
@@ -248,9 +263,10 @@ namespace IntegrationService.Targets.MicrosoftProject
 				dateFormat = CurrentUser.DateFormat ?? "MM/dd/yyyy";
 			}
 
-			if (task.GetDueDate().HasValue) 
+			var dueDate = task.GetDueDate(importFields);
+			if (dueDate.HasValue) 
 			{
-				var dueDateString = task.GetDueDate().Value.ToString(dateFormat);
+				var dueDateString = dueDate.Value.ToString(dateFormat);
 				if (card.DueDate != dueDateString) 
 				{
 					card.DueDate = dueDateString;
@@ -263,9 +279,10 @@ namespace IntegrationService.Targets.MicrosoftProject
 				saveCard = true;
 			}
 
-			if (task.GetStartDate().HasValue) 
+			var startDate = task.GetStartDate(importFields);
+			if (startDate.HasValue) 
 			{
-				var startDateString = task.GetStartDate().Value.ToString(dateFormat);
+				var startDateString = startDate.Value.ToString(dateFormat);
 				if (card.StartDate != startDateString) 
 				{
 					card.StartDate = startDateString;
@@ -279,11 +296,12 @@ namespace IntegrationService.Targets.MicrosoftProject
 			}
 
 			// Text4 = tags
-			if (!string.IsNullOrEmpty(task.GetText(4))) 
+			var tags = task.GetTags(importFields);
+			if (!string.IsNullOrEmpty(tags)) 
 			{
-				if (card.Tags != task.GetText(4))
+				if (card.Tags != tags)
 				{
-					card.Tags = task.GetText(4);
+					card.Tags = tags;
 					saveCard = true;
 				}
 			}
@@ -302,22 +320,21 @@ namespace IntegrationService.Targets.MicrosoftProject
 				saveCard = true;
 			}
 
-			// Flag3/Text4 = IsBlocked, Text3 = Blocked Reason
-			var isBlocked = IsBlocked(task);
+			var isBlocked = task.GetIsBlocked(importFields);
 			if (card.IsBlocked != isBlocked)
 			{
 				card.IsBlocked = isBlocked;
-				card.BlockReason = task.GetText(3) ?? "Task is blocked/unblocked in Microsoft Project.";
+				card.BlockReason = task.GetBlockedReason(importFields) ?? "Task is blocked/unblocked in Microsoft Project.";
 				saveCard = true;
-			}			
+			}
 
-			// Text2 = Class of Service
-			if (!string.IsNullOrEmpty(task.GetText(2))) 
+			var cos = task.GetClassOfService(importFields);
+			if (!string.IsNullOrEmpty(cos)) 
 			{
 				var board = LeanKit.GetBoard(boardId);
 				if (board != null && board.ClassOfServiceEnabled) 
 				{
-					var classOfService = board.ClassesOfService.FirstOrDefault(x => x.Title.ToLowerInvariant() == task.GetText(2).ToLowerInvariant());
+					var classOfService = board.ClassesOfService.FirstOrDefault(x => x.Title.ToLowerInvariant() == cos.ToLowerInvariant());
 					if (classOfService != null && card.ClassOfServiceId != classOfService.Id) 
 					{
 						card.ClassOfServiceId = classOfService.Id;
@@ -403,22 +420,14 @@ namespace IntegrationService.Targets.MicrosoftProject
 			return userId;
 		}
 
-		private bool IsBlocked(Task task)
+		private Dictionary<LeanKitField, List<string>> GetImportFields(BoardMapping boardMapping)
 		{
-			// we ought to be using Flag3 as the IsBlocked indicator
-			// but there is a bug where mpxj is not getting those values properly
-			// so instead for the mean time we'll be using Yes/No values in Text5
-			var blocked = task.GetFlag(3);
-			if (!string.IsNullOrEmpty(task.GetText(5)))
+			var importFields = new Dictionary<LeanKitField, List<string>>();
+			foreach (var field in (LeanKitField[]) Enum.GetValues(typeof(LeanKitField)))
 			{
-				if (task.GetText(5).ToLowerInvariant() == "yes")
-				{
-					return true;
-				}
-				return false;
+				importFields.Add(field, boardMapping.GetTargetFieldFor(field, SyncDirection.ToLeanKit));
 			}
-			return blocked;
+			return importFields;
 		}
-
 	}
 }

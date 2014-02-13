@@ -5,6 +5,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using IntegrationService.Targets.GitHub;
@@ -22,6 +23,9 @@ namespace IntegrationService.API
 
     [Route("/projects")]
     public class ProjectsRequest : Request { }
+
+	[Route("/configurablefields")]
+	public class ConfigurableFieldsRequest : Request { }
 
 	public class TargetService : ServiceBase
 	{
@@ -159,6 +163,28 @@ namespace IntegrationService.API
 			var projects = target.GetProjects();
 
 			return OK(projects);
+		}
+
+		public object Get(ConfigurableFieldsRequest request)
+		{
+			if (request.Type == null) return null;
+
+			ConnectionResult result;
+			var target = Connect(request, out result);
+
+			if (result != ConnectionResult.Success)
+				return ServerError(result.ToString());
+
+			if ((target is IConfigurableFieldsConnection))
+			{
+				"Getting configurable fields...".Debug();
+
+				var configurableFields = ((IConfigurableFieldsConnection)target).GetConfigurableFields();
+
+				return OK(configurableFields);
+			}
+
+			return OK(new List<ConfigurableField>());
 		}
 	}
 }

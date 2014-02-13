@@ -31,12 +31,36 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             IsConfirmed:false
         },
     });
-    
+
     Main.models.TypeMapCollection = Backbone.Collection.extend({
         model: Main.models.TypeMapModel,
         isNew2:function () {
             return this.attributes.LeanKitType != "" && this.attributes.TargetType != "";
         }
+    });
+
+    Main.models.TargetFieldMapModel = App.codegen.TargetFieldMapModel.extend({
+       defaults: {
+           IsDefault: false,
+           IsSelected: false,
+           Name: ""
+       },
+    });
+
+    Main.models.TargetFieldMapCollection = Backbone.Collection.extend({
+       model: Main.models.TargetFieldMapModel, 
+    });
+
+    Main.models.FieldMapModel = App.codegen.FieldMapModel.extend({
+        defaults: {
+            LeanKitField: "",
+            SyncDirection: "None",
+            TargetFields: new Main.models.TargetFieldMapCollection()
+        },
+    });
+
+    Main.models.FieldMapCollection = Backbone.Collection.extend({
+        model: Main.models.FieldMapModel,
     });
     
     Main.models.BoardMapping = App.codegen.BoardMappingModel.extend({
@@ -47,6 +71,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             BoardId: null,
             LaneToStatesMap: undefined,
             TypeMap: undefined,
+            FieldMap: undefined,
             CreateCards: true,
             CreateTargetItems: false,
             UpdateCards: true,
@@ -61,6 +86,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             this.UpdateCards(item.UpdateCards);
             this.UpdateTargetItems(item.UpdateTargetItems);
             this.TypeMap(new Main.models.TypeMapCollection(item.TypeMap));
+            this.FieldMap(new Main.models.FieldMapCollection(item.FieldMap));
             this.isDirty = false;
         },
         
@@ -72,6 +98,9 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             if (_.isUndefined(this.attributes.TypeMap))
                 this.attributes.TypeMap = { };
 
+            if (_.isUndefined(this.attributes.FieldMap))
+                this.attributes.FieldMap = {};
+
             // convert TypeMap to collection
             var tm = this.TypeMap();
             var typeCollection;
@@ -82,8 +111,20 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
 
             // overwrite typeMap with backbone collection
             this.TypeMap(typeCollection);
+
+            // convert FieldMap to collection
+            var fm = this.FieldMap();
+            var fieldCollection;
+            if (_.isUndefined(fm) || _.isUndefined(fm.length) || fm.length === 0)
+                fieldCollection = new Main.models.FieldMapCollection();
+            else
+                fieldCollection = new Main.models.FieldMapCollection(fm);
+
+            // overwrite typeMap with backbone collection
+            this.FieldMap(fieldCollection);
             
             this.listenTo(typeCollection, "all", this.onTypeMapUpdate, this);
+            this.listenTo(fieldCollection, "all", this.onFieldMapUpdate, this);
             this.listenTo(this, "change", this.onChange, this);
             this.isDirty = false;
         },
@@ -95,6 +136,14 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         onTypeMapUpdate: function (e, m) {
             if (e === "remove" || e === "change:IsConfirmed" ) {
                 this.changed["TypeMap"] = this.TypeMap();
+                this.trigger('change', this);
+            }
+        },
+
+        onFieldMapUpdate: function (e, m) {
+            if (e === "remove" || e === "change:IsConfirmed")
+            {
+                this.changed["FieldMap"] = this.FieldMap();
                 this.trigger('change', this);
             }
         },
@@ -218,6 +267,11 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
     Main.models.ProjectCollection = Backbone.Collection.extend({
         model: App.codegen.ProjectListItem,
         url: "/projects"
+    });
+
+    Main.models.ConfigurableFieldsCollection = Backbone.Collection.extend({
+        model: App.codegen.ConfigurableFieldModel,
+        url: "/configurablefields"
     });
 
     // board detail model
