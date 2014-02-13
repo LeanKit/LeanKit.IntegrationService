@@ -39,6 +39,8 @@ namespace IntegrationService
 			var sb = new StringBuilder();
 			sb.Append(Environment.NewLine);
 			sb.AppendLine("PollingFrequency :        " + PollingFrequency.ToString());
+			sb.AppendLine("PollingUnits:             " + PollingUnits);
+			sb.AppendLine("PollingTime:              " + PollingTime.ToString());
 			sb.AppendLine("LocalStoragePath :        " + LocalStoragePath);
 			sb.AppendLine("EarliestSyncDate :        " + EarliestSyncDate.ToUniversalTime().ToString("o"));
             sb.AppendLine("LeanKit :                 " + Environment.NewLine + LeanKit);
@@ -53,6 +55,9 @@ namespace IntegrationService
 
 		public int GetEffectivePollingFrequency()
 		{
+			if (string.IsNullOrEmpty(PollingUnits))
+				return PollingFrequency;
+
 			switch (PollingUnits.ToLowerInvariant()) 
 			{
 				case "seconds":
