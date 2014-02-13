@@ -211,12 +211,11 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                                 return itm.Name === confTargetFieldItem.Name;
                             });
                             if (!_.isObject(targetField) || targetField === undefined || targetField === null) {
-                                targetFieldsConfiguration.push(new Main.models.TargetFieldMapModel(
-                                    {
+                                targetFieldsConfiguration.push({
                                         Name: confTargetFieldItem.Name,
                                         IsDefault: confTargetFieldItem.IsDefault,
                                         IsSelected: false
-                                    }));
+                                    });
                             }
                         });
                     }                        

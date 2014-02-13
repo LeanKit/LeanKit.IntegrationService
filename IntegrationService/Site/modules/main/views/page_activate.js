@@ -125,12 +125,14 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
 
         getFieldMapping: function (options, model)
         {
-            var html = "";
+            var html = "";            
             for (var i = 0; i < model.FieldMap.models.length; i++)
             {
                 var map = model.FieldMap.models[i];
-                html += String.format("<div>LeanKit Field: <strong>{0}</strong><div>Sync Direction: <strong>{1}</strong></div><div>Target Fields:{2}</div><br /></div>",
-                    map.get("LeanKitField"), map.get("SyncDirection"), this.getTargetFieldMapping(map.get("TargetFields")));
+                if (_.isObject(map) && !_.isUndefined(map)) {
+                    html += String.format("<div>LeanKit Field: <strong>{0}</strong><div>Sync Direction: <strong>{1}</strong></div><div>Target Fields:{2}</div><br /></div>",
+                        map.get("LeanKitField"), map.get("SyncDirection"), this.getTargetFieldMapping(map.get("TargetFields")));
+                }
             }
             return html;
         },
@@ -139,7 +141,11 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             var html = "";
             for (var j = 0; j < targetFields.length; j++) {
                 var map = targetFields[j];
-                html += String.format("<div>&nbsp;&nbsp;<strong>{0}</strong>, IsDefault: {1}, IsSelected: {2}</div>", map.Name, map.IsDefault, map.IsSelected);
+                if (_.isObject(map) && !_.isUndefined(map)) {
+                    if (map.IsDefault || map.IsSelected) {
+                        html += String.format("<div>&nbsp;&nbsp;<strong>{0}</strong>, IsDefault: {1}, IsSelected: {2}</div>", map.Name, map.IsDefault, map.IsSelected);
+                    }
+                }
             }
             return html;
         },
