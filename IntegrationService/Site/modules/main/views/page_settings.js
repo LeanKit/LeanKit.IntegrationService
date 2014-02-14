@@ -39,7 +39,10 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         template: this.template("page_settings"),
         className:"panel panel-primary",
         ui: {
-            "earliestSyncDate":"#EarliestSyncDate"
+            "earliestSyncDate": "#EarliestSyncDate",
+            "pollingTime": "#PollingTime",
+            "pollingUnits": "#PollingUnits",
+            "pollingTimeReset": "#PollingTimeReset"
         },
 
         initialize: function(options) {
@@ -50,6 +53,20 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         onShow: function() {
             this.bindModel();
             this.ui.earliestSyncDate.kendoDatePicker({ value: this.model.EarliestSyncDate() });
+            this.ui.pollingTime.kendoTimePicker({ value: this.model.PollingTime(), interval: 60 });
+            var bob = this.model;
+            this.ui.pollingUnits.kendoDropDownList({
+                dataSource: ["milliseconds", "seconds", "minutes", "hours"],
+                value: this.model.PollingUnits(),
+                change: function(e) {
+                    bob.PollingUnits(this.value());
+                }
+            });
+            var bill = this;
+            this.ui.pollingTimeReset.click(function() {
+                bill.ui.pollingTime.data("kendoTimePicker").value(null);
+                bill.model.PollingTime(null);
+            });
             if (App.Config.wizardMode)
                 App.Config.pageValidated(this.controller.pageName, this.model, "Next: Configure Boards and Projects");
         },

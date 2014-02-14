@@ -232,7 +232,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
     Main.models.ConfigurationSettingsModel = App.codegen.ConfigurationSettingsModel.extend({
         url: "/settings",
         defaults: {
-            PollingFrequency: 5000,
+            PollingFrequency: 60000,
             EarliestSyncDate: "1/1/2007",
             PollingUnits: "milliseconds",
             PollingTime: null

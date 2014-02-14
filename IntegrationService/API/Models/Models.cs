@@ -47,7 +47,7 @@ namespace IntegrationService.API.Models
     {
         public int PollingFrequency { get; set; }
 		public string PollingUnits { get; set; }
-		public TimeSpan? PollingTime { get; set; }
+		public DateTime? PollingTime { get; set; }
         public DateTime EarliestSyncDate { get; set; }
         public string LocalStoragePath { get; set; }
     }
@@ -172,9 +172,15 @@ namespace IntegrationService.API.Models
                     EarliestSyncDate = configuration.EarliestSyncDate,
                     LocalStoragePath = configuration.LocalStoragePath,
                     PollingFrequency = configuration.PollingFrequency, 
-					PollingTime = configuration.PollingTime,
+					PollingTime = configuration.PollingTime.HasValue ? ConvertTimeSpanToDateTime(configuration.PollingTime.Value) : null,
 					PollingUnits = configuration.PollingUnits
                 };
         }
+
+		private DateTime? ConvertTimeSpanToDateTime(TimeSpan ts)
+		{
+			var dt = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
+			return dt + ts;
+		}
     }
 }
