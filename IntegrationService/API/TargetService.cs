@@ -5,11 +5,14 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using IntegrationService.Targets.GitHub;
 using IntegrationService.Targets.JIRA;
 using IntegrationService.Targets.TFS;
+using IntegrationService.Targets.Unfuddle;
+using IntegrationService.Targets.MicrosoftProject;
 using IntegrationService.Util;
 using ServiceStack.ServiceHost;
 
@@ -20,6 +23,9 @@ namespace IntegrationService.API
 
     [Route("/projects")]
     public class ProjectsRequest : Request { }
+
+	[Route("/configurablefields")]
+	public class ConfigurableFieldsRequest : Request { }
 
 	public class TargetService : ServiceBase
 	{
@@ -34,22 +40,32 @@ namespace IntegrationService.API
 				case "tfs":
 					string.Format("Connecting to TFS using {0}", request).Debug();
 					var tfs = new TfsConnection();
-					result = tfs.Connect(request.Url, request.User, request.Password);
+					result = tfs.Connect(request.Protocol, request.Url, request.User, request.Password);
 					break;
 				case "jira":
 					string.Format("Connecting to JIRA using {0}", request).Debug();
 					var jira = new JiraConnection();
-					result = jira.Connect(request.Url, request.User, request.Password);
+					result = jira.Connect(request.Protocol, request.Url, request.User, request.Password);
 					break;
 				case "githubissues":
 					string.Format("Connecting to GitHub (Issues) using {0}", request).Debug();
 					var githubissues = new GitHubIssuesConnection();
-					result = githubissues.Connect(request.Host, request.User, request.Password);
+					result = githubissues.Connect(request.Protocol, request.Host, request.User, request.Password);
 					break;
 				case "githubpulls":
 					string.Format("Connecting to GitHub (Pulls) using {0}", request).Debug();
 					var githubpulls = new GitHubPullsConnection();
-					result = githubpulls.Connect(request.Host, request.User, request.Password);
+					result = githubpulls.Connect(request.Protocol, request.Host, request.User, request.Password);
+					break;
+				case "unfuddle":
+					string.Format("Connecting to Unfuddle using {0}", request).Debug();
+					var unfuddle = new UnfuddleConnection();
+					result = unfuddle.Connect(request.Protocol, request.Host, request.User, request.Password);
+					break;
+				case "microsoftproject":
+					string.Format("Connecting to Microsoft Project using {0}", request).Debug();
+					var microsoftproject = new MicrosoftProjectConnection();
+					result = microsoftproject.Connect(request.Protocol, request.Host, request.User, request.Password);
 					break;
 			}
 
@@ -103,19 +119,27 @@ namespace IntegrationService.API
 			{
 				case "tfs":
 					target = new TfsConnection();
-					result = target.Connect(request.Url, request.User, request.Password);
+					result = target.Connect(request.Protocol, request.Url, request.User, request.Password);
 					break;
 				case "jira":
 					target = new JiraConnection();
-					result = target.Connect(request.Url, request.User, request.Password);
+					result = target.Connect(request.Protocol, request.Url, request.User, request.Password);
 					break;
 				case "githubissues":
 					target = new GitHubIssuesConnection();
-					result = target.Connect(request.Host, request.User, request.Password);
+					result = target.Connect(request.Protocol, request.Host, request.User, request.Password);
 					break;
 				case "githubpulls":
 					target = new GitHubPullsConnection();
-					result = target.Connect(request.Host, request.User, request.Password);
+					result = target.Connect(request.Protocol, request.Host, request.User, request.Password);
+					break;
+				case "unfuddle":
+					target = new UnfuddleConnection();
+					result = target.Connect(request.Protocol, request.Host, request.User, request.Password);
+					break;
+				case "microsoftproject":
+					target = new MicrosoftProjectConnection();
+					result = target.Connect(request.Protocol, request.Host, request.User, request.Password);
 					break;
 				default:
 					target = null;
@@ -139,6 +163,28 @@ namespace IntegrationService.API
 			var projects = target.GetProjects();
 
 			return OK(projects);
+		}
+
+		public object Get(ConfigurableFieldsRequest request)
+		{
+			if (request.Type == null) return null;
+
+			ConnectionResult result;
+			var target = Connect(request, out result);
+
+			if (result != ConnectionResult.Success)
+				return ServerError(result.ToString());
+
+			if ((target is IConfigurableFieldsConnection))
+			{
+				"Getting configurable fields...".Debug();
+
+				var configurableFields = ((IConfigurableFieldsConnection)target).GetConfigurableFields();
+
+				return OK(configurableFields);
+			}
+
+			return OK(new List<ConfigurableField>());
 		}
 	}
 }

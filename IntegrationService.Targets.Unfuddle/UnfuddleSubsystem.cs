@@ -287,7 +287,7 @@ namespace IntegrationService.Targets.Unfuddle
         {
             Log.Debug("Polling Unfuddle for Tickets");
 
-			var queryAsOfDate = QueryDate.AddMilliseconds(Configuration.PollingFrequency * -1.5);
+			var queryAsOfDate = QueryDate.AddMilliseconds(Configuration.GetEffectivePollingFrequency() * -1.5);
 
 			var unfuddleQuery = !string.IsNullOrEmpty(project.Query) 
 				? string.Format(project.Query, queryAsOfDate.ToString("yyyy/MM/dd hh:mm")) 

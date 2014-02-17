@@ -437,6 +437,10 @@
       <Project>{7693c155-f95f-4442-a534-3345fcec11c9}</Project>
       <Name>IntegrationService.Targets.JIRA</Name>
     </ProjectReference>
+    <ProjectReference Include="..\IntegrationService.Targets.MicrosoftProject\IntegrationService.Targets.MicrosoftProject.csproj">
+      <Project>{1e7ffa39-8dac-4e38-bada-53dd14b0bedb}</Project>
+      <Name>IntegrationService.Targets.MicrosoftProject</Name>
+    </ProjectReference>
     <ProjectReference Include="..\IntegrationService.Targets.TFS\IntegrationService.Targets.TFS.csproj">
       <Project>{62acbac5-81d0-4811-8b2b-afb9c875fc70}</Project>
       <Name>IntegrationService.Targets.TFS</Name>

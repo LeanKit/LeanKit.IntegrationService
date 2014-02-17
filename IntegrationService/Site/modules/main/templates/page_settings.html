@@ -6,7 +6,11 @@
         <fieldset>
             <div class="list-group list-group-flush">
                 <div class="list-group-item">
-                    Check target for updates every&nbsp;<input id="PollingFrequency" type="text" style="width:50px" />&nbsp;milliseconds.
+                    Check target for updates every&nbsp;<input id="PollingFrequency" type="text" style="width:50px" />&nbsp;<input id="PollingUnits" />.
+                    <br />
+                    OR 
+                    <br />
+                    Check target for updates every day at:&nbsp;<input id="PollingTime" /> <input class="btn btn-sm btn-primary" type="button" id="PollingTimeReset" value="Reset" />
                 </div>
                 <div class="list-group-item">
                     Synchronize items created after:&nbsp;<input id="EarliestSyncDate" />

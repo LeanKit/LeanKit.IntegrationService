@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
-MinimumVisualStudioVersion = 10.0.40219.1
+# Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationService", "IntegrationService\IntegrationService.csproj", "{A09987F5-F718-461D-B9EE-84AF9B17E28E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationService.Tests", "IntegrationService.Tests\IntegrationService.Tests.csproj", "{6FDD6C42-B84E-4475-9D0B-1B234AE32852}"
@@ -23,6 +21,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{90263B
 		.nuget\NuGet.exe = .nuget\NuGet.exe
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationService.Targets.MicrosoftProject", "IntegrationService.Targets.MicrosoftProject\IntegrationService.Targets.MicrosoftProject.csproj", "{1E7FFA39-8DAC-4E38-BADA-53DD14B0BEDB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -58,6 +58,10 @@ Global
 		{B0A428A3-6AE0-4C24-9F3C-8CAFE41D529D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B0A428A3-6AE0-4C24-9F3C-8CAFE41D529D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B0A428A3-6AE0-4C24-9F3C-8CAFE41D529D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E7FFA39-8DAC-4E38-BADA-53DD14B0BEDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E7FFA39-8DAC-4E38-BADA-53DD14B0BEDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E7FFA39-8DAC-4E38-BADA-53DD14B0BEDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E7FFA39-8DAC-4E38-BADA-53DD14B0BEDB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

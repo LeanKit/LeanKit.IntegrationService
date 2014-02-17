@@ -189,7 +189,7 @@ namespace IntegrationService.Targets.GitHub
         {
 			Log.Debug("Polling GitHub for Pull Requests");
 
-			var queryAsOfDate = QueryDate.AddMilliseconds(Configuration.PollingFrequency * -1.5);
+			var queryAsOfDate = QueryDate.AddMilliseconds(Configuration.GetEffectivePollingFrequency() * -1.5);
 
 			//https://api.github.com/repos/{0}/{1}/pulls?state=Open
 			var request = new RestRequest(string.Format("repos/{0}/{1}/pulls", Configuration.Target.Host, project.Identity.Target), Method.GET);

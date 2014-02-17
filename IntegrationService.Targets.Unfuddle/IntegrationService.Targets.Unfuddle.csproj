@@ -57,6 +57,7 @@
     <Compile Include="ConversionExtensions.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="UnfuddleConnection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UnfuddleSubsystem.cs">
       <SubType>Code</SubType>

@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using IntegrationService.Util;
 using RestSharp;
 using ServiceStack.Text;
 
@@ -28,8 +29,14 @@ namespace IntegrationService.Targets.GitHub
 			RestClient = restClient;
 		}
 
-        public ConnectionResult Connect(string host, string user, string password)
+        public ConnectionResult Connect(string protocol, string host, string user, string password)
         {
+			if (protocol.ToLowerInvariant().StartsWith("file")) 
+			{
+				string.Format("GitHub integration cannot use a file datasource '{0}'.", host).Error();
+				return ConnectionResult.InvalidUrl;
+			}
+
 	        Host = host;
 	        RestClient.BaseUrl = "https://api.github.com";
 			RestClient.Authenticator = new HttpBasicAuthenticator(user, password);

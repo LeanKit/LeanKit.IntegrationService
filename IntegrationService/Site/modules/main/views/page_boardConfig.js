@@ -13,6 +13,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             this.owner = options.owner;
             this.pageName = options.pageName;
             this.mappingCollection = options.model;
+            this.loadedConfigurableFields = false;
             App.credentials = options.credentials;
             
             // configure request handlers and events
@@ -40,7 +41,9 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             return invalidMappings === 0;
         },
 
-        loadBoardsAndProjects:function () {
+        loadBoardsAndProjects: function () {
+            if (_.isObject(App.credentials.target) && _.isString(App.credentials.target.Host()))
+                this.loadConfigurableFieldsTask = this.loadConfigurableFields();
             if (_.isObject(App.credentials.leankit) && _.isString(App.credentials.leankit.Host()))
                 this.loadBoardsTask = this.loadBoards();
             if (_.isObject(App.credentials.target) && _.isString(App.credentials.target.Host()))
@@ -58,10 +61,14 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         },
 
         onShow: function () {
-            if (_.isUndefined(this.loadBoardsTask) || _.isUndefined(this.loadProjectsTask))
+            if (_.isUndefined(this.loadBoardsTask)
+                || _.isUndefined(this.loadProjectsTask)
+                || _.isUndefined(this.loadConfigurableFieldsTask))
                 this.loadBoardsAndProjects();
             
-            if (this.loadBoardsTask.state() === 'resolved' && this.loadProjectsTask.state() === 'resolved')
+            if (this.loadBoardsTask.state() === 'resolved'
+                && this.loadProjectsTask.state() === 'resolved'
+                && this.loadConfigurableFieldsTask.state() === 'resolved')
                 this.buildBoardList();
             else {
                 // restart if there was a previous error
@@ -69,11 +76,15 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                     this.loadBoardsTask = this.loadBoards();
                 } else if (this.loadProjectsTask.state() === 'rejected') {
                     this.loadProjectsTask = this.loadProjects();
+                } else if (this.loadConfigurableFieldsTask.state() === 'rejected') {
+                    this.loadConfigurableFieldsTask = this.loadConfigurableFields();
                 }
 
                 // whether restarted or not, wait for completion
+                $.when(this.loadConfigurableFieldsTask).done(this.buildBoardList);
                 $.when(this.loadProjectsTask).done(this.buildBoardList);
                 $.when(this.loadBoardsTask).done(this.buildBoardList);
+                
             }
 
         },
@@ -100,10 +111,31 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             }
         });
         },
+        
+        loadConfigurableFields: function () {
+            Main.configurableFields = this.configurableFields = new Main.models.ConfigurableFieldsCollection();
+            return this.configurableFields.fetch({
+                data: $.param(App.credentials.target.attributes),
+                context: this,
+                success: function (collection, response, options) {
+                    options.context.loadedConfigurableFields = true;
+                },
+                error: function () {
+                    alert("Load Configurable Fields failed, please verify settings for type and credentials on the 'Connect to Target' tab.");
+                }
+            });
+        },
 
         buildBoardList: function(collection, result) {
             // wait for both projects and boards to finish loading!
-            if (_.isUndefined(this.boards) || this.boards.length === 0 || _.isUndefined(this.targetProjects) || this.targetProjects.length === 0) return;
+            if (_.isUndefined(this.boards) || this.boards.length === 0) return;
+            if (_.isUndefined(this.targetProjects) || this.targetProjects.length === 0) return;
+            if (_.isUndefined(this.configurableFields)) return;
+            if (!this.loadedConfigurableFields) return;
+
+            for (var j = 0; j < this.mappingCollection.length; j++) {
+                this.updateFieldMappingConfiguration(this.mappingCollection.at(j));
+            }
 
             for (var i = 0; i < this.boards.length; i++) {
                 var board = this.boards.at(i);
@@ -112,7 +144,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                     var project = this.getMappedProject(configuredMap);
                     if (_.isUndefined(project)) {
                         App.log("Error -- could not match project from configuration.");
-                    } else {
+                    } else {                        
                         board.TargetProjectId(project.Id());
                         board.TargetProjectName(project.Name());
                     }
@@ -122,6 +154,73 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                 }
             }
             this.view.displayBoardList(this.boards);
+        },
+        
+        updateFieldMappingConfiguration: function(boardMapping) {
+            var fieldMapConfiguration = boardMapping.get("FieldMap");                
+            if (fieldMapConfiguration.length == 0) {
+                // create a new one from configurable fields  
+                for (var k = 0; k < this.configurableFields.length; k++) {
+                    fieldMapConfiguration.add(new Main.models.FieldMapModel(
+                        {
+                            LeanKitField: this.configurableFields.at(k).get("LeanKitField"),
+                            SyncDirection: this.configurableFields.at(k).get("SyncDirection"),
+                            TargetFields: this.configurableFields.at(k).get("TargetFields")
+                        }));
+                }
+            } else {
+                // update existing field mapping configuration    
+                this.configurableFields.each(function (confFieldItem) {
+                    var fieldMapItem = fieldMapConfiguration.findWhere({ LeanKitField: confFieldItem.get("LeanKitField"), SyncDirection: confFieldItem.get("SyncDirection") });
+                    // if a field does not exist in the configuration but does in configurable fields 
+                    // then add it to the configuration                          
+                    if (!_.isObject(fieldMapItem) || fieldMapItem === undefined || fieldMapItem === null) {
+                        alert("add item");
+                        fieldMapConfiguration.add(new Main.models.FieldMapModel(
+                            {
+                                LeanKitField: confFieldItem.LeanKitField,
+                                SyncDirection: confFieldItem.SyncDirection,
+                                TargetFields: confFieldItem.TargetFields
+                            }));                            
+                    }
+                });
+
+                // loop through any existing field mapping
+                fieldMapConfiguration.each(function (item) {
+                    var configurableFieldItem = this.configurableFields.findWhere({ LeanKitField: item.get("LeanKitField"), SyncDirection: item.get("SyncDirection") });
+                        
+                    if (!_.isObject(configurableFieldItem) || configurableFieldItem === undefined || configurableFieldItem === null) {
+                        // the field mapping exists in configuration but not in configurable fields so remove it
+                        fieldMapConfiguration.remove(item);
+                    } else {
+                        // The field exists in configuration, check the target fields
+                        var configurableTargetFieldItems = configurableFieldItem.get("TargetFields");
+                        var targetFieldsConfiguration = item.get("TargetFields");
+                        // remove any Target Fields included but not in configurable fields 
+                        _.each(targetFieldsConfiguration, function (field, idx) {                                
+                            var confTargetFieldItem = _.find(configurableTargetFieldItems, function (itm) {
+                                return itm.Name === field.Name;
+                            });
+                            if (!_.isObject(confTargetFieldItem) || confTargetFieldItem === undefined || confTargetFieldItem === null) {
+                                targetFieldsConfiguration.splice(idx, 1);
+                            }
+                        }, this);
+                        // add any Target Fields not already included   
+                        _.each(configurableTargetFieldItems, function (confTargetFieldItem) {
+                            var targetField = _.find(targetFieldsConfiguration, function (itm) {
+                                return itm.Name === confTargetFieldItem.Name;
+                            });
+                            if (!_.isObject(targetField) || targetField === undefined || targetField === null) {
+                                targetFieldsConfiguration.push({
+                                        Name: confTargetFieldItem.Name,
+                                        IsDefault: confTargetFieldItem.IsDefault,
+                                        IsSelected: false
+                                    });
+                            }
+                        });
+                    }                        
+                }, this);
+            }            
         },
 
         getMappedProject: function(mapping) {
@@ -170,6 +269,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                 this.cachedFilterPaths = project.get("cachedFilterPaths");
             } else {
                 this.currentMapping = new Main.models.BoardMapping({ BoardId: id, Title: board.get("Title"), TargetProjectId: "" });
+                this.updateFieldMappingConfiguration(this.currentMapping);
                 this.cachedStates = this.cachedTypes = this.cachedFilterPaths = undefined;
             }
 

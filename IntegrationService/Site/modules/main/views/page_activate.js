@@ -65,7 +65,6 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             });
         }
 
-
     });
     
 
@@ -85,6 +84,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
 
             App.reqres.setHandler("getLaneToStatesMap", this.getLaneToStatesMap, this);
             App.reqres.setHandler("getCardTypeMapping", this.getCardTypeMapping, this);
+            App.reqres.setHandler("getFieldMapping", this.getFieldMapping, this);
             App.reqres.setHandler("getCachedTargetType", this.getCachedTargetType, this);
             App.reqres.setHandler("checkIf_targetIsTfs", this.checkIf_targetIsTfs, this);
             App.reqres.setHandler("checkIf_useCustomQuery", this.checkIf_useCustomQuery, this);
@@ -119,6 +119,33 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                 var map = model.TypeMap.models[i];
                 html += String.format("<div><strong>{0}:&nbsp;</strong>{1}</div>",
                     map.get("LeanKitType"), map.get("TargetType"));
+            }
+            return html;
+        },
+
+        getFieldMapping: function (options, model)
+        {
+            var html = "";            
+            for (var i = 0; i < model.FieldMap.models.length; i++)
+            {
+                var map = model.FieldMap.models[i];
+                if (_.isObject(map) && !_.isUndefined(map)) {
+                    html += String.format("<div>LeanKit Field: <strong>{0}</strong><div>Sync Direction: <strong>{1}</strong></div><div>Target Fields:{2}</div><br /></div>",
+                        map.get("LeanKitField"), map.get("SyncDirection"), this.getTargetFieldMapping(map.get("TargetFields")));
+                }
+            }
+            return html;
+        },
+        
+        getTargetFieldMapping: function(targetFields) {
+            var html = "";
+            for (var j = 0; j < targetFields.length; j++) {
+                var map = targetFields[j];
+                if (_.isObject(map) && !_.isUndefined(map)) {
+                    if (map.IsDefault || map.IsSelected) {
+                        html += String.format("<div>&nbsp;&nbsp;<strong>{0}</strong>, IsDefault: {1}, IsSelected: {2}</div>", map.Name, map.IsDefault, map.IsSelected);
+                    }
+                }
             }
             return html;
         },
