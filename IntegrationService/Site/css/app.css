@@ -6,7 +6,8 @@
 //------------------------------------------------------------------------------
 */
 
-.k-icon.k-i-calendar { margin-top: -6px }
+.k-icon.k-i-calendar, .k-icon.k-i-clock { margin-top: -6px }
+.k-dropdown .k-input { margin-bottom: 4px !important; }
 
 .logo {
     background-image: url('../img/logo.png');
