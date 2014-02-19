@@ -96,6 +96,17 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                 return c.subcontrollers.laneMap.view;
             });
 
+            this.viewFactory.register("fieldMapTab", function (c) {
+                if (!_.isObject(c.subcontrollers)) c.subcontrollers = {};
+                if (_.isObject(c.subcontrollers.fieldMapTab)) {
+                    c.subcontrollers.fieldMapTab.close();
+                    c.subcontrollers.fieldMapTab = undefined;
+                }
+
+                c.subcontrollers.fieldMapTab = new Main.controllers.FieldMapTabController({ owner: c, board: c.board, configuration: c.model.FieldMap() });
+                return c.subcontrollers.fieldMapTab.view;
+            });
+
             this.viewFactory.register("typeMapTab", function (c) {
                 if (!_.isObject(c.subcontrollers)) c.subcontrollers = { };
                 if (_.isObject(c.subcontrollers.typeMapTab)) {

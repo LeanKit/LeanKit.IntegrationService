@@ -56,7 +56,7 @@ namespace IntegrationService
 	{
 		None, 
 		ToLeanKit,
-		ToTarket,
+		ToTarget,
 		//Both
 	}
 

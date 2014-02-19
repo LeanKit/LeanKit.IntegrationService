@@ -57,6 +57,36 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             SyncDirection: "None",
             TargetFields: new Main.models.TargetFieldMapCollection()
         },
+        
+        initialize: function () {
+            if (_.isUndefined(this.attributes.TargetFields))
+                this.attributes.TargetFields = {};
+
+            // convert TypeMap to collection
+            var tf = this.TargetFields();
+            var targetFieldsCollection;
+            if (_.isUndefined(tf) || _.isUndefined(tf.length) || tf.length === 0)
+                targetFieldsCollection = new Main.models.TargetFieldMapCollection();
+            else
+                targetFieldsCollection = new Main.models.TargetFieldMapCollection(tf);
+
+            // overwrite typeMap with backbone collection
+            this.TargetFields(targetFieldsCollection);
+
+            this.listenTo(targetFieldsCollection, "all", this.onTargetFieldMapUpdate, this);
+            this.listenTo(this, "change", this.onChange, this);
+            this.isDirty = false;  
+        },
+     
+        onChange:function (m) {
+            this.isDirty = true;
+        },
+       
+        onTargetFieldMapUpdate: function (e, m)
+        {
+            this.changed["TargetFields"] = this.TargetFields();
+            this.trigger('change', this);
+        },          
     });
 
     Main.models.FieldMapCollection = Backbone.Collection.extend({
@@ -141,11 +171,8 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         },
 
         onFieldMapUpdate: function (e, m) {
-            if (e === "remove" || e === "change:IsConfirmed")
-            {
-                this.changed["FieldMap"] = this.FieldMap();
-                this.trigger('change', this);
-            }
+            this.changed["FieldMap"] = this.FieldMap();
+            this.trigger('change', this);
         },
                 
         hasProject: function () {

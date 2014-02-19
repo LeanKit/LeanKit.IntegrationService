@@ -175,11 +175,11 @@ require(["marionette", "nicetools", "handlebars", "modulehelper", "kendo.all.min
         return result;
     });
     
-    Handlebars.registerHelper('simpleSelect', function (itemFunction, options) {
+    Handlebars.registerHelper('simpleSelect', function (itemFunction, isSelectedFunction, options) {
         var html = "";
         var items = undefined;
         if (_.isString(itemFunction)) {
-            items = App.request(itemFunction);
+            items = App.request(itemFunction, this);
         }
         
         if (!_.isArray(items)) return "No data for " + itemFunction + " selector";
@@ -191,9 +191,18 @@ require(["marionette", "nicetools", "handlebars", "modulehelper", "kendo.all.min
         });
         html += ">";
 
-
+        var model = this;
         for (var index in items) {
-            html += String.format("<option value='{0}'>{1}</option>", items[index], items[index]);
+            html += String.format("<option value='{0}' {2}>{1}</option>", items[index], items[index],
+                function () {
+                    if (_.isString(isSelectedFunction)) {
+                        var res = App.request(isSelectedFunction, model, index);
+                        if (res) {
+                            return "selected";                        
+                        } 
+                    }
+                    return "";
+                });
         }
 
         html += "</select>";

@@ -175,18 +175,17 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                     // if a field does not exist in the configuration but does in configurable fields 
                     // then add it to the configuration                          
                     if (!_.isObject(fieldMapItem) || fieldMapItem === undefined || fieldMapItem === null) {
-                        alert("add item");
                         fieldMapConfiguration.add(new Main.models.FieldMapModel(
                             {
-                                LeanKitField: confFieldItem.LeanKitField,
-                                SyncDirection: confFieldItem.SyncDirection,
-                                TargetFields: confFieldItem.TargetFields
+                                LeanKitField: confFieldItem.LeanKitField(),
+                                SyncDirection: confFieldItem.SyncDirection(),
+                                TargetFields: confFieldItem.TargetFields()
                             }));                            
                     }
                 });
 
                 // loop through any existing field mapping
-                fieldMapConfiguration.each(function (item) {
+                fieldMapConfiguration.each(function (item) {                    
                     var configurableFieldItem = this.configurableFields.findWhere({ LeanKitField: item.get("LeanKitField"), SyncDirection: item.get("SyncDirection") });
                         
                     if (!_.isObject(configurableFieldItem) || configurableFieldItem === undefined || configurableFieldItem === null) {
@@ -194,33 +193,43 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                         fieldMapConfiguration.remove(item);
                     } else {
                         // The field exists in configuration, check the target fields
-                        var configurableTargetFieldItems = configurableFieldItem.get("TargetFields");
+                        var configurableTargetFieldItems = configurableFieldItem.TargetFields();
                         var targetFieldsConfiguration = item.get("TargetFields");
                         // remove any Target Fields included but not in configurable fields 
-                        _.each(targetFieldsConfiguration, function (field, idx) {                                
+                        _.each(targetFieldsConfiguration.models, function (field) {                                
                             var confTargetFieldItem = _.find(configurableTargetFieldItems, function (itm) {
-                                return itm.Name === field.Name;
+                                return itm.Name === field.get("Name");
                             });
                             if (!_.isObject(confTargetFieldItem) || confTargetFieldItem === undefined || confTargetFieldItem === null) {
-                                targetFieldsConfiguration.splice(idx, 1);
+                                targetFieldsConfiguration.remove(field);
                             }
                         }, this);
                         // add any Target Fields not already included   
                         _.each(configurableTargetFieldItems, function (confTargetFieldItem) {
-                            var targetField = _.find(targetFieldsConfiguration, function (itm) {
-                                return itm.Name === confTargetFieldItem.Name;
+                            var targetField = _.find(targetFieldsConfiguration.models, function (itm) {
+                                return itm.get("Name") === confTargetFieldItem.Name;
                             });
                             if (!_.isObject(targetField) || targetField === undefined || targetField === null) {
-                                targetFieldsConfiguration.push({
+                                targetFieldsConfiguration.add(new Main.models.TargetFieldMapModel(
+                                    {
                                         Name: confTargetFieldItem.Name,
                                         IsDefault: confTargetFieldItem.IsDefault,
                                         IsSelected: false
-                                    });
+                                    }));
                             }
                         });
                     }                        
                 }, this);
-            }            
+            }
+            fieldMapConfiguration.each(function (item) {
+                var isSelected = item.get("TargetFields").findWhere({ IsSelected: true });
+                if (_.isUndefined(isSelected)) {
+                    var isDefault = item.get("TargetFields").findWhere({ IsDefault: true });
+                    if (!_.isUndefined(isDefault)) {
+                        isDefault.IsSelected(true);
+                    }
+                }
+            });
         },
 
         getMappedProject: function(mapping) {
