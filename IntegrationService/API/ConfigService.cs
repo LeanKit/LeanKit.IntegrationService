@@ -139,6 +139,7 @@ namespace IntegrationService.API
 					config.PollingTime = request.PollingTime.Value.TimeOfDay;
 				else
 					config.PollingTime = null;
+				config.PollingRunOnce = request.PollingRunOnce;
 
 				configStore.Save(config);
 			}

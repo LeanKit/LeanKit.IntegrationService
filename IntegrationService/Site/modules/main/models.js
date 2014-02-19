@@ -262,7 +262,8 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             PollingFrequency: 60000,
             EarliestSyncDate: "1/1/2007",
             PollingUnits: "milliseconds",
-            PollingTime: null
+            PollingTime: null,
+            PollingRunOnce: false
         }
     });
     

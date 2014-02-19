@@ -27,6 +27,7 @@ namespace IntegrationService
         public int PollingFrequency { get; set; }
 		public string PollingUnits { get; set; }
 		public TimeSpan? PollingTime { get; set; }
+		public bool PollingRunOnce { get; set; }
         public ServerConfiguration Target { get; set; }
         public ServerConfiguration LeanKit { get; set; }
         public List<BoardMapping> Mappings { get; set; }
@@ -41,6 +42,7 @@ namespace IntegrationService
 			sb.AppendLine("PollingFrequency :        " + PollingFrequency.ToString());
 			sb.AppendLine("PollingUnits:             " + PollingUnits);
 			sb.AppendLine("PollingTime:              " + PollingTime.ToString());
+			sb.AppendLine("PollingRunOnce:           " + PollingRunOnce.ToString());
 			sb.AppendLine("LocalStoragePath :        " + LocalStoragePath);
 			sb.AppendLine("EarliestSyncDate :        " + EarliestSyncDate.ToUniversalTime().ToString("o"));
             sb.AppendLine("LeanKit :                 " + Environment.NewLine + LeanKit);

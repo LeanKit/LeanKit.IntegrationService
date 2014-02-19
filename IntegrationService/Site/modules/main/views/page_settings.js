@@ -42,7 +42,8 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             "earliestSyncDate": "#EarliestSyncDate",
             "pollingTime": "#PollingTime",
             "pollingUnits": "#PollingUnits",
-            "pollingTimeReset": "#PollingTimeReset"
+            "pollingTimeReset": "#PollingTimeReset",
+            "pollingRunOnce": "#PollingRunOnce"
         },
 
         initialize: function(options) {
@@ -63,9 +64,25 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                 }
             });
             var bill = this;
-            this.ui.pollingTimeReset.click(function() {
+            this.ui.pollingTimeReset.click(function () {
+                bill.ui.pollingRunOnce.checked(false);
+                bill.model.PollingRunOnce(false);
                 bill.ui.pollingTime.data("kendoTimePicker").value(null);
                 bill.model.PollingTime(null);
+            });
+            this.ui.pollingRunOnce.checked = function() {
+                if (bill.model.PollingRunOnce())
+                    return true;
+                return false;
+            };
+            this.ui.pollingRunOnce.change(function (e) {
+                if (e.target.checked) {
+                    bill.ui.pollingTime.data("kendoTimePicker").value(null);
+                    bill.model.PollingTime(null);
+                    bill.model.PollingRunOnce(true);
+                } else {
+                    bill.model.PollingRunOnce(false);
+                }
             });
             if (App.Config.wizardMode)
                 App.Config.pageValidated(this.controller.pageName, this.model, "Next: Configure Boards and Projects");

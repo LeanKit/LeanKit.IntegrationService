@@ -48,6 +48,7 @@ namespace IntegrationService.API.Models
         public int PollingFrequency { get; set; }
 		public string PollingUnits { get; set; }
 		public DateTime? PollingTime { get; set; }
+		public bool PollingRunOnce { get; set; }
         public DateTime EarliestSyncDate { get; set; }
         public string LocalStoragePath { get; set; }
     }
@@ -173,6 +174,7 @@ namespace IntegrationService.API.Models
                     LocalStoragePath = configuration.LocalStoragePath,
                     PollingFrequency = configuration.PollingFrequency, 
 					PollingTime = configuration.PollingTime.HasValue ? ConvertTimeSpanToDateTime(configuration.PollingTime.Value) : null,
+					PollingRunOnce = configuration.PollingRunOnce,
 					PollingUnits = configuration.PollingUnits
                 };
         }

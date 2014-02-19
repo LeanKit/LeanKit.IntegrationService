@@ -167,7 +167,7 @@ namespace IntegrationService.Targets
 
 					QueryDate = DateTime.Now;
 
-					if (RunOnce)
+					if (RunOnce || Configuration.PollingRunOnce)
 					{
 						Shutdown();
 						Subscriptions.Shutdown();
