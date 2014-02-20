@@ -195,6 +195,13 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
 
             this.ui.tabstrip.kendoTabStrip({ activate:this.tabActivated, animation: { open: { effects: "" } } });
 
+            var tabStrip = this.ui.tabstrip.kendoTabStrip().data("kendoTabStrip");
+            if (this.model.FieldMap().length > 0) {
+                tabStrip.enable(tabStrip.items()[2], true);
+            } else {
+                tabStrip.enable(tabStrip.items()[2], false);
+            }
+
             this.controller.triggerMethod("prep:nestedViews");
 
             this.bindModel();
