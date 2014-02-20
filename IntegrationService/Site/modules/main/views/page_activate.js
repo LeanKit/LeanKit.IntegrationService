@@ -84,8 +84,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
 
             App.reqres.setHandler("getLaneToStatesMap", this.getLaneToStatesMap, this);
             App.reqres.setHandler("getCardTypeMapping", this.getCardTypeMapping, this);
-            App.reqres.setHandler("getImportFieldMapping", this.getImportFieldMapping, this);
-            App.reqres.setHandler("getExportFieldMapping", this.getExportFieldMapping, this);
+            App.reqres.setHandler("getFieldMapping", this.getFieldMapping, this);
             App.reqres.setHandler("getCachedTargetType", this.getCachedTargetType, this);
             App.reqres.setHandler("checkIf_targetIsTfs", this.checkIf_targetIsTfs, this);
             App.reqres.setHandler("checkIf_useCustomQuery", this.checkIf_useCustomQuery, this);
@@ -124,27 +123,15 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             return html;
         },
 
-        getImportFieldMapping: function (options, model)
+        getFieldMapping: function (options, model)
         {
             var html = "";            
             for (var i = 0; i < model.FieldMap.models.length; i++)
             {
                 var map = model.FieldMap.models[i];
-                if (_.isObject(map) && !_.isUndefined(map) && map.SyncDirection() === "ToLeanKit") {
-                    html += String.format("<div>LeanKit Field: <strong>{0}</strong><div>Target Fields:{1}</div><br /></div>",
-                        map.get("LeanKitField"), this.getTargetFieldMapping(map.get("TargetFields")));
-                }
-            }
-            return html;
-        },
-
-        getExportFieldMapping: function (options, model) {
-            var html = "";
-            for (var i = 0; i < model.FieldMap.models.length; i++) {
-                var map = model.FieldMap.models[i];
-                if (_.isObject(map) && !_.isUndefined(map) && map.SyncDirection() === "ToTarget") {
-                    html += String.format("<div>LeanKit Field: <strong>{0}</strong><div>Target Fields:{1}</div><br /></div>",
-                        map.get("LeanKitField"), this.getTargetFieldMapping(map.get("TargetFields")));
+                if (_.isObject(map) && !_.isUndefined(map)) {
+                    html += String.format("<div>LeanKit Field: <strong>{0}</strong><div>Sync Direction: <strong>{2}</strong></div><div>Target Fields:{1}</div><br /></div>",
+                        map.get("LeanKitField"), this.getTargetFieldMapping(map.get("TargetFields")), map.get("SyncDirection"));
                 }
             }
             return html;

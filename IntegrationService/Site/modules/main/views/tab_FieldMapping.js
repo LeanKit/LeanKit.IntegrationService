@@ -33,16 +33,10 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             
             this.viewFactory = new App.ViewFactory(this, "FieldMapTab");
             
-            this.viewFactory.register("fieldMapImportCollection", function (c) {
-                var view = new Main.views.FieldMapImportCollectionView({ collection: new Main.models.FieldMapCollection(c.model.get("FieldCollection").where({ SyncDirection: "ToLeanKit" })), controller:c });                
+            this.viewFactory.register("fieldMapCollection", function (c) {
+                var view = new Main.views.FieldMapCollectionView({ collection: c.model.get("FieldCollection"), controller:c });                
                 return view;
-            });
-
-            this.viewFactory.register("fieldMapExportCollection", function (c) {
-                var view = new Main.views.FieldMapExportCollectionView({ collection: new Main.models.FieldMapCollection(c.model.get("FieldCollection").where({ SyncDirection: "ToTarget" })), controller: c });
-                return view;
-            });
-            
+            });            
         },
         
         onPrepNestedViews: function () {
@@ -64,41 +58,27 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
 
     });
 
-    Main.views.FieldMapItemImportView = NiceTools.BoundView.extend({
-       template:this.template("fieldMapImportItem"),
+    Main.views.FieldMapItemView = NiceTools.BoundView.extend({
+       template:this.template("fieldMapItem"),
        initialize:function () {
             this.initializeBindings();
         },           
        onShow:function () {
            this.bindModel();
            this.delegateEvents();
-       },  
+       },
     });
 
-    Main.views.FieldMapItemExportView = NiceTools.BoundView.extend({
-        template: this.template("fieldMapExportItem"),
-        initialize: function () {
-            this.initializeBindings();
-        },
-        onShow: function () {
-            this.bindModel();
-            this.delegateEvents();
-        },
-    });
-
-    Main.views.FieldMapImportCollectionView = Marionette.CollectionView.extend({
-        itemView: Main.views.FieldMapItemImportView
-    });
-
-    Main.views.FieldMapExportCollectionView = Marionette.CollectionView.extend({
-        itemView: Main.views.FieldMapItemExportView
+    Main.views.FieldMapCollectionView = Marionette.CollectionView.extend({
+        itemView: Main.views.FieldMapItemView,
     });
     
     Main.views.FieldMapTabView = Marionette.Layout.extend({
         template: this.template("tab_fieldMapping"),
 
         events: {
-            "change #TargetField": "updateSelected",
+            "change #TargetField": "updateSelectedTargetField",
+            "change #SyncDirection": "updateSelectedSyncDirection"
         },
 
         initialize: function (options) {
@@ -107,8 +87,16 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                 var attrs = _.pluck(model.TargetFields.models, "attributes");
                 return _.pluck(attrs, "Name");
             }, this);
-            App.reqres.setHandler('isSelected', function (model, idx) {
+            App.reqres.setHandler('getSyncDirections', function (model) {
+                return model.SyncDirections;
+            }, this);
+            App.reqres.setHandler('isTargetFieldSelected', function (model, idx) {
                 if (model.TargetFields.models[idx].IsSelected())
+                    return true;
+                return false;
+            }, this);
+            App.reqres.setHandler('isSyncDirectionSelected', function (model, idx) {
+                if (model.SyncDirections[idx] == model.SyncDirection)
                     return true;
                 return false;
             }, this);
@@ -122,8 +110,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             this.controller.triggerMethod("close");
         },
         
-        updateSelected: function (e) {
-            //alert(e.value());
+        updateSelectedTargetField: function (e) {
             var item = this.model.get("FieldCollection").findWhere({ LeanKitField: e.target.getAttribute("data-leankitfield") });
             if (!_.isUndefined(item)) {
                 var targetFields = item.get("TargetFields");
@@ -133,6 +120,13 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                         targetFields.at(i).IsSelected(true);
                     }
                 }                
+            }
+        },
+        
+        updateSelectedSyncDirection: function (e) {
+            var item = this.model.get("FieldCollection").findWhere({ LeanKitField: e.target.getAttribute("data-leankitfield") });
+            if (!_.isUndefined(item)) {
+                item.SyncDirection(e.target.value);
             }
         },
     });

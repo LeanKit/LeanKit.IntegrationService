@@ -159,10 +159,7 @@
     <Content Include="Site\modules\main\templates\buttonItem.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Site\modules\main\templates\fieldMapExportItem.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Site\modules\main\templates\fieldMapImportItem.html">
+    <Content Include="Site\modules\main\templates\fieldMapItem.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Site\modules\main\templates\tab_fieldMapping.html">

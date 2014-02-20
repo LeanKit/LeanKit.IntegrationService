@@ -1,0 +1,13 @@
+﻿    <div class="row">
+        <fieldset>
+            <div class="col-xs-4">
+                <div id="field_{{LeanKitField}}"><strong>{{LeanKitField}}</strong></div>
+            </div> 
+            <div class="col-xs-3">
+                {{{simpleSelect "getSyncDirections" "isSyncDirectionSelected" id="SyncDirection" class="form-control" data-leankitfield=LeanKitField}}}
+            </div>
+            <div class="col-xs-5">
+                {{{simpleSelect "getTargetFields" "isTargetFieldSelected" id="TargetField" class="form-control" data-leankitfield=LeanKitField}}}
+            </div>           
+        </fieldset>
+    </div>

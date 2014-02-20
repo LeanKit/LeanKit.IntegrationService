@@ -62,8 +62,24 @@ namespace IntegrationService
 
 			if (FieldMappings.Any())
 			{
-				var field = FieldMappings.FirstOrDefault(x => (x.LeanKitField.ToLowerInvariant() == leanKitField.ToString().ToLowerInvariant()) 
-													&& (x.SyncDirection.ToLowerInvariant() == syncDirection.ToString().ToLowerInvariant()));
+				FieldMap field = null;
+
+				switch (syncDirection)
+				{
+					case SyncDirection.ToLeanKit:
+						field = FieldMappings.FirstOrDefault(x => (x.LeanKitField.ToLowerInvariant() == leanKitField.ToString().ToLowerInvariant())
+						                                          && ((x.SyncDirection.ToLowerInvariant() == "toleankit") || (x.SyncDirection.ToLowerInvariant() == "both")));
+						break;
+					case SyncDirection.ToTarget:
+						field = FieldMappings.FirstOrDefault(x => (x.LeanKitField.ToLowerInvariant() == leanKitField.ToString().ToLowerInvariant())
+						                                          && ((x.SyncDirection.ToLowerInvariant() == "totarget") || (x.SyncDirection.ToLowerInvariant() == "both")));
+						break;
+					default:
+						field = FieldMappings.FirstOrDefault(x => (x.LeanKitField.ToLowerInvariant() == leanKitField.ToString().ToLowerInvariant())
+						                                          && (x.SyncDirection.ToLowerInvariant() == syncDirection.ToString().ToLowerInvariant()));
+						break;
+				}
+
 				if (field != null)
 				{
 					var selectedFields = field.TargetFields.Where(x => x.IsSelected).Select(x => x.Name);

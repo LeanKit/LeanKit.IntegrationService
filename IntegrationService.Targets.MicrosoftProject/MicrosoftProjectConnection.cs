@@ -101,24 +101,31 @@ namespace IntegrationService.Targets.MicrosoftProject
 		{
 			var fields = new List<ConfigurableField>();
 
-
-			#region From Target to LeanKit
+			fields.Add(new ConfigurableField(LeanKitField.Id,
+										 GetAllTextFields(0),
+										 GetSyncDirections(true, false, true, false),
+										 SyncDirection.None, 
+										 ""));
 			fields.Add(new ConfigurableField(LeanKitField.Title,
 										 new List<TargetField>() { new TargetField() { Name = "Name", IsDefault = true } },
-										 SyncDirection.ToLeanKit,
+										 GetSyncDirections(false, true, false, true),
+										 SyncDirection.ToLeanKit, 
 										 ""));
 			fields.Add(new ConfigurableField(LeanKitField.Description,
 										 new List<TargetField>() { new TargetField() { Name = "Notes", IsDefault = true } },
-										 SyncDirection.ToLeanKit,
+										 GetSyncDirections(true, true, true, true),
+										 SyncDirection.ToLeanKit, 
 										 ""));
 			fields.Add(new ConfigurableField(LeanKitField.ExternalId, 
 										 new List<TargetField>() { new TargetField() { Name = "UniqueId", IsDefault = true } },
+										 GetSyncDirections(false, true, false, false),
 										 SyncDirection.ToLeanKit, 
 										 ""));
 
 			fields.Add(new ConfigurableField(LeanKitField.ExcludeFromLeankit,
 										 GetAllTextFields(6),
-										 SyncDirection.ToLeanKit,
+										 GetSyncDirections(true, true, false, false),
+										 SyncDirection.ToLeanKit, 
 										 "Exclude a task from being imported into LeanKit. Value should be 'Yes' to exclude."));
 			fields.Add(new ConfigurableField(LeanKitField.StartDate,
 			                             new List<TargetField>()
@@ -127,7 +134,8 @@ namespace IntegrationService.Targets.MicrosoftProject
 					                            new TargetField() {Name = "Start", IsDefault = true},
 					                            new TargetField() {Name = "EarlyStart", IsDefault = false}
 				                            },
-										 SyncDirection.ToLeanKit,
+										 GetSyncDirections(false, true, false, true),
+										 SyncDirection.ToLeanKit, 
 										 "Select the Project field to use as the card's StartDate."));
 			fields.Add(new ConfigurableField(LeanKitField.DueDate,
 										 new List<TargetField>()
@@ -136,14 +144,17 @@ namespace IntegrationService.Targets.MicrosoftProject
 					                            new TargetField() {Name = "Finish", IsDefault = true},
 					                            new TargetField() {Name = "EarlyFinish", IsDefault = false}
 				                            },
-										 SyncDirection.ToLeanKit,
+										 GetSyncDirections(true, true, true, true),
+										 SyncDirection.ToLeanKit, 
 										 "Select the Project field to use as the card's DueDate."));
 			fields.Add(new ConfigurableField(LeanKitField.CardType, 
 										 GetAllTextFields(1),
+										 GetSyncDirections(true, true, true, true),
 										 SyncDirection.ToLeanKit, 
 										 "To create a card of a specific type. Must match a card type name i.e. Task, Defect, etc."));
 			fields.Add(new ConfigurableField(LeanKitField.Priority,
 										 new List<TargetField>() { new TargetField() { Name = "Priority", IsDefault = true } },
+										 GetSyncDirections(true, true, true, true),
 										 SyncDirection.ToLeanKit, 
 										 ""));
 			fields.Add(new ConfigurableField(LeanKitField.Size,
@@ -155,104 +166,29 @@ namespace IntegrationService.Targets.MicrosoftProject
 					                            new TargetField() {Name = "BaselineCost", IsDefault = false},
 											    new TargetField() {Name = "Cost", IsDefault = false}
 				                            },
+										 GetSyncDirections(true, true, true, true),
 										 SyncDirection.ToLeanKit, 
 										 "Select the Project field to use as the card's Size."));
 			fields.Add(new ConfigurableField(LeanKitField.ClassOfService, 
-										 GetAllTextFields(2), 
+										 GetAllTextFields(2),
+										 GetSyncDirections(true, true, true, true),
 										 SyncDirection.ToLeanKit, 
 										 "To assign a class of service to the card."));			
 			fields.Add(new ConfigurableField(LeanKitField.IsBlocked, 
-										 GetAllTextFields(5), 
+										 GetAllTextFields(5),
+										 GetSyncDirections(true, true, true, true),
 										 SyncDirection.ToLeanKit, 
 										 "To mark the card as blocked. Value should be 'Yes' to be blocked"));
 			fields.Add(new ConfigurableField(LeanKitField.BlockedReason, 
-										 GetAllTextFields(3), 
+										 GetAllTextFields(3),
+										 GetSyncDirections(true, true, true, true),
 										 SyncDirection.ToLeanKit, 
 										 "To provide a reason the card is blocked."));
 			fields.Add(new ConfigurableField(LeanKitField.Tags,
 										 GetAllTextFields(4),
-										 SyncDirection.ToLeanKit,
+										 GetSyncDirections(true, true, true, true),
+										 SyncDirection.ToLeanKit, 
 										 "A Project field(s) containing a comma separated list of tags to apply to the card."));
-			#endregion
-			#region From LeanKit to Target 
-
-			fields.Add(new ConfigurableField(LeanKitField.Id,
-										GetAllTextFields(0),
-										SyncDirection.ToTarget,
-										""));
-			fields.Add(new ConfigurableField(LeanKitField.Title,
-										new List<TargetField>()
-											{
-												new TargetField() { Name = "None", IsDefault = true },
-												new TargetField() { Name = "Name", IsDefault = false }, 
-											},
-										SyncDirection.ToTarget,
-										""));
-			fields.Add(new ConfigurableField(LeanKitField.Description,
-										new List<TargetField>()
-											{
-												new TargetField() { Name = "None", IsDefault = true },
-												new TargetField() { Name = "Notes", IsDefault = false },
-											},
-										SyncDirection.ToTarget,
-										""));
-			fields.Add(new ConfigurableField(LeanKitField.StartDate,
-										 new List<TargetField>()
-											{
-												new TargetField() {Name = "None", IsDefault = true},
-												new TargetField() {Name = "BaselineStart", IsDefault = false},
-					                            new TargetField() {Name = "Start", IsDefault = false},
-					                            new TargetField() {Name = "EarlyStart", IsDefault = false}
-				                            },
-										 SyncDirection.ToTarget,
-										 ""));
-			fields.Add(new ConfigurableField(LeanKitField.DueDate,
-										 new List<TargetField>()
-				                            {
-												new TargetField() {Name = "None", IsDefault = true},
-					                            new TargetField() {Name = "BaselineFinish", IsDefault = false},
-					                            new TargetField() {Name = "Finish", IsDefault = false},
-					                            new TargetField() {Name = "EarlyFinish", IsDefault = false}
-				                            },
-										 SyncDirection.ToTarget,
-										 ""));
-			fields.Add(new ConfigurableField(LeanKitField.CardType,
-										 GetAllTextFields(0),
-										 SyncDirection.ToTarget,
-										 ""));
-			fields.Add(new ConfigurableField(LeanKitField.Priority,
-										 new List<TargetField>()
-											 {
-												 new TargetField() {Name = "None", IsDefault = true},
-												 new TargetField() { Name = "Priority", IsDefault = false }
-											 },
-										 SyncDirection.ToTarget,
-										 ""));
-			fields.Add(new ConfigurableField(LeanKitField.Size,
-										 new List<TargetField>()
-				                            {
-												new TargetField() {Name = "None", IsDefault = true },
-					                            new TargetField() {Name = "BaselineWork", IsDefault = false},
-					                            new TargetField() {Name = "Work", IsDefault = false},
-					                            new TargetField() {Name = "BaselineCost", IsDefault = false},
-											    new TargetField() {Name = "Cost", IsDefault = false}
-				                            },
-										 SyncDirection.ToTarget,
-										 "Select the Project field to use as the card's Size."));
-			fields.Add(new ConfigurableField(LeanKitField.IsBlocked,
-										 GetAllTextFields(0),
-										 SyncDirection.ToTarget,
-										 ""));
-			fields.Add(new ConfigurableField(LeanKitField.BlockedReason,
-										 GetAllTextFields(0),
-										 SyncDirection.ToTarget,
-										 ""));
-			fields.Add(new ConfigurableField(LeanKitField.Tags,
-										 GetAllTextFields(0),
-										 SyncDirection.ToTarget,
-										 ""));
-			#endregion
-
 			return fields;
 		}
 
@@ -283,6 +219,25 @@ namespace IntegrationService.Targets.MicrosoftProject
 			}
 
 			return taskTypes;
+		}
+
+		private List<SyncDirection> GetSyncDirections(bool includeNone, 
+													  bool includeToLeankit, 
+													  bool includeToTarget,
+		                                              bool includeBoth)
+		{
+			var syncDirections = new List<SyncDirection>();
+
+			if (includeNone)
+				syncDirections.Add(SyncDirection.None);
+			if (includeToLeankit)
+				syncDirections.Add(SyncDirection.ToLeanKit);
+			if (includeToTarget)
+				syncDirections.Add(SyncDirection.ToTarget);
+			if (includeBoth)
+				syncDirections.Add(SyncDirection.Both);
+
+			return syncDirections;
 		}
 
 		private List<State> GetStates(ProjectFile mpx)

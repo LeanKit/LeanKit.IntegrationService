@@ -55,6 +55,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         defaults: {
             LeanKitField: "",
             SyncDirection: "None",
+            SyncDirections: undefined,
             TargetFields: new Main.models.TargetFieldMapCollection()
         },
         

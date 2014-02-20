@@ -164,35 +164,52 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                     fieldMapConfiguration.add(new Main.models.FieldMapModel(
                         {
                             LeanKitField: this.configurableFields.at(k).get("LeanKitField"),
-                            SyncDirection: this.configurableFields.at(k).get("SyncDirection"),
+                            SyncDirection: this.configurableFields.at(k).get("DefaultSyncDirection"),
+                            SyncDirections: this.configurableFields.at(k).get("SyncDirections"),
                             TargetFields: this.configurableFields.at(k).get("TargetFields")
                         }));
                 }
             } else {
                 // update existing field mapping configuration    
                 this.configurableFields.each(function (confFieldItem) {
-                    var fieldMapItem = fieldMapConfiguration.findWhere({ LeanKitField: confFieldItem.get("LeanKitField"), SyncDirection: confFieldItem.get("SyncDirection") });
+                    var fieldMapItem = fieldMapConfiguration.findWhere({ LeanKitField: confFieldItem.get("LeanKitField") });
                     // if a field does not exist in the configuration but does in configurable fields 
                     // then add it to the configuration                          
                     if (!_.isObject(fieldMapItem) || fieldMapItem === undefined || fieldMapItem === null) {
                         fieldMapConfiguration.add(new Main.models.FieldMapModel(
                             {
                                 LeanKitField: confFieldItem.LeanKitField(),
-                                SyncDirection: confFieldItem.SyncDirection(),
+                                SyncDirection: confFieldItem.DefaultSyncDirection(),
+                                SyncDirections: confFieldItem.SyncDirections(),
                                 TargetFields: confFieldItem.TargetFields()
                             }));                            
                     }
                 });
 
                 // loop through any existing field mapping
-                fieldMapConfiguration.each(function (item) {                    
-                    var configurableFieldItem = this.configurableFields.findWhere({ LeanKitField: item.get("LeanKitField"), SyncDirection: item.get("SyncDirection") });
-                        
+                fieldMapConfiguration.each(function (item) {
+                    var configurableFieldItem = this.configurableFields.findWhere({ LeanKitField: item.get("LeanKitField") });                        
                     if (!_.isObject(configurableFieldItem) || configurableFieldItem === undefined || configurableFieldItem === null) {
                         // the field mapping exists in configuration but not in configurable fields so remove it
                         fieldMapConfiguration.remove(item);
                     } else {
-                        // The field exists in configuration, check the target fields
+                        // The field exists in configuration
+                        // Update the sync directions
+                        if (_.isUndefined(item.SyncDirections()) || item.SyncDirections().length === 0) {
+                            // add them all if the field doesn't have any
+                            item.SyncDirections(configurableFieldItem.SyncDirections());
+                        } else {
+                            // add any that are missing
+                            for (var i = 0; i < configurableFieldItem.SyncDirections().length; i++) {
+                                var confSyncDirectionIdx = item.SyncDirections().indexOf(configurableFieldItem.SyncDirections()[i]);
+                                if (confSyncDirectionIdx < 0) {
+                                    // add the sync direction
+                                    var newSyncDirection = configurableFieldItem.SyncDirections()[i];
+                                    item.SyncDirections().push(newSyncDirection);
+                                }
+                            }
+                        }                        
+                        // Check the target fields
                         var configurableTargetFieldItems = configurableFieldItem.TargetFields();
                         var targetFieldsConfiguration = item.get("TargetFields");
                         // remove any Target Fields included but not in configurable fields 

@@ -31,7 +31,8 @@ namespace IntegrationService
 	public class ConfigurableField
 	{
 		public string Description { get; set; }
-		public SyncDirection SyncDirection { get; set; }
+		public List<SyncDirection> SyncDirections { get; set; }
+		public SyncDirection DefaultSyncDirection { get; set; }
 		public LeanKitField LeanKitField { get; set; }
 		public List<TargetField> TargetFields { get; set; } 
 
@@ -39,14 +40,16 @@ namespace IntegrationService
 		{
 			LeanKitField = LeanKitField.None;
 			Description = "";
-			SyncDirection = SyncDirection.None;
+			SyncDirections = new List<SyncDirection>(){ SyncDirection.None };
+			DefaultSyncDirection = SyncDirection.None;
 			TargetFields = new List<TargetField>();
 		}
 
-		public ConfigurableField(LeanKitField leanKitField, List<TargetField> targetFields, SyncDirection syncDirection, string description)
+		public ConfigurableField(LeanKitField leanKitField, List<TargetField> targetFields, List<SyncDirection> syncDirections, SyncDirection defaultSyncDirection, string description)
 		{
 			Description = description;
-			SyncDirection = syncDirection;
+			SyncDirections = syncDirections;
+			DefaultSyncDirection = defaultSyncDirection;
 			LeanKitField = leanKitField;
 			TargetFields = targetFields;
 		}
@@ -57,7 +60,7 @@ namespace IntegrationService
 		None, 
 		ToLeanKit,
 		ToTarget,
-		//Both
+		Both
 	}
 
 	public class TargetField

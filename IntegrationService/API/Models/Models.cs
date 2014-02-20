@@ -24,7 +24,8 @@ namespace IntegrationService.API.Models
 	public class ConfigurableFieldModel
 	{
 		public string Description { get; set; }
-		public string SyncDirection { get; set; }
+		public List<string> SyncDirections { get; set; }
+		public string DefaultSyncDirection { get; set; }
 		public string LeanKitField { get; set; }
 		public List<TargetFieldModel> TargetFields { get; set; } 
 	}
@@ -72,6 +73,7 @@ namespace IntegrationService.API.Models
 	public class FieldMapModel
 	{
 		public string LeanKitField { get; set; }
+		public List<string> SyncDirections { get; set; } 
 		public string SyncDirection { get; set; }
 		public List<TargetFieldMapModel> TargetFields { get; set; }
 	}
