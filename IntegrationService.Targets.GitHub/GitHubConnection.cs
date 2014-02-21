@@ -106,8 +106,8 @@ namespace IntegrationService.Targets.GitHub
 		{
 			var projects = new List<Project>();
 
-			int pageNumber = 100;
-			int pageSize = 2;
+			int pageNumber = 0;
+			int pageSize = 100;
 			int totalCount = 0;
 
 			do
@@ -170,8 +170,8 @@ namespace IntegrationService.Targets.GitHub
 		{
 			var projects = new List<Project>();
 
-			int pageNumber = 100;
-			int pageSize = 2;
+			int pageNumber = 0;
+			int pageSize = 100;
 			int totalCount = 0;
 
 			do {
