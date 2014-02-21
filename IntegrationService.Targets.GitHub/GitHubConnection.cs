@@ -69,6 +69,7 @@ namespace IntegrationService.Targets.GitHub
 				Items = new List<Repository>();
 			}
 
+			public int Total_Count { get; set; }
 			public List<Repository> Items { get; set; }
 		}
 
@@ -77,6 +78,16 @@ namespace IntegrationService.Targets.GitHub
 			public string Id { get; set; }
 			public string Name { get; set; }
 		}
+
+		protected IRestResponse ReposResponse(int pageNumber, int pageSize) 
+		{
+			//https://api.github.com/search/repositories?q=@hostname
+			var reposRequest = new RestRequest(string.Format("/search/repositories?q=@{0}&page={1}&per_page={2}", Host, pageNumber, pageSize), Method.GET);
+			// required for GitHub Search API during the developer preview
+			reposRequest.AddHeader("Accept", "application/vnd.github.preview");
+			var reposResponse = RestClient.Execute(reposRequest);
+			return reposResponse;
+		}		
     }
 
 	public class GitHubIssuesConnection : GitHubConnection
@@ -95,19 +106,31 @@ namespace IntegrationService.Targets.GitHub
 		{
 			var projects = new List<Project>();
 
-			//https://api.github.com/search/repositories?q=@hostname
-			var reposRequest = new RestRequest("/search/repositories?q=@" + Host, Method.GET);
-			// required for GitHub Search API during the developer preview
-			reposRequest.AddHeader("Accept", "application/vnd.github.preview");
-			var reposResponse = RestClient.Execute(reposRequest);
-			if (reposResponse.StatusCode == HttpStatusCode.OK) 
+			int pageNumber = 100;
+			int pageSize = 2;
+			int totalCount = 0;
+
+			do
 			{
-				var repos = new JsonSerializer<RepositoryResponse>().DeserializeFromString(reposResponse.Content);
-				if (repos != null && repos.Items != null && repos.Items.Any()) 
+				pageNumber++;
+				var reposResponse = ReposResponse(pageNumber, pageSize);
+				if (reposResponse.StatusCode == HttpStatusCode.OK) 
 				{
-					projects.AddRange(repos.Items.Select(repo => new Project(repo.Name, repo.Name, GetIssueTypes(), GetStates())));
-				}
-			}
+					var repos = new JsonSerializer<RepositoryResponse>().DeserializeFromString(reposResponse.Content);
+					if (repos != null)
+					{
+						if (repos.Items != null && repos.Items.Any())
+						{
+							projects.AddRange(repos.Items.Select(repo => new Project(repo.Name, repo.Name, GetIssueTypes(), GetStates())));
+						}
+						totalCount = repos.Total_Count;
+					}
+					else
+					{
+						break;
+					}
+				}					
+			} while (totalCount > pageNumber * pageSize);
 
 			return projects;
 		}
@@ -147,19 +170,25 @@ namespace IntegrationService.Targets.GitHub
 		{
 			var projects = new List<Project>();
 
-			//https://api.github.com/search/repositories?q=@hostname
-			var reposRequest = new RestRequest("/search/repositories?q=@" + Host, Method.GET);
-			// required for GitHub Search API during the developer preview
-			reposRequest.AddHeader("Accept", "application/vnd.github.preview");
-			var reposResponse = RestClient.Execute(reposRequest);
-			if (reposResponse.StatusCode == HttpStatusCode.OK) 
-			{
-				var repos = new JsonSerializer<RepositoryResponse>().DeserializeFromString(reposResponse.Content);
-				if (repos != null && repos.Items != null && repos.Items.Any()) 
-				{
-					projects.AddRange(repos.Items.Select(repo => new Project(repo.Name, repo.Name, GetIssueTypes(), GetStates())));
+			int pageNumber = 100;
+			int pageSize = 2;
+			int totalCount = 0;
+
+			do {
+				pageNumber++;
+				var reposResponse = ReposResponse(pageNumber, pageSize);
+				if (reposResponse.StatusCode == HttpStatusCode.OK) {
+					var repos = new JsonSerializer<RepositoryResponse>().DeserializeFromString(reposResponse.Content);
+					if (repos != null) {
+						if (repos.Items != null && repos.Items.Any()) {
+							projects.AddRange(repos.Items.Select(repo => new Project(repo.Name, repo.Name, GetIssueTypes(), GetStates())));
+						}
+						totalCount = repos.Total_Count;
+					} else {
+						break;
+					}
 				}
-			}
+			} while (totalCount > pageNumber * pageSize);
 
 			return projects;
 		}
