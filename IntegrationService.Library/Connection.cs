@@ -17,6 +17,7 @@ namespace IntegrationService
 	public interface IConfigurableFieldsConnection
 	{
 		List<ConfigurableField> GetConfigurableFields();
+		List<Type> GetTaskTypes(string project, string field);
 	}
 
 	public enum ConnectionResult 

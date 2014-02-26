@@ -319,7 +319,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             this.CardTypes(new Main.models.CardTypeCollection(item.CardTypes));
             this.LaneHtml(item.LaneHtml);
         }
-    });
+    }); 
 
-    Main.models.syncRule = { leankit: 0, target: 1, both: 2 };
+    Main.models.syncRule = { none: 0, leankit: 1, target: 2, both: 3 };
 });

@@ -24,6 +24,13 @@ namespace IntegrationService.API
     [Route("/projects")]
     public class ProjectsRequest : Request { }
 
+	[Route("/tasktypes")]
+	public class TaskTypesRequest : Request
+	{
+		public string Project { get; set; }
+		public string Field { get; set; }
+	}
+
 	[Route("/configurablefields")]
 	public class ConfigurableFieldsRequest : Request { }
 
@@ -163,6 +170,28 @@ namespace IntegrationService.API
 			var projects = target.GetProjects();
 
 			return OK(projects);
+		}
+
+		public object Get(TaskTypesRequest request)
+		{
+			if (request.Type == null) return null;
+
+			ConnectionResult result;
+			var target = Connect(request, out result);
+
+			if (result != ConnectionResult.Success)
+				return ServerError(result.ToString());
+
+			if ((target is IConfigurableFieldsConnection)) 
+			{
+				"Getting list of task types...".Debug();
+
+				var taskTypes = ((IConfigurableFieldsConnection)target).GetTaskTypes(request.Project, request.Field);
+
+				return OK(taskTypes);
+			}
+
+			return OK(new List<ConfigurableField>());		
 		}
 
 		public object Get(ConfigurableFieldsRequest request)

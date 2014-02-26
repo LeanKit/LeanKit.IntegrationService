@@ -120,13 +120,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 										 new List<TargetField>() { new TargetField() { Name = "UniqueId", IsDefault = true } },
 										 GetSyncDirections(false, true, false, false),
 										 SyncDirection.ToLeanKit, 
-										 ""));
-
-			fields.Add(new ConfigurableField(LeanKitField.ExcludeFromLeankit,
-										 GetAllTextFields(6),
-										 GetSyncDirections(true, true, false, false),
-										 SyncDirection.ToLeanKit, 
-										 "Exclude a task from being imported into LeanKit. Value should be 'Yes' to exclude."));
+										 ""));			
 			fields.Add(new ConfigurableField(LeanKitField.StartDate,
 			                             new List<TargetField>()
 											{
@@ -192,6 +186,40 @@ namespace IntegrationService.Targets.MicrosoftProject
 			return fields;
 		}
 
+
+		public List<Type> GetTaskTypes(string project, string field) 
+		{
+			var taskTypes = new List<Type>();
+
+			if (!string.IsNullOrEmpty(FolderPath))
+			{
+				var projectFile = Path.Combine(FolderPath, project);
+				if (!System.IO.File.Exists(projectFile))
+				{
+
+				}
+				else
+				{
+					ProjectReader reader = ProjectReaderUtility.getProjectReader(projectFile);
+					ProjectFile mpx = reader.read(projectFile);
+
+					// add types and states
+					var projTaskTypes = (from Task task in mpx.AllTasks.ToIEnumerable<Task>()
+										 select task.GetText(field))
+										 .Where(x => !string.IsNullOrEmpty(x))
+										 .Distinct()
+										 .ToList();
+
+					if (projTaskTypes.Any()) 
+					{
+						taskTypes.AddRange(projTaskTypes.Select(projTaskType => new Type(projTaskType)));
+					}
+				}								
+			}
+			return taskTypes;
+		}
+
+
 		private List<TargetField> GetAllTextFields(int defaultValue = 0)
 		{
 			var fields = new List<TargetField>();
@@ -207,16 +235,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 		{
 			var taskTypes = new List<Type>();
 
-			var projTaskTypes = (from Task task in mpx.AllTasks.ToIEnumerable<Task>()
-			                 select task.GetText(1))
-							 .Where(x => !string.IsNullOrEmpty(x))
-							 .Distinct()
-							 .ToList();
-
-			if (projTaskTypes.Any())
-			{
-				taskTypes.AddRange(projTaskTypes.Select(projTaskType => new Type(projTaskType)));
-			}
+			//TODO: need to get task types based on field mapping of task type field from configuration
 
 			return taskTypes;
 		}
