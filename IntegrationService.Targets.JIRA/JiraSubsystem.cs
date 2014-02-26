@@ -751,21 +751,19 @@ namespace IntegrationService.Targets.JIRA
 				boardMapping.Types != null &&
 				boardMapping.ValidCardTypes != null &&
 				boardMapping.Types.Any() &&
-				boardMapping.ValidCardTypes.Any()) 
+				boardMapping.ValidCardTypes.Any() &&
+				!string.IsNullOrEmpty(cardType)) 
 			{
-				if (boardMapping.ValidCardTypes != null && boardMapping.ValidCardTypes.Any())
+				var lkType = boardMapping.ValidCardTypes.FirstOrDefault(x => x != null && !string.IsNullOrEmpty(x.Name) && x.Name.ToLowerInvariant() == cardType.ToLowerInvariant());
+				if (lkType != null)
 				{
-					var lkType = boardMapping.ValidCardTypes.FirstOrDefault(x => x.Name.ToLowerInvariant() == cardType.ToLowerInvariant());
-					if (lkType != null)
+					// first check for mapped type
+					var mappedType = boardMapping.Types.FirstOrDefault(x => x!= null && !string.IsNullOrEmpty(x.LeanKit) && x.LeanKit.ToLowerInvariant() == lkType.Name.ToLowerInvariant());
+					if (mappedType != null)
 					{
-						// first check for mapped type
-						var mappedType = boardMapping.Types.FirstOrDefault(x => x.LeanKit.ToLowerInvariant() == lkType.Name.ToLowerInvariant());
-						if (mappedType != null)
-						{
-							return mappedType.Target;
-						}
+						return mappedType.Target;
 					}
-				}
+				}				
 			}
 			// else just default to Bug
 			return "Bug";
