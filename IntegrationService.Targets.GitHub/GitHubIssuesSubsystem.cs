@@ -45,7 +45,7 @@ namespace IntegrationService.Targets.GitHub
         public override void Init()
         {
             Log.Debug("Initializing GitHub-Issues...");
-			_externalUrlTemplate = "https://github.com/" + Configuration.Target.Host + "/{0}/issue/{1}";
+			_externalUrlTemplate = "https://github.com/" + Configuration.Target.Host + "/{0}/issues/{1}";
         }
 
 
@@ -353,9 +353,9 @@ namespace IntegrationService.Targets.GitHub
                 TypeId = mappedCardType.Id,
                 TypeName = mappedCardType.Name,
                 LaneId = laneId,
-                ExternalCardID = issue.Id.ToString() + "|" + issue.Number.ToString(),
+                ExternalCardID = issue.Id + "|" + issue.Number,
                 ExternalSystemName = ServiceName,
-				ExternalSystemUrl = string.Format(_externalUrlTemplate, project.Identity.Target, issue.Number.ToString())
+				ExternalSystemUrl = string.Format(_externalUrlTemplate, project.Identity.Target, issue.Number)
             };
 
 			var assignedUserId = issue.LeanKitAssignedUserId(boardId, LeanKit);
