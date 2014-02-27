@@ -274,6 +274,13 @@ namespace IntegrationService.Targets.GitHub
 				saveCard = true;
 			}
 
+			var lanes = boardMapping.LanesFromState(issue.State);
+			if (lanes.Count > 0 && lanes.All(x => x != card.LaneId))
+			{
+				card.LaneId = lanes.First();
+				saveCard = true;
+			}
+
 			if (saveCard) 
 			{
 				Log.Info("Updating card [{0}]", card.Id);
@@ -287,49 +294,49 @@ namespace IntegrationService.Targets.GitHub
 
 			var queryAsOfDate = QueryDate.AddMilliseconds(Configuration.PollingFrequency * -1.5);
 
-			//https://api.github.com/repos/{0}/{1}/issues?state=Open&since={2}			
-			var request = new RestRequest(string.Format("repos/{0}/{1}/issues", Configuration.Target.Host, project.Identity.Target), Method.GET);
-	        request.AddParameter("state", project.QueryStates[0]);
-	        request.AddParameter("since", queryAsOfDate.ToString("o"));
-
-			var resp = _restClient.Execute(request);
-
-			if (resp.StatusCode != HttpStatusCode.OK) 
-			{
-				var serializer = new JsonSerializer<ErrorMessage>();
-				var errorMessage = serializer.DeserializeFromString(resp.Content);
-				Log.Error(string.Format("Unable to get issues from GitHub, Error: {0}. Check your board/repo mapping configuration.", errorMessage.Message));
-				return;
-			}
-
-			var issues = new JsonSerializer<List<Issue>>().DeserializeFromString(resp.Content);
-
-			Log.Info("\nQueried [{0}] at {1} for changes after {2}", project.Identity.Target, QueryDate, queryAsOfDate.ToString("o"));
-
-	        if (issues != null && issues.Any() && issues[0].Id > 0)
+			// GitHub will only let us query one state at a time :(
+	        foreach (var state in project.QueryStates)
 	        {
-		        foreach (var issue in issues)
+				//https://api.github.com/repos/{0}/{1}/issues?state=Open&since={2}			
+				var request = new RestRequest(string.Format("repos/{0}/{1}/issues", Configuration.Target.Host, project.Identity.Target), Method.GET);
+				request.AddParameter("state", state);
+				request.AddParameter("since", queryAsOfDate.ToString("o"));
+
+				var resp = _restClient.Execute(request);
+
+				if (resp.StatusCode != HttpStatusCode.OK)
+				{
+					var serializer = new JsonSerializer<ErrorMessage>();
+					var errorMessage = serializer.DeserializeFromString(resp.Content);
+					Log.Error(string.Format("Unable to get issues from GitHub, Error: {0}. Check your board/repo mapping configuration.", errorMessage.Message));
+					return;
+				}
+
+				var issues = new JsonSerializer<List<Issue>>().DeserializeFromString(resp.Content);
+
+				Log.Info("\nQueried [{0}] at {1} for changes after {2}", project.Identity.Target, QueryDate, queryAsOfDate.ToString("o"));
+
+		        if (issues == null || !issues.Any() || issues[0].Id <= 0) continue;
+
+		        foreach (var issue in issues.Where(issue => issue.Id > 0))
 		        {
-			        if (issue.Id > 0)
+			        Log.Info("Issue [{0}]: {1}, {2}, {3}", issue.Number, issue.Title, issue.User.Login, issue.State);
+
+			        // does this workitem have a corresponding card?
+			        var card = LeanKit.GetCardByExternalId(project.Identity.LeanKit, issue.Id + "|" + issue.Number.ToString());
+
+			        if (card == null || card.ExternalSystemName != ServiceName)
 			        {
-				        Log.Info("Issue [{0}]: {1}, {2}, {3}", issue.Number, issue.Title, issue.User.Login, issue.State);
-
-				        // does this workitem have a corresponding card?
-				        var card = LeanKit.GetCardByExternalId(project.Identity.LeanKit, issue.Id + "|" + issue.Number.ToString());
-
-				        if (card == null || card.ExternalSystemName != ServiceName)
-				        {
-					        Log.Debug("Create new card for Issue [{0}]", issue.Number);
-					        CreateCardFromItem(project, issue);
-				        }
+				        Log.Debug("Create new card for Issue [{0}]", issue.Number);
+				        CreateCardFromItem(project, issue);
+			        }
+			        else
+			        {
+				        Log.Debug("Previously created a card for Issue [{0}]", issue.Number);
+				        if (project.UpdateCards)
+					        IssueUpdated(issue, card, project);
 				        else
-				        {
-					        Log.Debug("Previously created a card for Issue [{0}]", issue.Number);
-							if (project.UpdateCards)
-								IssueUpdated(issue, card, project);
-							else
-								Log.Info("Skipped card update because 'UpdateCards' is disabled.");
-				        }
+					        Log.Info("Skipped card update because 'UpdateCards' is disabled.");
 			        }
 		        }
 		        Log.Info("{0} item(s) queried.\n", issues.Count);
