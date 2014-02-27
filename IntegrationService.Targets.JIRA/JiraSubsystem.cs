@@ -351,7 +351,7 @@ namespace IntegrationService.Targets.JIRA
 			//https://yoursite.atlassian.net/rest/api/latest/search?jql=project=%22More+Tests%22+and+status=%22open%22+and+created+%3E+%222008/12/31+12:00%22+order+by+created+asc&fields=id,status,priority,summary,description
 			var request = new RestRequest("/rest/api/latest/search", Method.GET);
 			request.AddParameter("jql", jqlQuery);
-			request.AddParameter("fields", "id,status,priority,summary,description,type,assignee,duedate,labels");
+			request.AddParameter("fields", "id,status,priority,summary,description,issuetype,type,assignee,duedate,labels");
 	        request.AddParameter("maxResults", "9999");
 
 			var jiraResp = _restClient.Execute(request);
@@ -374,7 +374,7 @@ namespace IntegrationService.Targets.JIRA
 				foreach (var issue in issues)
  				{
 					Log.Info("Issue [{0}]: {1}, {2}, {3}", issue.Key, issue.Fields.Summary, issue.Fields.Status.Name, issue.Fields.Priority.Name);
-				
+
 					// does this workitem have a corresponding card?
 					var card = LeanKit.GetCardByExternalId(project.Identity.LeanKit, issue.Key);
 				
@@ -795,7 +795,7 @@ namespace IntegrationService.Targets.JIRA
 		{
 			public long Id { get; set; }
 			public string Key { get; set; }
-			public Fields Fields { get; set; } 
+			public Fields Fields { get; set; }
 
 			public Issue()
 			{
