@@ -45,13 +45,9 @@ namespace IntegrationService
 
 		public List<long> LanesFromState(string state)
 		{
-			var laneIds = LaneToStatesMap
-				.Where(x => x.Value.Contains(state))
-				.Select(x => x.Key).ToList();
-			if (laneIds.Any())
-				return laneIds;
-			
-			return ValidLanes.Select(x => x.Id).ToList();			
+			return (from lane in LaneToStatesMap 
+					where lane.Value.Any(val => val.Equals(state, StringComparison.OrdinalIgnoreCase)) 
+					select lane.Key).ToList();
 		}
 
 		public override string ToString() 
