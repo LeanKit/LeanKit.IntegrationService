@@ -52,7 +52,7 @@ namespace IntegrationService.Targets.Unfuddle
 
         protected override void CardUpdated(Card updatedCard, List<string> updatedItems, BoardMapping boardMapping)
         {
-			if (updatedCard.ExternalSystemName != ServiceName)
+			if (!updatedCard.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase))
 				return;
 
 	        var target = boardMapping.Identity.Target;
@@ -330,7 +330,7 @@ namespace IntegrationService.Targets.Unfuddle
 							// does this workitem have a corresponding card?
 							var card = LeanKit.GetCardByExternalId(project.Identity.LeanKit, ticket.Id.ToString());
 
-							if (card == null || card.ExternalSystemName != ServiceName) 
+							if (card == null || !card.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase)) 
 							{
 								Log.Debug("Create new card for Ticket [{0}]", ticket.Id);
 								CreateCardFromItem(project, ticket);
@@ -485,7 +485,7 @@ namespace IntegrationService.Targets.Unfuddle
 
         protected void UpdateStateOfExternalItem(Card card, List<string> states, BoardMapping mapping, bool runOnlyOnce)
 		{
-			if (card.ExternalSystemName != ServiceName)
+			if (!card.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase))
 				return;
 
 			if (states == null || states.Count == 0)

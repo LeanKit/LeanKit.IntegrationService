@@ -51,7 +51,7 @@ namespace IntegrationService.Targets.GitHub
 
         protected override void CardUpdated(Card updatedCard, List<string> updatedItems, BoardMapping boardMapping)
         {
-	        if (updatedCard.ExternalSystemName != ServiceName)
+	        if (!updatedCard.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase))
 		        return;
 
 			long issueNumber;
@@ -325,7 +325,7 @@ namespace IntegrationService.Targets.GitHub
 			        // does this workitem have a corresponding card?
 			        var card = LeanKit.GetCardByExternalId(project.Identity.LeanKit, issue.Id + "|" + issue.Number.ToString());
 
-			        if (card == null || card.ExternalSystemName != ServiceName)
+					if (card == null || !card.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase))
 			        {
 				        Log.Debug("Create new card for Issue [{0}]", issue.Number);
 				        CreateCardFromItem(project, issue);
@@ -427,7 +427,7 @@ namespace IntegrationService.Targets.GitHub
 
         protected void UpdateStateOfExternalItem(Card card, List<string> states, BoardMapping boardMapping, bool runOnlyOnce)
 	    {
-		    if (card.ExternalSystemName != ServiceName)
+		    if (!card.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase))
 			    return;
 
 		    if (string.IsNullOrEmpty(card.ExternalCardID))

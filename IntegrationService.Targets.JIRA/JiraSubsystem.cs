@@ -21,7 +21,7 @@ namespace IntegrationService.Targets.JIRA
     {
 	    private readonly IRestClient _restClient;
 		private string _externalUrlTemplate;
-	    private const string ServiceName = "Jira";
+	    private const string ServiceName = "JIRA";
 
 	    public Jira(IBoardSubscriptionManager subscriptions) : base(subscriptions)
         {
@@ -52,7 +52,7 @@ namespace IntegrationService.Targets.JIRA
 
         protected override void CardUpdated(Card updatedCard, List<string> updatedItems, BoardMapping boardMapping)
         {
-			if (updatedCard.ExternalSystemName != ServiceName)
+			if (!updatedCard.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase))
 				return;
 
 			if (string.IsNullOrEmpty(updatedCard.ExternalCardID))
@@ -378,7 +378,7 @@ namespace IntegrationService.Targets.JIRA
 					// does this workitem have a corresponding card?
 					var card = LeanKit.GetCardByExternalId(project.Identity.LeanKit, issue.Key);
 				
-					if (card == null || card.ExternalSystemName != ServiceName) 
+					if (card == null || !card.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase)) 
 					{
 						Log.Debug("Create new card for Issue [{0}]", issue.Key);
 						CreateCardFromItem(project, issue);
@@ -500,7 +500,7 @@ namespace IntegrationService.Targets.JIRA
 
         protected void UpdateStateOfExternalItem(Card card, List<string> states, BoardMapping mapping, bool runOnlyOnce)
 		{
-			if (card.ExternalSystemName != ServiceName)
+			if (!card.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase))
 				return;
 
 			if (string.IsNullOrEmpty(card.ExternalCardID)) 
@@ -725,7 +725,7 @@ namespace IntegrationService.Targets.JIRA
 				try
 				{
 					card.ExternalCardID = newIssue.Key;
-					card.ExternalSystemName = "JIRA";
+					card.ExternalSystemName = ServiceName;
 					card.ExternalSystemUrl = string.Format(_externalUrlTemplate, newIssue.Key);
 
 					// now that we've created the work item let's try to set it to any matching state defined by lane

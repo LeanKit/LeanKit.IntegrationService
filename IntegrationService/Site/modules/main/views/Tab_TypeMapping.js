@@ -83,7 +83,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                 if (smallerList.indexOf(type) >= 0) {
                     // is it in typeCollection already
                     // no? then add it
-                    foundType = typeCollection.findWhere({ LeanKitType: type, TargetType: type });
+                    foundType = typeCollection.findWhere({ TargetType: type });
                     if (_.isUndefined(foundType)) {
                         var m = new Main.models.TypeMapModel({ LeanKitType: type, TargetType: type });
                         typeCollection.add(m);
