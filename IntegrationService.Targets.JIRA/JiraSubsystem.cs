@@ -662,8 +662,8 @@ namespace IntegrationService.Targets.JIRA
 			string json = "{ \"fields\": { ";
 			json += "\"project\":  { \"key\": \"" + boardMapping.Identity.Target + "\" }";
 			json += ", \"summary\": \"" + card.Title + "\" ";
-			json += ", \"description\": \"" + card.Description.Replace("</p>", "").Replace("<p>", "") + "\" ";
-			json += ", \"issuetype\": { \"name\": \"" + GetJiraIssueType(boardMapping, card.TypeName) + "\" }";
+			json += ", \"description\": \"" + (card.Description != null ? card.Description.Replace("</p>", "").Replace("<p>", "") : "") + "\" ";
+			json += ", \"issuetype\": { \"name\": \"" + GetJiraIssueType(boardMapping, card.TypeId) + "\" }";
 			json += ", \"priority\": { \"name\": \"" + GetPriority(card.Priority) + "\" }";
 
 			if (!string.IsNullOrEmpty(card.DueDate)) 
@@ -745,28 +745,21 @@ namespace IntegrationService.Targets.JIRA
 			}
 		}
 
-		private string GetJiraIssueType(BoardMapping boardMapping, string cardType) 
+		private string GetJiraIssueType(BoardMapping boardMapping, long cardTypeId)
 		{
-			if (boardMapping != null &&
-				boardMapping.Types != null &&
-				boardMapping.ValidCardTypes != null &&
-				boardMapping.Types.Any() &&
-				boardMapping.ValidCardTypes.Any() &&
-				!string.IsNullOrEmpty(cardType)) 
-			{
-				var lkType = boardMapping.ValidCardTypes.FirstOrDefault(x => x != null && !string.IsNullOrEmpty(x.Name) && x.Name.ToLowerInvariant() == cardType.ToLowerInvariant());
-				if (lkType != null)
-				{
-					// first check for mapped type
-					var mappedType = boardMapping.Types.FirstOrDefault(x => x!= null && !string.IsNullOrEmpty(x.LeanKit) && x.LeanKit.ToLowerInvariant() == lkType.Name.ToLowerInvariant());
-					if (mappedType != null)
-					{
-						return mappedType.Target;
-					}
-				}				
-			}
-			// else just default to Bug
-			return "Bug";
+			const string defaultIssueType = "Bug";
+			if (cardTypeId <= 0 
+				|| boardMapping == null 
+				|| boardMapping.Types == null 
+				|| boardMapping.ValidCardTypes == null 
+				|| !boardMapping.ValidCardTypes.Any()
+				|| !boardMapping.Types.Any())
+				return defaultIssueType;
+
+			var lkType = boardMapping.ValidCardTypes.FirstOrDefault(x => x.Id == cardTypeId);
+			if (lkType == null) return defaultIssueType;
+			var mappedType = boardMapping.Types.FirstOrDefault(x => x != null && !string.IsNullOrEmpty(x.LeanKit) && String.Equals(x.LeanKit, lkType.Name, StringComparison.OrdinalIgnoreCase));
+			return mappedType != null ? mappedType.Target : "Bug";
 		}
 
 		#region object model
