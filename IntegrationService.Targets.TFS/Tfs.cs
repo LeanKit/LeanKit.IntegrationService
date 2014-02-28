@@ -119,7 +119,7 @@ namespace IntegrationService.Targets.TFS
                 // does this workitem have a corresponding card?
                 var card = LeanKit.GetCardByExternalId(project.Identity.LeanKit, item.Id.ToString(CultureInfo.InvariantCulture));
 
-                if (card == null || card.ExternalSystemName != ServiceName)
+                if (card == null || !card.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase))
                 {
                     Log.Debug("Creating new card for work item [{0}]", item.Id);
                     CreateCardFromWorkItem(project, item);
@@ -326,7 +326,7 @@ namespace IntegrationService.Targets.TFS
 
         protected void UpdateStateOfExternalItem(Card card, List<string> states, BoardMapping mapping, bool runOnlyOnce)
 		{
-			if (card.ExternalSystemName != ServiceName) return;
+			if (!card.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase)) return;
 			if (string.IsNullOrEmpty(card.ExternalCardID)) return;
 
 			int workItemId;
@@ -636,7 +636,7 @@ namespace IntegrationService.Targets.TFS
 
 	    protected override void CardUpdated(Card card, List<string> updatedItems, BoardMapping boardMapping)
 	    {
-		    if (card.ExternalSystemName != ServiceName)
+		    if (!card.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase))
 			    return;
 
 		    if (string.IsNullOrEmpty(card.ExternalCardID))
@@ -814,7 +814,7 @@ namespace IntegrationService.Targets.TFS
 				Log.Debug("Created Work Item [{0}] from Card [{1}]", workItem.Id, card.Id);
 
 				card.ExternalCardID = workItem.Id.ToString(CultureInfo.InvariantCulture);
-				card.ExternalSystemName = "TFS";
+				card.ExternalSystemName = ServiceName;
 
 				if (_projectHyperlinkService != null) 
 				{
