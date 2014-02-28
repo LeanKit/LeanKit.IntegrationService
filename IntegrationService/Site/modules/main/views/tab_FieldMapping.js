@@ -119,7 +119,10 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                     if (targetFields.at(i).Name() == e.target.value) {
                         targetFields.at(i).IsSelected(true);
                     }
-                }                
+                }
+                if (e.target.getAttribute("data-leankitfield") == "CardType") {
+                    Main.boardConfiguration.updateProjectTypes(this.controller.owner.model.TargetProjectId(), e.target.value);                    
+                }
             }
         },
         

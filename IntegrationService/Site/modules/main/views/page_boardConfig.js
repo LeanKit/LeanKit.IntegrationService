@@ -134,7 +134,22 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             if (!this.loadedConfigurableFields) return;
 
             for (var j = 0; j < this.mappingCollection.length; j++) {
-                this.updateFieldMappingConfiguration(this.mappingCollection.at(j));
+                this.updateFieldMappingConfiguration(this.mappingCollection.at(j));                
+            }
+
+            if (this.configurableFields.length > 0) {
+                var defaultCardType = this.configurableFields.findWhere({ LeanKitField: "CardType" });
+                if (!_.isUndefined(defaultCardType)) {                    
+                    var defaultCardTypeField = _.find(defaultCardType.TargetFields(), function (itm) {
+                        return itm.IsDefault;
+                    });
+                    if (!_.isUndefined(defaultCardTypeField)) {
+                        for (var k = 0; k < this.targetProjects.length; k++) {
+                            // build list of types for each project based on default configuration for CardType;
+                            this.updateProjectTypes(this.targetProjects.at(k).Id(), defaultCardTypeField.Name);
+                        }
+                    }
+                }   
             }
 
             for (var i = 0; i < this.boards.length; i++) {
@@ -147,6 +162,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                     } else {                        
                         board.TargetProjectId(project.Id());
                         board.TargetProjectName(project.Name());
+                        this.updateProjectTypesForMapping(project.Id(), configuredMap);
                     }
                 } else {
                     board.unset("TargetProjectId", { silent: true });
@@ -156,6 +172,39 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             this.view.displayBoardList(this.boards);
         },
         
+        updateProjectTypes: function (projectId, targetFieldName) {
+            if (this.configurableFields.length > 0) {
+                var parms = $.param(App.Config.configuration.Target().attributes);
+                parms += "&project=" + projectId + "&field=" + targetFieldName;
+                $.ajax({
+                    url: "/tasktypes",
+                    data: parms,
+                    context: this,
+                    contentType: "application/json",
+                    success: function(result) {
+                        var thisProj = this.targetProjects.findWhere({ Id: projectId });
+                        if (_.isObject(thisProj) && !_.isUndefined(thisProj)) {
+                            thisProj.set("Types", result);
+                            this.trigger('projectTypesUpdated', projectId, result);
+                        }
+                    },
+                    error: function() {
+                        alert("Getting project types failed.");
+                    }
+                });
+            }
+        },
+
+        updateProjectTypesForMapping: function(projectId, boardMapping) {
+            var cardTypeMap = boardMapping.get("FieldMap").findWhere({ LeanKitField: "CardType" });
+            if (_.isObject(cardTypeMap) && !_.isUndefined(cardTypeMap)) {
+                var targetField = cardTypeMap.get("TargetFields").findWhere({ IsSelected: true });
+                if (_.isObject(targetField) && !_.isUndefined(targetField)) {
+                    this.updateProjectTypes(projectId, targetField.Name());
+                }
+            }
+        },
+
         updateFieldMappingConfiguration: function(boardMapping) {
             var fieldMapConfiguration = boardMapping.get("FieldMap");                
             if (fieldMapConfiguration.length == 0) {
@@ -273,9 +322,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                 mapping.TargetProjectName(proj.Name());
             }
             
-            return proj;
-            
-            
+            return proj;                        
         },
 
         requestDetailView: function(id, context) {

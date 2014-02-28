@@ -186,12 +186,14 @@ namespace IntegrationService.API
 			{
 				"Getting list of task types...".Debug();
 
-				var taskTypes = ((IConfigurableFieldsConnection)target).GetTaskTypes(request.Project, request.Field);
-
-				return OK(taskTypes);
+				if (request.Field.ToLowerInvariant() != "none")
+				{
+					var taskTypes = ((IConfigurableFieldsConnection) target).GetTaskTypes(request.Project, request.Field);
+					return OK(taskTypes);
+				}
 			}
 
-			return OK(new List<ConfigurableField>());		
+			return OK(new List<Type>());		
 		}
 
 		public object Get(ConfigurableFieldsRequest request)

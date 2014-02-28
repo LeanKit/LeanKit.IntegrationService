@@ -38,7 +38,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 			ProjectReader reader = ProjectReaderUtility.getProjectReader(Path.Combine(Configuration.Target.Host, boardMapping.Identity.Target));
 			ProjectFile mpx = reader.read(Path.Combine(Configuration.Target.Host, boardMapping.Identity.Target));
 
-			var futureDate = DateTime.Now.AddDays(60);
+			var futureDate = DateTime.Now.AddDays(7);
 
 			var importFields = GetImportFields(boardMapping);
 
@@ -106,7 +106,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 			var boardId = project.Identity.LeanKit;
 
 			var mappedCardType = task.LeanKitCardType(project, importFields);
-			var laneId = project.LanesFromState("Ready").First();
+			var laneId = project.LanesFromState("All Tasks").First();
 			var card = new Card
 			{
 				Active = true,

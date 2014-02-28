@@ -13,6 +13,8 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             this.model = options.model;
             this.targetTypes = options.targetTypes;
             this.configureViews();
+            this.typesView = undefined;
+            this.listenTo(Main.boardConfiguration, 'projectTypesUpdated', this.updateProjectTypes, this);
         },
                 
         configureViews:function () {
@@ -26,22 +28,39 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                 var view = new Main.views.CheckboxCollectionView({ id: "States", collection: c.stateCollection });
 
                 return view;
-            });
-            
+            });           
+
             this.viewFactory.register("Types", function (c) {
                 c.typeCollection = new Main.models.CheckboxCollection(c.targetTypes);
                 c.typeCollection.each(function(type) {
                     type.set("Checked", true);
                 }, c);
-                var view = new Main.views.CheckboxCollectionView({ id: "Types", collection: c.typeCollection });
+                c.typesView = new Main.views.CheckboxCollectionView({ id: "Types", collection: c.typeCollection });
 
-                return view;
+                return c.typesView;
             });
 
             this.viewFactory.register("Filters", function (c) {
                 var paths = App.request("getFilterPaths");
                 return new Main.views.SelectView({ id: "PathPicker", collection: paths});
             });
+        },
+        
+        updateProjectTypes: function (projectId, types) {
+            if (this.model.TargetProjectId() == projectId) {
+                this.targetTypes = types;
+                this.model.Excludes(null);           
+                this.typesView.collection.reset();
+                this.typeCollection = new Main.models.CheckboxCollection(this.targetTypes);
+                this.typeCollection.each(function (type) {
+                    type.set("Checked", true);
+                    this.typesView.collection.add(type);
+                }, this);
+                this.viewFactory.register("Types", function(c) {
+                    return c.typesView;
+                });
+                this.trigger("typesViewUpdated", this);
+            }
         },
         
     });
@@ -51,6 +70,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         initialize: function(options) {
             this.controller = options.controller;
             App.reqres.setHandler("pathFilters", this.selectFilters, this);
+            this.listenTo(this.controller, "typesViewUpdated", this.reRenderTypesView, this);
         },
 
         events: {
@@ -65,6 +85,18 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             "simple": "#simple",
             "custom": "#custom",
             "iterationPath": "#iteration-paths"
+        },
+
+        reRenderTypesView: function () {
+            var html = "";
+            var view = this.controller.viewFactory.createView("Types");
+            if (_.isObject(view)) {
+                var el = view.render().el;
+                html = el.innerHTML;
+                view.close();
+                this.controller.viewFactory.remove(view);
+            }
+            this.$("#Types").html(html);
         },
 
         onShow: function () {

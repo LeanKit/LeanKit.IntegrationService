@@ -47,9 +47,12 @@ namespace IntegrationService
 
 		public List<long> LanesFromState(string state)
 		{
-			return (from lane in LaneToStatesMap 
+			var laneIds = (from lane in LaneToStatesMap 
 					where lane.Value.Any(val => val.Equals(state, StringComparison.OrdinalIgnoreCase)) 
 					select lane.Key).ToList();
+			if (laneIds.Any())
+				return laneIds;
+			return ValidLanes.Select(x => x.Id).ToList();
 		}
 
 		public List<string> GetTargetFieldFor(LeanKitField leanKitField, SyncDirection syncDirection)

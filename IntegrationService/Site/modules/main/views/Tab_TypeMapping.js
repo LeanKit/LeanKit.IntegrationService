@@ -20,13 +20,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             this.targetTypes = options.targetTypes;
             this.allTargetTypes = options.targetTypes;
 
-            if (_.isObject(options.owner.model.attributes.Excludes)) {
-                var etypes = options.owner.model.attributes.Excludes.split(",");
-                this.excludedTypes = _.map(etypes, function(exc) { return exc.trim(); });
-                this.filterExcludes(this.excludedTypes);
-            } else {
-                this.excludedTypes = [];
-            }
+            this.applyfilters();
 
             this.model = new Backbone.Model();
             this.model.set("Target", App.request('getTargetType'));
@@ -48,8 +42,29 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             // subscribe to tab:activated events
             this.listenTo(Main, 'excludes:updated', this.excludesUpdated, this);
             this.listenTo(Main, 'tab:activated', this.tabActivated, this);
+            this.listenTo(Main.boardConfiguration, 'projectTypesUpdated', this.updateProjectTypes, this);
             
             this.configureViews();
+        },
+        
+        applyfilters: function() {
+            if (_.isObject(this.options.owner.model.attributes.Excludes)) {
+                var etypes = this.options.owner.model.attributes.Excludes.split(",");
+                this.excludedTypes = _.map(etypes, function(exc) { return exc.trim(); });
+                this.filterExcludes(this.excludedTypes);
+            } else {
+                this.excludedTypes = [];
+            }            
+        },
+
+        updateProjectTypes: function (projectId, types) {
+            if (this.owner.model.TargetProjectId() == projectId) {
+                this.owner.model.TypeMap().reset();
+                this.model.set("TypeCollection", this.owner.model.TypeMap());
+                this.allTargetTypes = _.pluck(types, "Name");
+                this.targetTypes = _.pluck(types, "Name");
+                this.applyfilters();                
+            }
         },
 
         autoMapMatchedItems:function (typeCollection) {
