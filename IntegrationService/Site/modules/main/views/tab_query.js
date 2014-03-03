@@ -78,13 +78,15 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             "change div#query textarea": "queryChanged",
             "click #radio-simple": "simpleModeSelected",
             "click #radio-custom": "customModeSelected",
-            "change #iteration-paths":"changePath"
+            "change #iteration-paths": "changePath",
+            "change #QueryDaysOut": "queryDaysOutChanged"
         },
 
         ui: {
             "simple": "#simple",
             "custom": "#custom",
-            "iterationPath": "#iteration-paths"
+            "iterationPath": "#iteration-paths",
+            "queryDaysOutContainer": "#QueryDaysOutContainer"
         },
 
         reRenderTypesView: function () {
@@ -114,6 +116,12 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                 }).prop("selected", true);
             } else {
                 this.$("#iteration-path-section").addClass("hide");
+            }
+            
+            if (App.request("getTargetType") == "MicrosoftProject") {
+                this.ui.queryDaysOutContainer.show();
+            } else {
+                this.ui.queryDaysOutContainer.hide();
             }
             
             // set states
@@ -194,6 +202,10 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         
         queryChanged:function (e) {
             this.model.Query(e.currentTarget.value);
+        },
+        
+        queryDaysOutChanged: function(e) {
+            this.model.QueryDaysOut(e.currentTarget.value);
         },
         
         simpleModeSelected:function () {

@@ -101,6 +101,7 @@ namespace IntegrationService.API.Models
         public List<TypeMapModel> TypeMap { get; set; }
 		public List<FieldMapModel> FieldMap { get; set; } 
         public string Query { get; set; }
+		public int QueryDaysOut { get; set; }
         public string IterationPath { get; set; }
         public List<string> QueryStates { get; set; }
         public string Excludes { get; set; }

@@ -142,7 +142,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 										 SyncDirection.ToLeanKit, 
 										 "Select the Project field to use as the card's DueDate."));
 			fields.Add(new ConfigurableField(LeanKitField.CardType, 
-										 GetAllTextFields(1),
+										 GetAllTextFields(0),
 										 GetSyncDirections(true, true, true, true),
 										 SyncDirection.ToLeanKit, 
 										 "To create a card of a specific type. Must match a card type name i.e. Task, Defect, etc."));
@@ -164,22 +164,22 @@ namespace IntegrationService.Targets.MicrosoftProject
 										 SyncDirection.ToLeanKit, 
 										 "Select the Project field to use as the card's Size."));
 			fields.Add(new ConfigurableField(LeanKitField.ClassOfService, 
-										 GetAllTextFields(2),
+										 GetAllTextFields(0),
 										 GetSyncDirections(true, true, true, true),
 										 SyncDirection.ToLeanKit, 
 										 "To assign a class of service to the card."));			
 			fields.Add(new ConfigurableField(LeanKitField.IsBlocked, 
-										 GetAllTextFields(5),
+										 GetAllTextFields(0),
 										 GetSyncDirections(true, true, true, true),
 										 SyncDirection.ToLeanKit, 
 										 "To mark the card as blocked. Value should be 'Yes' to be blocked"));
 			fields.Add(new ConfigurableField(LeanKitField.BlockedReason, 
-										 GetAllTextFields(3),
+										 GetAllTextFields(0),
 										 GetSyncDirections(true, true, true, true),
 										 SyncDirection.ToLeanKit, 
 										 "To provide a reason the card is blocked."));
 			fields.Add(new ConfigurableField(LeanKitField.Tags,
-										 GetAllTextFields(4),
+										 GetAllTextFields(0),
 										 GetSyncDirections(true, true, true, true),
 										 SyncDirection.ToLeanKit, 
 										 "A Project field(s) containing a comma separated list of tags to apply to the card."));

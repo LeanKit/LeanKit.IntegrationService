@@ -87,6 +87,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             App.reqres.setHandler("getFieldMapping", this.getFieldMapping, this);
             App.reqres.setHandler("getCachedTargetType", this.getCachedTargetType, this);
             App.reqres.setHandler("checkIf_targetIsTfs", this.checkIf_targetIsTfs, this);
+            App.reqres.setHandler("checkIf_targetIsMicrosoftProject", this.checkIf_targetIsMicrosoftProject, this);
             App.reqres.setHandler("checkIf_useCustomQuery", this.checkIf_useCustomQuery, this);
         },
 
@@ -156,6 +157,10 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         
         checkIf_targetIsTfs: function (model) {
             return this.targetType === 'TFS';
+        },
+
+        checkIf_targetIsMicrosoftProject: function (model) {
+            return this.targetType === 'MicrosoftProject';
         },
         
         checkIf_useCustomQuery:function (model) {

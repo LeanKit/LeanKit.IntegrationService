@@ -103,6 +103,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             LaneToStatesMap: undefined,
             TypeMap: undefined,
             FieldMap: undefined,
+            QueryDaysOut: 7,
             CreateCards: true,
             CreateTargetItems: false,
             UpdateCards: true,
@@ -115,6 +116,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             this.BoardId(item.BoardId);
             this.TargetProjectId(item.TargetProjectId);
             this.UpdateCards(item.UpdateCards);
+            this.QueryDaysOut(item.QueryDaysOut);
             this.UpdateTargetItems(item.UpdateTargetItems);
             this.TypeMap(new Main.models.TypeMapCollection(item.TypeMap));
             this.FieldMap(new Main.models.FieldMapCollection(item.FieldMap));

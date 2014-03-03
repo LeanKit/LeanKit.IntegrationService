@@ -13,6 +13,9 @@
         {{/checkIf}}
         <div><strong>Include items in these states:</strong><br/>{{QueryStatesSpaced}}</div>
         <div><strong>Exclude items of these types:</strong><br/>{{Excludes}}</div>
+        {{#checkIf "targetIsMicrosoftProject"}}
+        <div><strong>Include items with start date within {{QueryDaysOut}} days.</strong></div>
+        {{/checkIf}}
         {{/checkIf}}
     </div>
 

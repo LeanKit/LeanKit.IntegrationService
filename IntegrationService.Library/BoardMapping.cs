@@ -21,6 +21,7 @@ namespace IntegrationService
 			Types=new List<WorkItemType>();
 			FieldMappings = new List<FieldMap>();
 			LaneToStatesMap = new Dictionary<long, List<string>>();
+			QueryDaysOut = 7;
 		}
 
 		// populated by user, via config file
@@ -31,6 +32,7 @@ namespace IntegrationService
 		public List<WorkItemType> Types { get; set; }
 		public string Excludes { get; set; }
 		public string Query { get; set; }
+		public int QueryDaysOut { get; set; }
 		public string IterationPath { get; set; }
 		public bool CreateCards { get; set; }
 		public bool UpdateCards { get; set; }
@@ -147,6 +149,7 @@ namespace IntegrationService
 
 			sb.Append(Environment.NewLine);
 			sb.AppendLine("     Query :                         " + Query);
+			sb.AppendLine("     QueryDaysOut:                   " + QueryDaysOut.ToString());
 			sb.AppendLine("     ArchiveLaneId :                 " + ArchiveLaneId);
 			sb.AppendLine("     TagCardsWithTargetSystemName :  " + TagCardsWithTargetSystemName);
 			sb.AppendLine("     CreateCards :                   " + CreateCards);

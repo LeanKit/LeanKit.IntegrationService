@@ -38,7 +38,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 			ProjectReader reader = ProjectReaderUtility.getProjectReader(Path.Combine(Configuration.Target.Host, boardMapping.Identity.Target));
 			ProjectFile mpx = reader.read(Path.Combine(Configuration.Target.Host, boardMapping.Identity.Target));
 
-			var futureDate = DateTime.Now.AddDays(7);
+			var futureDate = DateTime.Now.AddDays(boardMapping.QueryDaysOut);
 
 			var importFields = GetImportFields(boardMapping);
 
