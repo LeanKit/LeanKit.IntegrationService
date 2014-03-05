@@ -293,9 +293,9 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
     Main.models.ConfigurationSettingsModel = App.codegen.ConfigurationSettingsModel.extend({
         url: "/settings",
         defaults: {
-            PollingFrequency: 60000,
+            PollingFrequency: 5,
             EarliestSyncDate: "1/1/2007",
-            PollingUnits: "milliseconds",
+            PollingUnits: "minutes",
             PollingTime: null,
             PollingRunOnce: false
         }

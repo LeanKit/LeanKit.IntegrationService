@@ -6,7 +6,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace IntegrationService
@@ -15,8 +14,8 @@ namespace IntegrationService
     {
 		public Configuration()
 		{
-			PollingFrequency = 60000;
-			PollingUnits = "milliseconds";
+			PollingFrequency = 5;
+			PollingUnits = "minutes";
 			PollingTime = null;
 			EarliestSyncDate = new DateTime(2013, 1, 1);
 			Mappings = new List<BoardMapping>();

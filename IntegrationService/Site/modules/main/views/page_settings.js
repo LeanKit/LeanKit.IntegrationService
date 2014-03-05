@@ -57,7 +57,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             this.ui.pollingTime.kendoTimePicker({ value: this.model.PollingTime(), interval: 60 });
             var bob = this.model;
             this.ui.pollingUnits.kendoDropDownList({
-                dataSource: ["milliseconds", "seconds", "minutes", "hours"],
+                dataSource: ["seconds", "minutes", "hours"],
                 value: this.model.PollingUnits(),
                 change: function(e) {
                     bob.PollingUnits(this.value());
