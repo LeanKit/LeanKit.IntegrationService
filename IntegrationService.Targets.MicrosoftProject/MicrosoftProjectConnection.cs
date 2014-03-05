@@ -18,24 +18,28 @@ namespace IntegrationService.Targets.MicrosoftProject
     public class MicrosoftProjectConnection : IConnection, IConfigurableConnection
     {
 	    protected string FolderPath;
+	    protected string FilePath;
 		protected string File;
 
         public ConnectionResult Connect(string protocol, string host, string user, string password)
         {
 			string.Format("Connecting to Microsoft Project '{0}'", host).Debug();
 
-	        if (protocol.ToLowerInvariant().StartsWith("file"))
+	        if (protocol.ToLowerInvariant().StartsWith("folder path"))
 	        {
 		        FolderPath = host;
+	        } else if (protocol.ToLowerInvariant().StartsWith("file"))
+	        {
+		        FilePath = host;
 	        }
 
 	        if (!string.IsNullOrEmpty(FolderPath))
 	        {
 		        try
 		        {
-			        if (!Directory.Exists(host))
+			        if (!Directory.Exists(FolderPath))
 			        {
-				        string.Format("Folder does not exist '{0}'", host).Error();
+				        string.Format("Folder does not exist '{0}'", FolderPath).Error();
 				        return ConnectionResult.FailedToConnect;
 			        }
 		        }
@@ -44,6 +48,21 @@ namespace IntegrationService.Targets.MicrosoftProject
 			        return ConnectionResult.FailedToConnect;
 		        }
 	        }
+			else if (!string.IsNullOrEmpty(FilePath))
+			{
+				try
+				{
+					if (!System.IO.File.Exists(FilePath))
+					{
+						string.Format("File does not exist '{0}'", FilePath).Error();
+						return ConnectionResult.FailedToConnect;
+					}
+				}
+				catch (Exception)
+				{
+					return ConnectionResult.FailedToConnect;
+				}
+			}
 	        else
 	        {
 		        // connect to project server
@@ -88,6 +107,31 @@ namespace IntegrationService.Targets.MicrosoftProject
 						}				        
 			        }
 		        }
+	        } 
+			else if (!string.IsNullOrEmpty(FilePath)) 
+			{
+		        ProjectReader reader = ProjectReaderUtility.getProjectReader(FilePath);
+		        ProjectFile mpx = reader.read(FilePath);
+
+		        // Get the top level task
+		        var topTask = (from Task task in mpx.AllTasks.ToIEnumerable()
+		                       where task.ID.intValue() == 0
+		                       select task).FirstOrDefault();
+
+		        if (topTask == null)
+		        {
+			        string.Format("No project found in file: '{0}'.", FilePath).Debug();
+		        }
+		        else
+		        {
+			        // add types and states
+			        projects.Add(new Project(
+									 topTask.Name,
+								     topTask.Name,
+				                     GetTaskTypes(mpx),
+				                     GetStates(mpx)
+				                     ));
+		        }
 	        }
 	        else
 	        {
@@ -105,22 +149,26 @@ namespace IntegrationService.Targets.MicrosoftProject
 										 GetAllTextFields(),
 										 GetSyncDirections(true, false, true, false),
 										 SyncDirection.None, 
-										 ""));
+										 "", 
+										 false));
 			fields.Add(new ConfigurableField(LeanKitField.Title,
 										 new List<TargetField>() { new TargetField() { Name = "Name", IsDefault = true } },
 										 GetSyncDirections(false, true, false, true),
 										 SyncDirection.ToLeanKit, 
-										 ""));
+										 "", 
+										 true));
 			fields.Add(new ConfigurableField(LeanKitField.Description,
 										 new List<TargetField>() { new TargetField() { Name = "Notes", IsDefault = true } },
 										 GetSyncDirections(true, true, true, true),
 										 SyncDirection.ToLeanKit, 
-										 ""));
+										 "", 
+										 true));
 			fields.Add(new ConfigurableField(LeanKitField.ExternalId, 
 										 new List<TargetField>() { new TargetField() { Name = "UniqueId", IsDefault = true } },
 										 GetSyncDirections(false, true, false, false),
 										 SyncDirection.ToLeanKit, 
-										 ""));			
+										 "", 
+										 true));			
 			fields.Add(new ConfigurableField(LeanKitField.StartDate,
 			                             new List<TargetField>()
 											{
@@ -130,7 +178,8 @@ namespace IntegrationService.Targets.MicrosoftProject
 				                            },
 										 GetSyncDirections(false, true, false, true),
 										 SyncDirection.ToLeanKit, 
-										 "Select the Project field to use as the card's StartDate."));
+										 "Select the Project field to use as the card's StartDate.", 
+										 true));
 			fields.Add(new ConfigurableField(LeanKitField.DueDate,
 										 new List<TargetField>()
 				                            {
@@ -140,17 +189,20 @@ namespace IntegrationService.Targets.MicrosoftProject
 				                            },
 										 GetSyncDirections(true, true, true, true),
 										 SyncDirection.ToLeanKit, 
-										 "Select the Project field to use as the card's DueDate."));
+										 "Select the Project field to use as the card's DueDate.", 
+										 true));
 			fields.Add(new ConfigurableField(LeanKitField.CardType, 
 										 GetAllTextFields(),
 										 GetSyncDirections(true, true, true, true),
 										 SyncDirection.None, 
-										 "To create a card of a specific type. Must match a card type name i.e. Task, Defect, etc."));
+										 "To create a card of a specific type. Must match a card type name i.e. Task, Defect, etc.", 
+										 false));
 			fields.Add(new ConfigurableField(LeanKitField.Priority,
 										 new List<TargetField>() { new TargetField() { Name = "Priority", IsDefault = true } },
 										 GetSyncDirections(true, true, true, true),
 										 SyncDirection.ToLeanKit, 
-										 ""));
+										 "", 
+										 true));
 			fields.Add(new ConfigurableField(LeanKitField.Size,
 										 new List<TargetField>()
 				                            {
@@ -161,28 +213,41 @@ namespace IntegrationService.Targets.MicrosoftProject
 											    new TargetField() {Name = "Cost", IsDefault = false}
 				                            },
 										 GetSyncDirections(true, true, true, true),
-										 SyncDirection.ToLeanKit, 
-										 "Select the Project field to use as the card's Size."));
+										 SyncDirection.None, 
+										 "Select the Project field to use as the card's Size.", 
+										 false));
 			fields.Add(new ConfigurableField(LeanKitField.ClassOfService, 
 										 GetAllTextFields(),
 										 GetSyncDirections(true, true, true, true),
 										 SyncDirection.None, 
-										 "To assign a class of service to the card."));			
+										 "To assign a class of service to the card.", 
+										 false));			
 			fields.Add(new ConfigurableField(LeanKitField.IsBlocked, 
 										 GetAllTextFields(),
 										 GetSyncDirections(true, true, true, true),
 										 SyncDirection.None, 
-										 "To mark the card as blocked. Value should be 'Yes' to be blocked"));
+										 "To mark the card as blocked. Value should be 'Yes' to be blocked", 
+										 false));
 			fields.Add(new ConfigurableField(LeanKitField.BlockedReason, 
 										 GetAllTextFields(),
 										 GetSyncDirections(true, true, true, true),
 										 SyncDirection.None, 
-										 "To provide a reason the card is blocked."));
+										 "To provide a reason the card is blocked.", 
+										 false));
 			fields.Add(new ConfigurableField(LeanKitField.Tags,
 										 GetAllTextFields(),
 										 GetSyncDirections(true, true, true, true),
 										 SyncDirection.None, 
-										 "A Project field(s) containing a comma separated list of tags to apply to the card."));
+										 "A Project field(s) containing a comma separated list of tags to apply to the card.", 
+										 false));
+			var dateArchivedTargetFields = GetAllTextFields();
+			dateArchivedTargetFields.Add(new TargetField() {IsDefault = false, Name = "ActualFinish"});
+			fields.Add(new ConfigurableField(LeanKitField.DateArchived,
+										 dateArchivedTargetFields,
+										 GetSyncDirections(true, false, true, false),
+										 SyncDirection.None,
+										 "The date the card is moved to the Archive, or considered finished.", 
+										 false));
 			return fields;
 		}
 
@@ -198,11 +263,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 			if (!string.IsNullOrEmpty(FolderPath))
 			{
 				var projectFile = Path.Combine(FolderPath, project);
-				if (!System.IO.File.Exists(projectFile))
-				{
-
-				}
-				else
+				if (System.IO.File.Exists(projectFile))
 				{
 					ProjectReader reader = ProjectReaderUtility.getProjectReader(projectFile);
 					ProjectFile mpx = reader.read(projectFile);
@@ -219,6 +280,25 @@ namespace IntegrationService.Targets.MicrosoftProject
 						taskTypes.AddRange(projTaskTypes.Select(projTaskType => new Type(projTaskType)));
 					}
 				}								
+			}
+			else if (!string.IsNullOrEmpty(FilePath)) 
+			{
+				if (System.IO.File.Exists(FilePath)) 
+				{
+					ProjectReader reader = ProjectReaderUtility.getProjectReader(FilePath);
+					ProjectFile mpx = reader.read(FilePath);
+
+					// add types and states
+					var projTaskTypes = (from Task task in mpx.AllTasks.ToIEnumerable<Task>()
+										 select task.GetText(field))
+										 .Where(x => !string.IsNullOrEmpty(x))
+										 .Distinct()
+										 .ToList();
+
+					if (projTaskTypes.Any()) {
+						taskTypes.AddRange(projTaskTypes.Select(projTaskType => new Type(projTaskType)));
+					}
+				}
 			}
 			return taskTypes;
 		}

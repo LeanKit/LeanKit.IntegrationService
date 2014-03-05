@@ -6,7 +6,10 @@
             <span>LeanKit</span>
             <span class="pull-right">{{Target}}</span>
         </div>
-        {{{nestedView "fieldMapCollection" factory="FieldMapTab"}}}        
+        <div style="margin-left: 10px; margin-bottom: 10px;"><em>Required Fields</em></div>
+        {{{nestedView "fieldMapCollectionRequired" factory="FieldMapTab"}}}   
+        <div style="margin-left: 10px; margin-bottom: 10px;"><em>Optional Fields</em></div>
+        {{{nestedView "fieldMapCollectionOptional" factory="FieldMapTab"}}}   
     </div>
 </fieldset>
 

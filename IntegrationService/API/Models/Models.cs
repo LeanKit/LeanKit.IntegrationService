@@ -27,7 +27,8 @@ namespace IntegrationService.API.Models
 		public List<string> SyncDirections { get; set; }
 		public string DefaultSyncDirection { get; set; }
 		public string LeanKitField { get; set; }
-		public List<TargetFieldModel> TargetFields { get; set; } 
+		public List<TargetFieldModel> TargetFields { get; set; }
+		public bool IsRequired { get; set; }
 	}
 
 	public class TargetFieldModel
@@ -76,6 +77,7 @@ namespace IntegrationService.API.Models
 		public List<string> SyncDirections { get; set; } 
 		public string SyncDirection { get; set; }
 		public List<TargetFieldMapModel> TargetFields { get; set; }
+		public bool IsRequired { get; set; }
 	}
 
 	public class FilterModel

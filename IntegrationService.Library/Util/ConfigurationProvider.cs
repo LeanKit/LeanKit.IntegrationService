@@ -59,14 +59,16 @@ namespace IntegrationService.Util
             if (config.Target.Url == null) throw new ConfigurationErrorsException("Configuration is missing Target Host definition.");
             if (config.Target.User == null)
             {
-	            if (!config.Target.Protocol.ToLowerInvariant().StartsWith("file"))
+	            if (!config.Target.Protocol.ToLowerInvariant().StartsWith("file") &&
+					!config.Target.Protocol.ToLowerInvariant().StartsWith("folder path"))
 	            {
 		            throw new ConfigurationErrorsException("Configuration is missing Target User definition.");
 	            }
             }
             if (config.Target.Password == null)
             {
-	            if (!config.Target.Protocol.ToLowerInvariant().StartsWith("file"))
+				if (!config.Target.Protocol.ToLowerInvariant().StartsWith("file") &&
+					!config.Target.Protocol.ToLowerInvariant().StartsWith("folder path"))
 	            {
 		            throw new ConfigurationErrorsException("Configuration is missing Target Password definition.");
 	            }

@@ -35,8 +35,23 @@ namespace IntegrationService.Targets.MicrosoftProject
 		{
 			Log.Debug("Polling Microsoft Project for Tasks");
 
-			ProjectReader reader = ProjectReaderUtility.getProjectReader(Path.Combine(Configuration.Target.Host, boardMapping.Identity.Target));
-			ProjectFile mpx = reader.read(Path.Combine(Configuration.Target.Host, boardMapping.Identity.Target));
+			string filePath = "";
+			if (Configuration.Target.Protocol.ToLowerInvariant().StartsWith("file"))
+			{
+				filePath = Configuration.Target.Host;
+			}
+			else if (Configuration.Target.Protocol.ToLowerInvariant().StartsWith("folder path"))
+			{
+				filePath = Path.Combine(Configuration.Target.Host, boardMapping.Identity.Target);
+			}
+
+			if (!File.Exists(filePath))
+			{
+				Log.Error(string.Format("File {0} does not exist.", filePath));
+			}
+
+			ProjectReader reader = ProjectReaderUtility.getProjectReader(filePath);
+			ProjectFile mpx = reader.read(filePath);
 
 			var futureDate = DateTime.Now.AddDays(boardMapping.QueryDaysOut);
 

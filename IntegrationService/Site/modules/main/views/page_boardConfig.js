@@ -239,7 +239,8 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                             LeanKitField: this.configurableFields.at(k).get("LeanKitField"),
                             SyncDirection: this.configurableFields.at(k).get("DefaultSyncDirection"),
                             SyncDirections: this.configurableFields.at(k).get("SyncDirections"),
-                            TargetFields: this.configurableFields.at(k).get("TargetFields")
+                            TargetFields: this.configurableFields.at(k).get("TargetFields"),
+                            IsRequired: this.configurableFields.at(k).get("IsRequired")
                         }));
                 }
             } else {
@@ -254,11 +255,11 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                                 LeanKitField: confFieldItem.LeanKitField(),
                                 SyncDirection: confFieldItem.DefaultSyncDirection(),
                                 SyncDirections: confFieldItem.SyncDirections(),
-                                TargetFields: confFieldItem.TargetFields()
+                                TargetFields: confFieldItem.TargetFields(),
+                                IsRequired: confFieldItem.IsRequired()
                             }));                            
                     }
                 });
-
                 // loop through any existing field mapping
                 fieldMapConfiguration.each(function (item) {
                     var configurableFieldItem = this.configurableFields.findWhere({ LeanKitField: item.get("LeanKitField") });                        
@@ -268,6 +269,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                     } else {
                         // The field exists in configuration
                         // Update the sync directions
+                        item.IsRequired(configurableFieldItem.IsRequired());
                         if (_.isUndefined(item.SyncDirections()) || item.SyncDirections().length === 0) {
                             // add them all if the field doesn't have any
                             item.SyncDirections(configurableFieldItem.SyncDirections());

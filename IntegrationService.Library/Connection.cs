@@ -32,6 +32,7 @@ namespace IntegrationService
 	public class ConfigurableField
 	{
 		public string Description { get; set; }
+		public bool IsRequired { get; set; }
 		public List<SyncDirection> SyncDirections { get; set; }
 		public SyncDirection DefaultSyncDirection { get; set; }
 		public LeanKitField LeanKitField { get; set; }
@@ -41,14 +42,16 @@ namespace IntegrationService
 		{
 			LeanKitField = LeanKitField.None;
 			Description = "";
+			IsRequired = false;
 			SyncDirections = new List<SyncDirection>(){ SyncDirection.None };
 			DefaultSyncDirection = SyncDirection.None;
 			TargetFields = new List<TargetField>();
 		}
 
-		public ConfigurableField(LeanKitField leanKitField, List<TargetField> targetFields, List<SyncDirection> syncDirections, SyncDirection defaultSyncDirection, string description)
+		public ConfigurableField(LeanKitField leanKitField, List<TargetField> targetFields, List<SyncDirection> syncDirections, SyncDirection defaultSyncDirection, string description, bool isRequired)
 		{
 			Description = description;
+			IsRequired = isRequired;
 			SyncDirections = syncDirections;
 			DefaultSyncDirection = defaultSyncDirection;
 			LeanKitField = leanKitField;
@@ -87,7 +90,8 @@ namespace IntegrationService
 		Size, 
 		ExternalId, 
 		Id, 
-		Permalink
+		Permalink, 
+		DateArchived
 	}
 
 	public class Project 

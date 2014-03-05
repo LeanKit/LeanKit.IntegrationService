@@ -67,7 +67,8 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             LeanKitField: "",
             SyncDirection: "None",
             SyncDirections: undefined,
-            TargetFields: new Main.models.TargetFieldMapCollection()
+            TargetFields: new Main.models.TargetFieldMapCollection(),
+            IsRequired: false
         },
         
         initialize: function () {

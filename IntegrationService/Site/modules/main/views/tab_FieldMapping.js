@@ -33,10 +33,15 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             
             this.viewFactory = new App.ViewFactory(this, "FieldMapTab");
             
-            this.viewFactory.register("fieldMapCollection", function (c) {
-                var view = new Main.views.FieldMapCollectionView({ collection: c.model.get("FieldCollection"), controller:c });                
+            this.viewFactory.register("fieldMapCollectionRequired", function (c) {
+                var view = new Main.views.FieldMapCollectionView({ collection: new Main.models.FieldMapCollection(c.model.get("FieldCollection").where({ IsRequired: true })), controller:c });                
                 return view;
-            });            
+            });
+            
+            this.viewFactory.register("fieldMapCollectionOptional", function (c) {
+                var view = new Main.views.FieldMapCollectionView({ collection:  new Main.models.FieldMapCollection(c.model.get("FieldCollection").where( {IsRequired: false })), controller: c });
+                return view;
+            });
         },
         
         onPrepNestedViews: function () {
