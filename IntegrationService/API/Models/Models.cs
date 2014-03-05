@@ -78,6 +78,13 @@ namespace IntegrationService.API.Models
 		public List<TargetFieldMapModel> TargetFields { get; set; }
 	}
 
+	public class FilterModel
+	{
+		public string TargetFieldName { get; set; }
+		public string FilterType { get; set; }
+		public string FilterValue { get; set; }
+	}
+
 	public class TargetFieldMapModel 
 	{
 		public string Name { get; set; }
@@ -99,7 +106,8 @@ namespace IntegrationService.API.Models
 		public bool CreateTargetItems { get; set; }
         public Dictionary<long, List<string>> LaneToStatesMap { get; set; }
         public List<TypeMapModel> TypeMap { get; set; }
-		public List<FieldMapModel> FieldMap { get; set; } 
+		public List<FieldMapModel> FieldMap { get; set; }
+		public List<FilterModel> Filters { get; set; } 
         public string Query { get; set; }
 		public int QueryDaysOut { get; set; }
         public string IterationPath { get; set; }
@@ -143,6 +151,16 @@ namespace IntegrationService.API.Models
 				.ForMember(x => x.SyncDirection, opt => opt.MapFrom(s => s.SyncDirection))
 				.ForMember(x => x.TargetFields, opt => opt.MapFrom(s => s.TargetFields.Where(f => f.IsDefault || f.IsSelected)));
 
+	        Mapper.CreateMap<Filter, FilterModel>()
+	            .ForMember(x => x.TargetFieldName, opt => opt.MapFrom(s => s.TargetFieldName))
+	            .ForMember(x => x.FilterType, opt => opt.MapFrom(s => s.FilterType))
+	            .ForMember(x => x.FilterValue, opt => opt.MapFrom(s => s.FilterValue));
+
+	        Mapper.CreateMap<FilterModel, Filter>()
+	            .ForMember(x => x.TargetFieldName, opt => opt.MapFrom(s => s.TargetFieldName))
+	            .ForMember(x => x.FilterType, opt => opt.MapFrom(s => s.FilterType))
+	            .ForMember(x => x.FilterValue, opt => opt.MapFrom(s => s.FilterValue));
+
             Mapper.CreateMap<WorkItemType, TypeMapModel>()
                 .ForMember(m => m.LeanKitType, opt => opt.MapFrom(s => s.LeanKit))
                 .ForMember(m => m.TargetType, opt => opt.MapFrom(s => s.Target));
@@ -153,6 +171,7 @@ namespace IntegrationService.API.Models
                 .ForMember(m => m.TargetProjectId, opt => opt.MapFrom(s => s.Identity.Target))
                 .ForMember(m => m.TypeMap, opt=>opt.MapFrom(s=>s.Types))
 				.ForMember(m => m.FieldMap, opt => opt.MapFrom(s=>s.FieldMappings))
+				.ForMember(m => m.Filters, opt => opt.MapFrom(s => s.Filters))
                 .ForMember(m => m.TargetProjectName, opt=>opt.MapFrom(s=>s.Identity.TargetName))
 	            .ForMember(m => m.Title, opt => opt.MapFrom(s => s.Identity.LeanKitTitle));
 
@@ -162,6 +181,7 @@ namespace IntegrationService.API.Models
                                                                                 .Where(item=>!string.IsNullOrEmpty(item.LeanKitType)&& !string.IsNullOrEmpty(item.TargetType))
                                                                                 .Select(item => new WorkItemType { LeanKit = item.LeanKitType, Target = item.TargetType })))
 				.ForMember(m => m.FieldMappings, opt => opt.MapFrom(board => board.FieldMap))
+				.ForMember(m=> m.Filters, opt => opt.MapFrom(board => board.Filters))
                 .ForMember(m => m.ExcludedTypeQuery, opt => opt.Ignore())
                 .ForMember(m => m.ValidLanes, opt => opt.Ignore())
                 .ForMember(m => m.ValidCardTypes, opt => opt.Ignore())

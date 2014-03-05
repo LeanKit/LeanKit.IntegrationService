@@ -14,10 +14,11 @@ namespace IntegrationService
 		List<Project> GetProjects();
 	}
 
-	public interface IConfigurableFieldsConnection
+	public interface IConfigurableConnection
 	{
 		List<ConfigurableField> GetConfigurableFields();
 		List<Type> GetTaskTypes(string project, string field);
+		List<string> GetFilterFields();
 	}
 
 	public enum ConnectionResult 
@@ -27,7 +28,6 @@ namespace IntegrationService
 		Success = 2,
 		UnknownTarget = 3
 	}
-
 
 	public class ConfigurableField
 	{

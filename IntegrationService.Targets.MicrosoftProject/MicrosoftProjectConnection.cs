@@ -15,7 +15,7 @@ using net.sf.mpxj.reader;
 
 namespace IntegrationService.Targets.MicrosoftProject
 {
-    public class MicrosoftProjectConnection : IConnection, IConfigurableFieldsConnection
+    public class MicrosoftProjectConnection : IConnection, IConfigurableConnection
     {
 	    protected string FolderPath;
 		protected string File;
@@ -102,7 +102,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 			var fields = new List<ConfigurableField>();
 
 			fields.Add(new ConfigurableField(LeanKitField.Id,
-										 GetAllTextFields(0),
+										 GetAllTextFields(),
 										 GetSyncDirections(true, false, true, false),
 										 SyncDirection.None, 
 										 ""));
@@ -142,9 +142,9 @@ namespace IntegrationService.Targets.MicrosoftProject
 										 SyncDirection.ToLeanKit, 
 										 "Select the Project field to use as the card's DueDate."));
 			fields.Add(new ConfigurableField(LeanKitField.CardType, 
-										 GetAllTextFields(0),
+										 GetAllTextFields(),
 										 GetSyncDirections(true, true, true, true),
-										 SyncDirection.ToLeanKit, 
+										 SyncDirection.None, 
 										 "To create a card of a specific type. Must match a card type name i.e. Task, Defect, etc."));
 			fields.Add(new ConfigurableField(LeanKitField.Priority,
 										 new List<TargetField>() { new TargetField() { Name = "Priority", IsDefault = true } },
@@ -164,28 +164,32 @@ namespace IntegrationService.Targets.MicrosoftProject
 										 SyncDirection.ToLeanKit, 
 										 "Select the Project field to use as the card's Size."));
 			fields.Add(new ConfigurableField(LeanKitField.ClassOfService, 
-										 GetAllTextFields(0),
+										 GetAllTextFields(),
 										 GetSyncDirections(true, true, true, true),
-										 SyncDirection.ToLeanKit, 
+										 SyncDirection.None, 
 										 "To assign a class of service to the card."));			
 			fields.Add(new ConfigurableField(LeanKitField.IsBlocked, 
-										 GetAllTextFields(0),
+										 GetAllTextFields(),
 										 GetSyncDirections(true, true, true, true),
-										 SyncDirection.ToLeanKit, 
+										 SyncDirection.None, 
 										 "To mark the card as blocked. Value should be 'Yes' to be blocked"));
 			fields.Add(new ConfigurableField(LeanKitField.BlockedReason, 
-										 GetAllTextFields(0),
+										 GetAllTextFields(),
 										 GetSyncDirections(true, true, true, true),
-										 SyncDirection.ToLeanKit, 
+										 SyncDirection.None, 
 										 "To provide a reason the card is blocked."));
 			fields.Add(new ConfigurableField(LeanKitField.Tags,
-										 GetAllTextFields(0),
+										 GetAllTextFields(),
 										 GetSyncDirections(true, true, true, true),
-										 SyncDirection.ToLeanKit, 
+										 SyncDirection.None, 
 										 "A Project field(s) containing a comma separated list of tags to apply to the card."));
 			return fields;
 		}
 
+		public List<string> GetFilterFields()
+		{
+			return GetAllTextFields(false).Select(x => x.Name).ToList();
+		}
 
 		public List<Type> GetTaskTypes(string project, string field) 
 		{
@@ -220,10 +224,13 @@ namespace IntegrationService.Targets.MicrosoftProject
 		}
 
 
-		private List<TargetField> GetAllTextFields(int defaultValue = 0)
+		private List<TargetField> GetAllTextFields(bool includeNone = true, int defaultValue = 0)
 		{
 			var fields = new List<TargetField>();
-			fields.Add(new TargetField() { Name = "None", IsDefault = (0 == defaultValue) });
+			if (includeNone)
+			{
+				fields.Add(new TargetField() {Name = "None", IsDefault = (0 == defaultValue)});
+			}
 			for (int i = 1; i <= 20; i++)
 			{
 				fields.Add(new TargetField() { Name = "Text" + i, IsDefault = (i == defaultValue)});				
@@ -233,11 +240,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 
 		private List<Type> GetTaskTypes(ProjectFile mpx)
 		{
-			var taskTypes = new List<Type>();
-
-			//TODO: need to get task types based on field mapping of task type field from configuration
-
-			return taskTypes;
+			return new List<Type>();
 		}
 
 		private List<SyncDirection> GetSyncDirections(bool includeNone, 

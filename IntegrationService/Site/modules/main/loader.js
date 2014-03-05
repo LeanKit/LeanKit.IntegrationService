@@ -64,6 +64,7 @@ define([
     "modules/main/views/tab_query",
     "modules/main/views/tab_laneMapping",
     "modules/main/views/tab_FieldMapping",
+    "modules/main/views/tab_Filters",
     "modules/main/views/tab_TypeMapping",
     "modules/main/views/tab_Options",
     "modules/main/views/mappingDetail",

@@ -12,6 +12,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         initialize: function(options) {
             this.owner = options.owner;
             this.model = options.model;
+            this.filterfields = options.filterfields;
             this.configureViews();
             
             if (this.model.TargetProjectId() !== "") {
@@ -124,6 +125,17 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                 c.subcontrollers.typeMapTab = new Main.controllers.TypeMapTabController({ owner: c, board: c.board, collection: c.model.TypeMap(), leanKitTypes: leanKitTypes, targetTypes: targetTypes });
                 return c.subcontrollers.typeMapTab.view;
             });
+            
+            this.viewFactory.register("filtersTab", function (c) {
+                if (!_.isObject(c.subcontrollers)) c.subcontrollers = {};
+                if (_.isObject(c.subcontrollers.filtersTab)) {
+                    c.subcontrollers.filtersTab.close();
+                    c.subcontrollers.filtersTab = undefined;
+                }
+
+                c.subcontrollers.filtersTab = new Main.controllers.FiltersTabController({ owner: c, board: c.board, configuration: c.model.Filters(), filterfields: c.filterfields });
+                return c.subcontrollers.filtersTab.view;
+            });
 
             this.viewFactory.register("projectPicker", function(controller) {
                 var availableProjects = controller.owner.getAvailableTargetProjects();
@@ -200,6 +212,11 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                 tabStrip.enable(tabStrip.items()[2], true);
             } else {
                 tabStrip.enable(tabStrip.items()[2], false);
+            }
+            if (!_.isUndefined(this.controller.filterfields) && this.controller.filterfields.length > 0) {
+                tabStrip.enable(tabStrip.items()[4], true);
+            } else {
+                tabStrip.enable(tabStrip.items()[4], false);
             }
 
             this.controller.triggerMethod("prep:nestedViews");

@@ -14,6 +14,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             this.pageName = options.pageName;
             this.mappingCollection = options.model;
             this.loadedConfigurableFields = false;
+            this.loadedFilterFields = false;
             App.credentials = options.credentials;
             
             // configure request handlers and events
@@ -44,6 +45,8 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         loadBoardsAndProjects: function () {
             if (_.isObject(App.credentials.target) && _.isString(App.credentials.target.Host()))
                 this.loadConfigurableFieldsTask = this.loadConfigurableFields();
+            if (_.isObject(App.credentials.target) && _.isString(App.credentials.target.Host()))
+                this.loadFilterFields();
             if (_.isObject(App.credentials.leankit) && _.isString(App.credentials.leankit.Host()))
                 this.loadBoardsTask = this.loadBoards();
             if (_.isObject(App.credentials.target) && _.isString(App.credentials.target.Host()))
@@ -63,12 +66,14 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         onShow: function () {
             if (_.isUndefined(this.loadBoardsTask)
                 || _.isUndefined(this.loadProjectsTask)
-                || _.isUndefined(this.loadConfigurableFieldsTask))
+                || _.isUndefined(this.loadConfigurableFieldsTask)
+                || !(this.loadedFilterFields))
                 this.loadBoardsAndProjects();
             
             if (this.loadBoardsTask.state() === 'resolved'
                 && this.loadProjectsTask.state() === 'resolved'
-                && this.loadConfigurableFieldsTask.state() === 'resolved')
+                && this.loadConfigurableFieldsTask.state() === 'resolved'
+                && !(this.loadedFilterFields))
                 this.buildBoardList();
             else {
                 // restart if there was a previous error
@@ -78,6 +83,8 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                     this.loadProjectsTask = this.loadProjects();
                 } else if (this.loadConfigurableFieldsTask.state() === 'rejected') {
                     this.loadConfigurableFieldsTask = this.loadConfigurableFields();
+                } else if (!(this.loadedFilterFields)) {
+                    this.loadFilterFields();
                 }
 
                 // whether restarted or not, wait for completion
@@ -125,12 +132,29 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                 }
             });
         },
+        
+        loadFilterFields: function() {
+            $.ajax({
+                url: "/filterfields",
+                data: $.param(App.credentials.target.attributes),
+                context: this,
+                contentType: "application/json",
+                success: function (result) {
+                    this.filterFields = result;
+                    this.loadedFilterFields = true;
+                },
+                error: function () {
+                    alert("Load Filter Fields failed.");
+                }
+            });
+        },
 
         buildBoardList: function(collection, result) {
             // wait for both projects and boards to finish loading!
             if (_.isUndefined(this.boards) || this.boards.length === 0) return;
             if (_.isUndefined(this.targetProjects) || this.targetProjects.length === 0) return;
             if (_.isUndefined(this.configurableFields)) return;
+            if (_.isUndefined(this.filterFields)) return;
             if (!this.loadedConfigurableFields) return;
 
             for (var j = 0; j < this.mappingCollection.length; j++) {
@@ -352,7 +376,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
 
             // load detail for this board.
             this.closeDetails();
-            this.detailController = new Main.controllers.MappingDetailController({ owner: this, model: this.currentMapping });
+            this.detailController = new Main.controllers.MappingDetailController({ owner: this, model: this.currentMapping, filterfields: this.filterFields });
             var viewOrPromise = this.detailController.view;
             if (viewOrPromise.state && viewOrPromise.state() === "pending") {
                 $.when(viewOrPromise).done(function() { dfd.resolveWith(context); });

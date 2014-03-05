@@ -20,6 +20,7 @@ namespace IntegrationService
 		{
 			Types=new List<WorkItemType>();
 			FieldMappings = new List<FieldMap>();
+			Filters = new List<Filter>();
 			LaneToStatesMap = new Dictionary<long, List<string>>();
 			QueryDaysOut = 7;
 		}
@@ -30,6 +31,7 @@ namespace IntegrationService
 		public Dictionary<long, List<string>> LaneToStatesMap { get; set; }
 		public List<FieldMap> FieldMappings { get; set; } 
 		public List<WorkItemType> Types { get; set; }
+		public List<Filter> Filters { get; set; } 
 		public string Excludes { get; set; }
 		public string Query { get; set; }
 		public int QueryDaysOut { get; set; }
@@ -192,5 +194,18 @@ namespace IntegrationService
 		public string Name { get; set; }
 		public bool IsDefault { get; set; }
 		public bool IsSelected { get; set; }
+	}
+
+	public enum FilterType
+	{
+		Include, 
+		Exclude
+	}
+
+	public class Filter
+	{
+		public string TargetFieldName { get; set; }
+		public FilterType FilterType { get; set; }
+		public string FilterValue { get; set; }
 	}
 }

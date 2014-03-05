@@ -24,6 +24,17 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         model: App.codegen.LaneStateModel
     });
 
+    Main.models.FilterModel = App.codegen.TypeMapModel.extend({
+        defaults: {
+            TargetFieldName: "",
+            FilterType: "Exclude",
+            FilterValue: ""
+        },
+    });
+    Main.models.FilterCollection = Backbone.Collection.extend({
+        model: Main.models.FilterModel
+    });
+
     Main.models.TypeMapModel = App.codegen.TypeMapModel.extend({
         defaults: {
             LeanKitType: "",
@@ -103,6 +114,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             LaneToStatesMap: undefined,
             TypeMap: undefined,
             FieldMap: undefined,
+            Filters: undefined,
             QueryDaysOut: 7,
             CreateCards: true,
             CreateTargetItems: false,
@@ -120,6 +132,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             this.UpdateTargetItems(item.UpdateTargetItems);
             this.TypeMap(new Main.models.TypeMapCollection(item.TypeMap));
             this.FieldMap(new Main.models.FieldMapCollection(item.FieldMap));
+            this.Filters(new Main.models.FilterCollection(item.Filters));
             this.isDirty = false;
         },
         
@@ -156,8 +169,20 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             // overwrite typeMap with backbone collection
             this.FieldMap(fieldCollection);
             
+            // convert FieldMap to collection
+            var filters = this.Filters();
+            var filterCollection;
+            if (_.isUndefined(filters) || _.isUndefined(filters.length) || filters.length === 0)
+                filterCollection = new Main.models.FilterCollection();
+            else
+                filterCollection = new Main.models.FilterCollection(filters);
+
+            // overwrite typeMap with backbone collection
+            this.Filters(filterCollection);
+            
             this.listenTo(typeCollection, "all", this.onTypeMapUpdate, this);
             this.listenTo(fieldCollection, "all", this.onFieldMapUpdate, this);
+            this.listenTo(filterCollection, "all", this.onFiltersUpdate, this);
             this.listenTo(this, "change", this.onChange, this);
             this.isDirty = false;
         },
@@ -175,6 +200,11 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
 
         onFieldMapUpdate: function (e, m) {
             this.changed["FieldMap"] = this.FieldMap();
+            this.trigger('change', this);
+        },
+        
+        onFiltersUpdate: function (e, m) {
+            this.changed["Filters"] = this.Filters();
             this.trigger('change', this);
         },
                 

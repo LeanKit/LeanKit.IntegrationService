@@ -86,6 +86,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             App.reqres.setHandler("getCardTypeMapping", this.getCardTypeMapping, this);
             App.reqres.setHandler("getFieldMapping", this.getFieldMapping, this);
             App.reqres.setHandler("getCachedTargetType", this.getCachedTargetType, this);
+            App.reqres.setHandler("getFilters", this.getFilters, this);
             App.reqres.setHandler("checkIf_targetIsTfs", this.checkIf_targetIsTfs, this);
             App.reqres.setHandler("checkIf_targetIsMicrosoftProject", this.checkIf_targetIsMicrosoftProject, this);
             App.reqres.setHandler("checkIf_useCustomQuery", this.checkIf_useCustomQuery, this);
@@ -147,6 +148,16 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
                         html += String.format("<div>&nbsp;&nbsp;<strong>{0}</strong>, IsDefault: {1}, IsSelected: {2}</div>", map.Name(), map.IsDefault(), map.IsSelected());
                     }
                 }
+            }
+            return html;
+        },
+        
+        getFilters: function(options, model) {
+            var html = "";
+            for (var i = 0; i < model.Filters.models.length; i++) {
+                var map = model.Filters.models[i];
+                html += String.format("<div><strong>{0}</strong> if <strong>{1}</strong> = <strong>{2}</strong></div>",
+                    map.get("FilterType"), map.get("TargetFieldName"), map.get("FilterValue"));
             }
             return html;
         },

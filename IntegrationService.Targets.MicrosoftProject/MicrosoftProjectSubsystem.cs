@@ -42,24 +42,16 @@ namespace IntegrationService.Targets.MicrosoftProject
 
 			var importFields = GetImportFields(boardMapping);
 
-			bool useExclude = false;
-			string excludeField = "";
-			var excludeFields = importFields.GetTargetFieldsFor(LeanKitField.ExcludeFromLeankit);
-			if (excludeFields.Any())
-			{
-				excludeField = excludeFields.FirstOrDefault();
-				if (!string.IsNullOrEmpty(excludeField))
-					useExclude = true;
-			}
 			var startDates = importFields.GetTargetFieldsFor(LeanKitField.StartDate);
 
 			// for now we'll only get child tasks. 
 			// TODO: add tasks as a card, add any child tasks to a taskboard on the card?
 			var tasks = (from Task task in mpx.AllTasks.ToIEnumerable() 
-								where ((!useExclude || (string.IsNullOrEmpty(task.GetText(excludeField)) || task.GetText(excludeField).ToLowerInvariant() != "yes")) 
-										&& (startDates.Contains("Start") && task.Start != null && task.Start.ToDateTime() < futureDate)
+								where ((1 == 1) 
+									&& FilterTasks(task, boardMapping.Filters)
+									&& ((startDates.Contains("Start") && task.Start != null && task.Start.ToDateTime() < futureDate)
 										|| (startDates.Contains("BaselineStart") && task.BaselineStart != null && task.BaselineStart.ToDateTime() < futureDate)
-										|| (startDates.Contains("EarlyStart") && task.EarlyStart != null && task.EarlyStart.ToDateTime() < futureDate))
+										|| (startDates.Contains("EarlyStart") && task.EarlyStart != null && task.EarlyStart.ToDateTime() < futureDate)))
 									&& (task.Summary || task.Milestone) 
 									&& (task.ChildTasks == null || task.ChildTasks.isEmpty())
 								select task).ToList();
@@ -97,6 +89,48 @@ namespace IntegrationService.Targets.MicrosoftProject
 				}
 			}
 			Log.Info("{0} item(s) queried.\n", tasks.Count);
+		}
+
+		private bool FilterTasks(Task task, List<Filter> filters)
+		{
+			if (!filters.Any())
+				return true;
+
+			return FilterIncludeTasks(task, filters.Where(x => x.FilterType == FilterType.Include).ToList())
+			       && FilterExcludeTasks(task, filters.Where(x => x.FilterType == FilterType.Exclude).ToList());
+		}
+
+		private bool FilterIncludeTasks(Task task, List<Filter> filters)
+		{
+			if (!filters.Any())
+				return true;
+
+			foreach (var filter in filters)
+			{
+				var res = task.GetText(filter.TargetFieldName);
+				if (res != null && !string.IsNullOrEmpty(res) && !string.IsNullOrEmpty(filter.FilterValue))
+				{
+					if (res.ToLowerInvariant() == filter.FilterValue.ToLowerInvariant())
+						return true;
+				}
+			}
+			return false;		
+		}
+
+		private bool FilterExcludeTasks(Task task, List<Filter> filters)
+		{
+			if (!filters.Any())
+				return true;
+
+			foreach (var filter in filters) 
+			{
+				var res = task.GetText(filter.TargetFieldName);
+				if (res != null && !string.IsNullOrEmpty(res) && !string.IsNullOrEmpty(filter.FilterValue)) {
+					if (res.ToLowerInvariant() == filter.FilterValue.ToLowerInvariant())
+						return true;
+				}
+			}
+			return true;				
 		}
 
 		private void CreateCardFromTask(BoardMapping project, Task task, Dictionary<LeanKitField, List<string>> importFields) 

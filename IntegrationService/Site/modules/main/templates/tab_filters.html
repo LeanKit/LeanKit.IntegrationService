@@ -1,0 +1,35 @@
+﻿<h2>Filters</h2>
+<p><i>All items in the target system that match other criteria will be imported into LeanKit (states, 
+    excluded types, start date...). You can also include or exclude items using filters. If you create 
+    an exclude filter then all items except those matching the filter will be imported. If you create 
+    an include filter then only items matching the filter will be imported - all others will not.
+   </i></p>
+<fieldset>
+    <div class="panel panel-primary col-xs-12 no-padding">
+        <div class="panel-heading" style="margin-bottom: 20px;">
+            <span>{{Target}} Filters</span>
+        </div>
+        {{{nestedView "filtersCollection" factory="FiltersTab"}}}        
+
+        <div class="row">
+            <fieldset>
+                <div class="col-xs-3">
+                    {{{simpleSelect "getFilterTypes" null id="FilterType" class="form-control"}}}                
+                </div> 
+                <div class="col-xs-1">if</div>
+                <div class="col-xs-3">
+                    {{{simpleSelect "getFilterFields" null id="TargetField" class="form-control"}}}                
+                </div>
+                <div class="col-xs-1">=</div>
+                <div class="col-xs-2">
+                    <input type="text" id="FilterValue" style="width:50px;" />
+                </div>           
+                <div class="col-xs-2">
+                    <div id="confirm" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-ok"></span></div>
+                </div>
+            </fieldset>
+        </div>
+
+    </div>
+</fieldset>
+

@@ -34,6 +34,9 @@ namespace IntegrationService.API
 	[Route("/configurablefields")]
 	public class ConfigurableFieldsRequest : Request { }
 
+	[Route("/filterfields")]
+	public class FilterFieldsRequest : Request { }
+
 	public class TargetService : ServiceBase
 	{
 		public object Get(ConnectionRequest request)
@@ -182,13 +185,13 @@ namespace IntegrationService.API
 			if (result != ConnectionResult.Success)
 				return ServerError(result.ToString());
 
-			if ((target is IConfigurableFieldsConnection)) 
+			if ((target is IConfigurableConnection)) 
 			{
 				"Getting list of task types...".Debug();
 
 				if (request.Field.ToLowerInvariant() != "none")
 				{
-					var taskTypes = ((IConfigurableFieldsConnection) target).GetTaskTypes(request.Project, request.Field);
+					var taskTypes = ((IConfigurableConnection) target).GetTaskTypes(request.Project, request.Field);
 					return OK(taskTypes);
 				}
 			}
@@ -206,16 +209,38 @@ namespace IntegrationService.API
 			if (result != ConnectionResult.Success)
 				return ServerError(result.ToString());
 
-			if ((target is IConfigurableFieldsConnection))
+			if ((target is IConfigurableConnection))
 			{
 				"Getting configurable fields...".Debug();
 
-				var configurableFields = ((IConfigurableFieldsConnection)target).GetConfigurableFields();
+				var configurableFields = ((IConfigurableConnection)target).GetConfigurableFields();
 
 				return OK(configurableFields);
 			}
 
 			return OK(new List<ConfigurableField>());
 		}
+
+		public object Get(FilterFieldsRequest request)
+		{
+			if (request.Type == null) return null;
+
+			ConnectionResult result;
+			var target = Connect(request, out result);
+
+			if (result != ConnectionResult.Success)
+				return ServerError(result.ToString());
+
+			if ((target is IConfigurableConnection)) {
+				"Getting filter fields...".Debug();
+
+				var filterFields = ((IConfigurableConnection)target).GetFilterFields();
+
+				return OK(filterFields);
+			}
+
+			return OK(new List<string>());			
+		}
+
 	}
 }
