@@ -117,6 +117,8 @@ namespace IntegrationService.Targets.MicrosoftProject
 
 		private bool FilterIncludeTasks(Task task, List<Filter> filters)
 		{
+			// Include filters are ANDed - the task must meet all the include requirements
+			// For example: Text3 must equal true AND Text5 must equal ToLeanKit
 			if (!filters.Any())
 				return true;
 
@@ -125,15 +127,18 @@ namespace IntegrationService.Targets.MicrosoftProject
 				var res = task.GetText(filter.TargetFieldName);
 				if (res != null && !string.IsNullOrEmpty(res) && !string.IsNullOrEmpty(filter.FilterValue))
 				{
-					if (res.ToLowerInvariant() == filter.FilterValue.ToLowerInvariant())
-						return true;
+					if (res.ToLowerInvariant() != filter.FilterValue.ToLowerInvariant())
+						return false;
 				}
 			}
-			return false;		
+			return true;		
 		}
 
 		private bool FilterExcludeTasks(Task task, List<Filter> filters)
 		{
+			// Exclude filters are ORed - it any exclude is matched then the task is not imported
+			// For example: given 2 excludes Text2 = false, Text7 = exclude. If either is the case 
+			// then the item will not be imported.
 			if (!filters.Any())
 				return true;
 
@@ -142,7 +147,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 				var res = task.GetText(filter.TargetFieldName);
 				if (res != null && !string.IsNullOrEmpty(res) && !string.IsNullOrEmpty(filter.FilterValue)) {
 					if (res.ToLowerInvariant() == filter.FilterValue.ToLowerInvariant())
-						return true;
+						return false;
 				}
 			}
 			return true;				
@@ -155,7 +160,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 			var boardId = project.Identity.LeanKit;
 
 			var mappedCardType = task.LeanKitCardType(project, importFields);
-			var laneId = project.LanesFromState("All Tasks").First();
+			var laneId = project.LanesFromState("Backlog").First();
 			var card = new Card
 			{
 				Active = true,

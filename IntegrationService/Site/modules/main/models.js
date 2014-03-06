@@ -242,7 +242,10 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             // has project
             if (!this.hasProject()) return false;
 
-            // has at least 1 QueryState OR a Query defined
+            // has at least 1 QueryState OR a Query defined OR uses field mapping
+            
+            if (this.FieldMap().length > 0) return true; // don't need to validate queryStates or query if we're using field mapping
+
             var queryStates = this.QueryStates();
             if (_.isUndefined(queryStates)) return false;
             var queryStatesOk = queryStates.length > 0;
@@ -252,10 +255,10 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
 
             if (queryOk) return true; // don't need to validate queryStates if the query is ok
 
+            if (!queryStatesOk) return false;
+            
             // If QueryStates used, each state in QueryState is associated with a lane
             this.unassignedStates = queryStates.slice(0);
-
-            if (!queryStatesOk) return false;
 
             var lsm = this.LaneToStatesMap();
             var lanes = _.keys(lsm);

@@ -1,9 +1,15 @@
 ﻿<h2>Filters</h2>
-<p><i>All items in the target system that match other criteria will be imported into LeanKit (states, 
-    excluded types, start date...). You can also include or exclude items using filters. If you create 
-    an exclude filter then all items except those matching the filter will be imported. If you create 
-    an include filter then only items matching the filter will be imported - all others will not.
-   </i></p>
+<p><em>Filters are used to limit the items in the target system being synced to LeanKit cards.</em></p>
+<p><em>Create an exclude filter when you want all items except those matching the filter to be imported. 
+       Exclude filters are mutually exclusive. If the item meets any criteria for any exclude filter then 
+       it will not be imported. Ex: I want to import all items except for those where Text3 = false.</em></p>
+<p><em>Create an include filter when you only want items matching the filter to be imported. Multiple 
+       include filters are compounded. The item must meet the criteria in each include filter to 
+       be imported. Ex: I only want to import items where Text8 = true.</em></p>
+<p><em>Combine include and exclude filters when you want to import all items meeting every include criteria 
+       except for those matching any exclude criteria. Ex: I only want to import items where Text8 = true 
+       except for when Text3 = false.
+   </em></p>
 <fieldset>
     <div class="panel panel-primary col-xs-12 no-padding">
         <div class="panel-heading" style="margin-bottom: 20px;">

@@ -344,17 +344,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 
 		private List<State> GetStates(ProjectFile mpx)
 		{
-			return new List<State>()
-				{
-					new State("All Tasks")
-				};
-
-			//return new List<State>()
-			//	{
-			//		new State("Ready"),
-			//		new State("In Process"),
-			//		new State("Completed")
-			//	};
+			return new List<State>();
 		}
     }
 }

@@ -56,6 +56,13 @@ namespace IntegrationService
 					select lane.Key).ToList();
 			if (laneIds.Any())
 				return laneIds;
+
+			laneIds = (from lane in ValidLanes
+			           where lane.Name.Equals(state, StringComparison.OrdinalIgnoreCase)
+			           select lane.Id).ToList();
+			if (laneIds.Any())
+				return laneIds;	
+
 			return ValidLanes.Select(x => x.Id).ToList();
 		}
 

@@ -85,20 +85,27 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         ui: {
             "simple": "#simple",
             "custom": "#custom",
+            "customContainer" : "#customContainer",
             "iterationPath": "#iteration-paths",
-            "queryDaysOutContainer": "#QueryDaysOutContainer"
+            "queryDaysOutContainer": "#QueryDaysOutContainer",
+            "queryStatesContainer": "#QueryStatesContainer",
+            "queryTypesContainer": "#QueryTypesContainer",
+            "states": "#States",
+            "types": "#Types"
         },
 
         reRenderTypesView: function () {
-            var html = "";
-            var view = this.controller.viewFactory.createView("Types");
-            if (_.isObject(view)) {
-                var el = view.render().el;
-                html = el.innerHTML;
-                view.close();
-                this.controller.viewFactory.remove(view);
+            if (App.request("getTargetType") != "MicrosoftProject") {
+                var html = "";
+                var view = this.controller.viewFactory.createView("Types");
+                if (_.isObject(view)) {
+                    var el = view.render().el;
+                    html = el.innerHTML;
+                    view.close();
+                    this.controller.viewFactory.remove(view);
+                }
+                this.$("#Types").html(html);
             }
-            this.$("#Types").html(html);
         },
 
         onShow: function () {
@@ -119,9 +126,31 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             }
             
             if (App.request("getTargetType") == "MicrosoftProject") {
-                this.ui.queryDaysOutContainer.show();
+                this.ui.queryDaysOutContainer.show();                
             } else {
                 this.ui.queryDaysOutContainer.hide();
+            }
+            
+            if (App.request("targetAllowsCustomQuery")) {
+                this.ui.customContainer.show();
+            } else {
+                this.ui.customContainer.hide();
+            }
+
+            if (this.controller.stateCollection.length == 0) {
+                this.ui.queryStatesContainer.hide();
+                this.ui.states.hide();
+            } else {
+                this.ui.queryStatesContainer.show();
+                this.ui.states.show();
+            }
+            
+            if (this.controller.typeCollection.length == 0) {
+                this.ui.queryTypesContainer.hide();
+                this.ui.types.hide();
+            } else {
+                this.ui.queryTypesContainer.show();
+                this.ui.types.show();
             }
             
             // set states

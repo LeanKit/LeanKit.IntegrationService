@@ -210,8 +210,14 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             var tabStrip = this.ui.tabstrip.kendoTabStrip().data("kendoTabStrip");
             if (this.model.FieldMap().length > 0) {
                 tabStrip.enable(tabStrip.items()[2], true);
+                tabStrip.enable(tabStrip.items()[1], false);
+                tabStrip.enable(tabStrip.items()[3], false);
+                tabStrip.enable(tabStrip.items()[5], false);
             } else {
                 tabStrip.enable(tabStrip.items()[2], false);
+                tabStrip.enable(tabStrip.items()[1], true);
+                tabStrip.enable(tabStrip.items()[3], true);
+                tabStrip.enable(tabStrip.items()[5], true);
             }
             if (!_.isUndefined(this.controller.filterfields) && this.controller.filterfields.length > 0) {
                 tabStrip.enable(tabStrip.items()[4], true);

@@ -21,6 +21,7 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _, niceTools) {
 
             App.reqres.setHandler('getTargetType', this.getTargetType, this);
             App.reqres.setHandler('targetAllowsIterationPath', this.targetAllowsIterationPath, this);
+            App.reqres.setHandler('targetAllowsCustomQuery', this.targetAllowsCustomQuery, this);
             
             this.view = new Main.views.PageLayoutView({ controller: this });
 
@@ -245,6 +246,15 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _, niceTools) {
             return this.getTargetType().toLowerCase() === "tfs";
         },
         
+        targetAllowsCustomQuery: function() {
+            var targetType = this.getTargetType().toLowerCase();
+            if (targetType == "tfs")
+                return true;
+            if (targetType == "jira")
+                return true;
+            return false;
+        },
+
         validatePages: function () {
             // don't ask activate page whether it is valid...hence 'length-1'
             var page, isValid;

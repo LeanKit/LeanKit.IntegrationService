@@ -14,17 +14,19 @@
     </div>
 
     <div class="indented" style="margin-top:20px;">
-        <p><em>Create or Update a LeanKit card when a Target item has one of these statuses:</em></p>    
+        <p><em>Create or Update a LeanKit card when a Target item:</em></p>    
+        
+        <p id="QueryStatesContainer" style="margin-top: 20px;"><em>... has one of these statuses:</em></p>
             {{{partial "States" factory="tab_query"}}}
             
-        <p id="QueryDaysOutContainer" style="margin-top:20px"><em>...and the start date is within <input type="text" id="QueryDaysOut" style="width:50px" /> days.</em></p>
+        <p id="QueryDaysOutContainer" style="margin-top:20px"><em>... has a start date within <input type="text" id="QueryDaysOut" style="width:50px" /> days.</em></p>
 
-        <p style="margin-top:20px"><em>...and is one of these types:</em></p>
+        <p id="QueryTypesContainer" style="margin-top:20px"><em>... is one of these types:</em></p>
             {{{partial "Types" factory="tab_query"}}}       
     </div>
 </div>
 
-<div style="margin-top:20px">
+<div id="customContainer" style="margin-top:20px">
     <label class="radio">
         <input type="radio" name="optionsRadios" id="radio-custom" value="advanced">
         Custom Query
