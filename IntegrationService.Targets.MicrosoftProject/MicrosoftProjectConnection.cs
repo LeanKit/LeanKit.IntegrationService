@@ -145,12 +145,12 @@ namespace IntegrationService.Targets.MicrosoftProject
 		{
 			var fields = new List<ConfigurableField>();
 
-			fields.Add(new ConfigurableField(LeanKitField.Id,
-										 GetAllTextFields(),
-										 GetSyncDirections(true, false, true, false),
-										 SyncDirection.None, 
-										 "", 
-										 false));
+//			fields.Add(new ConfigurableField(LeanKitField.Id,
+//										 GetAllTextFields(),
+//										 GetSyncDirections(true, false, true, false),
+//										 SyncDirection.None, 
+//										 "", 
+//										 false));
 			fields.Add(new ConfigurableField(LeanKitField.Title,
 										 new List<TargetField>() { new TargetField() { Name = "Name", IsDefault = true } },
 										 GetSyncDirections(false, true, false, true),
@@ -240,14 +240,14 @@ namespace IntegrationService.Targets.MicrosoftProject
 										 SyncDirection.None, 
 										 "A Project field(s) containing a comma separated list of tags to apply to the card.", 
 										 false));
-			var dateArchivedTargetFields = GetAllTextFields();
-			dateArchivedTargetFields.Add(new TargetField() {IsDefault = false, Name = "ActualFinish"});
-			fields.Add(new ConfigurableField(LeanKitField.DateArchived,
-										 dateArchivedTargetFields,
-										 GetSyncDirections(true, false, true, false),
-										 SyncDirection.None,
-										 "The date the card is moved to the Archive, or considered finished.", 
-										 false));
+//			var dateArchivedTargetFields = GetAllTextFields();
+//			dateArchivedTargetFields.Add(new TargetField() {IsDefault = false, Name = "ActualFinish"});
+//			fields.Add(new ConfigurableField(LeanKitField.DateArchived,
+//										 dateArchivedTargetFields,
+//										 GetSyncDirections(true, false, true, false),
+//										 SyncDirection.None,
+//										 "The date the card is moved to the Archive, or considered finished.", 
+//										 false));
 			return fields;
 		}
 
@@ -334,10 +334,10 @@ namespace IntegrationService.Targets.MicrosoftProject
 				syncDirections.Add(SyncDirection.None);
 			if (includeToLeankit)
 				syncDirections.Add(SyncDirection.ToLeanKit);
-			if (includeToTarget)
-				syncDirections.Add(SyncDirection.ToTarget);
-			if (includeBoth)
-				syncDirections.Add(SyncDirection.Both);
+//			if (includeToTarget)
+//				syncDirections.Add(SyncDirection.ToTarget);
+//			if (includeBoth)
+//				syncDirections.Add(SyncDirection.Both);
 
 			return syncDirections;
 		}
