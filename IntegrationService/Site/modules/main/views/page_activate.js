@@ -204,7 +204,9 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
         className: "col-xs-6",
         templateHelpers: {
             "QueryStatesSpaced": function () {
-                return this.QueryStates.toString().replace(/,/g, ", ");
+                if (!_.isUndefined(this.QueryStates) && this.QueryStates.length > 0)
+                    return this.QueryStates.toString().replace(/,/g, ", ");
+                return "";
             }
         }
     });

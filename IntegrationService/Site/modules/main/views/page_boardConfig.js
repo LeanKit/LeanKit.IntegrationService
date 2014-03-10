@@ -492,6 +492,8 @@ App.module("Main", function (Main, App, Backbone, Marionette, $, _) {
             board.TargetProjectId(this.currentMapping.TargetProjectId());
             board.TargetProjectName(this.currentMapping.TargetProjectName());
 
+            this.save();
+
             this.view.displayBoardList(this.boards, board.Id());
             App.Config.loadLaneNames();
         },
