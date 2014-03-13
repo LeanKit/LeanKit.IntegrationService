@@ -93,7 +93,14 @@ namespace IntegrationService.Targets
             LoadConfiguration();
             if (Configuration != null)
             {
-                Init();
+	            try
+	            {
+		            Init();
+				} 
+				catch (Exception e) 
+				{
+					Log.Error("Exception for Init: " + e.Message);
+				}
             }
         }
 
@@ -107,7 +114,14 @@ namespace IntegrationService.Targets
 	        LoadConfiguration();
 			if (Configuration != null)
 			{
-				Init();
+				try
+				{
+					Init();
+				} 
+				catch (Exception e) 
+				{
+					Log.Error("Exception for Init: " + e.Message);
+				}
 			}
         }
 
@@ -187,7 +201,14 @@ namespace IntegrationService.Targets
 								var card = LeanKit.GetCard(board.Id, ev.CardId);
 								if (card != null && string.IsNullOrEmpty(card.ExternalCardID))
 								{
-									CreateNewItem(card.ToCard(), mapping);
+									try
+									{
+										CreateNewItem(card.ToCard(), mapping);
+									}
+									catch (Exception e)
+									{
+							            Log.Error("Exception for CreateNewItem: " + e.Message);
+						            }
 								}
 							}
 							// only look for moved cards
@@ -206,7 +227,11 @@ namespace IntegrationService.Targets
 										    var card = LeanKit.GetCard(board.Id, ev.CardId);
 										    if (card != null && !string.IsNullOrEmpty(card.ExternalCardID))
 										    {
-											    UpdateStateOfExternalItem(card.ToCard(), mapping.LaneToStatesMap[lane.Id.Value], mapping);
+												try {
+												    UpdateStateOfExternalItem(card.ToCard(), mapping.LaneToStatesMap[lane.Id.Value], mapping);
+												} catch (Exception e) {
+													Log.Error("Exception for UpdateStateOfExternalItem: " + e.Message);
+												}
 										    }
 									    }
 								    }
@@ -236,7 +261,6 @@ namespace IntegrationService.Targets
 				Log.Error(ex.Message);
                 return;
             }
-
             
             CheckLastQueryDate();
             ConnectToLeanKit();
@@ -525,8 +549,17 @@ namespace IntegrationService.Targets
 		                if (card.IsBlocked != updatedCardEvent.OriginalCard.IsBlocked)
 		                    itemsUpdated.Add("Blocked");
 
-		                if (itemsUpdated.Count > 0)
-		                    CardUpdated(card, itemsUpdated, boardConfig);
+			            if (itemsUpdated.Count > 0)
+			            {
+				            try
+				            {
+					            CardUpdated(card, itemsUpdated, boardConfig);
+				            }
+				            catch (Exception e)
+				            {
+					            Log.Error("Exception for CardUpdated: " + e.Message);
+				            }
+			            }
 		            }
 		        }
 				if (eventArgs.BlockedCards.Any())
@@ -549,7 +582,16 @@ namespace IntegrationService.Targets
 							itemsUpdated.Add("Blocked");
 
 						if (itemsUpdated.Count > 0)
-							CardUpdated(card, itemsUpdated, boardConfig);
+						{
+							try
+							{
+								CardUpdated(card, itemsUpdated, boardConfig);							
+				            }
+				            catch (Exception e)
+				            {
+					            Log.Error("Exception for CardUpdated: " + e.Message);
+				            }
+						}
 					}
 				}
 				if (eventArgs.UnBlockedCards.Any())
@@ -572,7 +614,16 @@ namespace IntegrationService.Targets
 							itemsUpdated.Add("Blocked");
 
 						if (itemsUpdated.Count > 0)
-							CardUpdated(card, itemsUpdated, boardConfig);
+						{
+							try
+							{
+								CardUpdated(card, itemsUpdated, boardConfig);
+							}
+				            catch (Exception e)
+				            {
+					            Log.Error("Exception for CardUpdated: " + e.Message);
+				            }
+						}
 					}					
 				}
 		    }
@@ -593,7 +644,14 @@ namespace IntegrationService.Targets
 						var newCard = cardAddEvent.AddedCard;
 						if (newCard != null && string.IsNullOrEmpty(newCard.ExternalCardID))
 						{
-							CreateNewItem(newCard, boardConfig);
+							try
+							{
+								CreateNewItem(newCard, boardConfig);
+							}
+				            catch (Exception e)
+				            {
+					            Log.Error("Exception for CreateNewItem: " + e.Message);
+				            }
 						}
 					}
 				}
@@ -619,7 +677,14 @@ namespace IntegrationService.Targets
 		                var states = boardConfig.LaneToStatesMap[movedCardEvent.ToLane.Id.Value];
 		                if (states != null && states.Count > 0)
 		                {
-			                UpdateStateOfExternalItem(movedCardEvent.MovedCard, states, boardConfig);
+			                try
+			                {
+				                UpdateStateOfExternalItem(movedCardEvent.MovedCard, states, boardConfig);
+							} 
+							catch (Exception e) 
+							{
+								Log.Error("Exception for UpdateStateOfExternalItem: " + e.Message);
+							}
 		                }
 						else
 							Log.Debug(String.Format("No states are mapped to the Lane [{0}]", movedCardEvent.ToLane.Id.Value));		         
