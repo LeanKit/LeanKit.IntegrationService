@@ -23,6 +23,51 @@ namespace IntegrationService.Targets.JIRA
 		private string _externalUrlTemplate;
 	    private const string ServiceName = "JIRA";
 
+		private object _customFieldsLock = new object();
+
+	    private List<Field> _customFields; 
+	    protected List<Field> CustomFields
+	    {
+			get
+			{
+				if (_customFields == null)
+				{
+					lock (_customFieldsLock)
+					{
+						if (_customFields == null)
+						{
+							_customFields = new List<Field>();
+							var request = new RestRequest(string.Format("/rest/api/latest/field"), Method.GET);
+							var jiraResp = _restClient.Execute(request);
+
+							if (jiraResp.StatusCode != HttpStatusCode.OK)
+							{
+								var serializer = new JsonSerializer<JiraConnection.ErrorMessage>();
+								var errorMessage = serializer.DeserializeFromString(jiraResp.Content);
+								Log.Error(string.Format(
+									"Unable to get custom fields from JIRA, Error: {0}. Check your JIRA connection configuration.",
+									errorMessage.Message));
+							}
+							else
+							{
+								var resp = new JsonSerializer<List<Field>>().DeserializeFromString(jiraResp.Content);
+								if (resp != null && resp.Any())
+								{
+									foreach (var field in resp.Where(field => field.Custom))
+									{
+										_customFields.Add(field);
+									}
+								}
+							}
+						}
+					}
+				}
+				return _customFields;
+			}
+
+			private set { _customFields = value; }
+	    }
+
 	    public Jira(IBoardSubscriptionManager subscriptions) : base(subscriptions)
         {
 			_restClient = new RestClient
@@ -44,7 +89,7 @@ namespace IntegrationService.Targets.JIRA
 
 		public override void Init() 
 		{
-			if (Configuration != null) 
+			if (Configuration != null)
 			{
 				_externalUrlTemplate = Configuration.Target.Url + "/browse/{0}";
 			}
@@ -81,6 +126,7 @@ namespace IntegrationService.Targets.JIRA
 				if (issueToUpdate != null && issueToUpdate.Key == updatedCard.ExternalCardID) 
 				{
 					bool isDirty = false;
+					bool updateEpicName = false;
 
 					var updateJson = "{ \"fields\": { ";
 
@@ -88,9 +134,25 @@ namespace IntegrationService.Targets.JIRA
 					{
 						issueToUpdate.Fields.Summary = updatedCard.Title;
 						isDirty = true;
+						updateEpicName = true;
 					}
 
 					updateJson += "\"summary\": \"" + issueToUpdate.Fields.Summary + "\"";
+
+					if (updateEpicName) 
+					{
+						if (issueToUpdate.Fields.IssueType.Name.ToLowerInvariant() == "epic")
+						{
+							if (CustomFields.Any())
+							{
+								var epicNameField = CustomFields.FirstOrDefault(x => x.Name == "Epic Name");
+								if (epicNameField != null)
+								{
+									updateJson += ", \"" + epicNameField.Id + "\": \"" + updatedCard.Title + "\"";
+								}
+							}
+						}						
+					}
 
 					if (updatedItems.Contains("Description") && issueToUpdate.Fields.Description.SanitizeCardDescription() != updatedCard.Description)
 					{
@@ -446,6 +508,8 @@ namespace IntegrationService.Targets.JIRA
 					card.Tags += "," + ServiceName;
 			}
 
+			// TODO: Add size from the custom story points field. 
+
             Log.Info("Creating a card of type [{0}] for issue [{1}] on Board [{2}] on Lane [{3}]", mappedCardType.Name, issue.Key, boardId, laneId);
 
 	        CardAddResult cardAddResult = null;
@@ -657,14 +721,28 @@ namespace IntegrationService.Targets.JIRA
 			}
 		}
 
-		protected override void CreateNewItem(Card card, BoardMapping boardMapping) 
+		protected override void CreateNewItem(Card card, BoardMapping boardMapping)
 		{
+			var jiraIssueType = GetJiraIssueType(boardMapping, card.TypeId);
+
 			string json = "{ \"fields\": { ";
 			json += "\"project\":  { \"key\": \"" + boardMapping.Identity.Target + "\" }";
 			json += ", \"summary\": \"" + card.Title + "\" ";
 			json += ", \"description\": \"" + (card.Description != null ? card.Description.Replace("</p>", "").Replace("<p>", "") : "") + "\" ";
-			json += ", \"issuetype\": { \"name\": \"" + GetJiraIssueType(boardMapping, card.TypeId) + "\" }";
+			json += ", \"issuetype\": { \"name\": \"" + jiraIssueType + "\" }";
 			json += ", \"priority\": { \"name\": \"" + GetPriority(card.Priority) + "\" }";
+
+			if (jiraIssueType.ToLowerInvariant() == "epic")
+			{
+				if (CustomFields.Any())
+				{
+					var epicNameField = CustomFields.FirstOrDefault(x => x.Name == "Epic Name");
+					if (epicNameField != null)
+					{
+						json += ", \"" + epicNameField.Id + "\": \"" + card.Title + "\"";
+					}
+				}
+			}
 
 			if (!string.IsNullOrEmpty(card.DueDate)) 
 			{
@@ -893,6 +971,13 @@ namespace IntegrationService.Targets.JIRA
 				Name = "";
 				To = new Status();
 			}
+		}
+
+		public class Field
+		{
+			public string Id { get; set; }
+			public string Name { get; set; }
+			public bool Custom { get; set; }
 		}
 
 		public class ErrorMessage 
