@@ -768,17 +768,7 @@ namespace IntegrationService.Targets.TFS
 
 		protected override void CreateNewItem(Card card, BoardMapping boardMapping) 
 		{
-	        var tfsProject = boardMapping.Identity.Target;
-			var tfsIteration = "";
-			if (tfsProject.Contains("\\"))
-			{
-				var tfsProjectParts = tfsProject.Split('\\');
-				if (tfsProjectParts.Length > 0)
-					tfsIteration = tfsProject;
-				tfsProject = tfsProjectParts[0];
-			}
-
-			var project = _projectCollectionWorkItemStore.Projects[tfsProject];
+			var project = _projectCollectionWorkItemStore.Projects[boardMapping.Identity.TargetName];
 			var tfsWorkItemType = GetTfsWorkItemType(boardMapping, project.WorkItemTypes, card.TypeId);
 			var workItemType = project.WorkItemTypes[tfsWorkItemType.Name];
 
@@ -802,8 +792,9 @@ namespace IntegrationService.Targets.TFS
 				SetAssignedUser(workItem, boardMapping.Identity.LeanKit, card.AssignedUserIds[0]);
 			}
 
-			if (!string.IsNullOrEmpty(tfsIteration))
-				workItem.Fields["System.IterationPath"].Value = tfsIteration;
+			if (!string.IsNullOrEmpty(boardMapping.IterationPath)) {
+				workItem.Fields["System.IterationPath"].Value = boardMapping.IterationPath;
+			}
 
 			try 
 			{
