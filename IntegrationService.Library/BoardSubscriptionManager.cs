@@ -59,6 +59,7 @@ namespace IntegrationService
                 var lkClientApi = LkClientApi;
 
                 Integration.BoardChanged += (sender, args) => Notifications.ForEach(action => action(boardIdLocal, args, lkClientApi));
+	            Integration.ClientError += IntegrationOnClientError;
 
 	            try
 	            {
@@ -74,6 +75,11 @@ namespace IntegrationService
 		            _log.Error(string.Format("Unknown error: {0} - {1} - {2}", e.GetType(), e.Message, e.StackTrace));		            
 	            }
             }
+
+	        private void IntegrationOnClientError(object sender, ClientErrorEventArgs args)
+	        {
+		        _log.Error(args.Exception, args.Message);
+	        }
         }
 
         public ILeanKitApi Subscribe(LeanKitAccountAuth auth, long boardId, Action<long, BoardChangedEventArgs, ILeanKitApi> notification)

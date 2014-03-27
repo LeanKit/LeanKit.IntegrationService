@@ -91,17 +91,15 @@ namespace IntegrationService.Targets
             LocalStorage = new LocalStorage<AppSettings>();
             LeanKitClientFactory = new LeanKitClientFactory();
             LoadConfiguration();
-            if (Configuration != null)
-            {
-	            try
-	            {
-		            Init();
-				} 
-				catch (Exception e) 
-				{
-					Log.Error("Exception for Init: " + e.Message);
-				}
-            }
+		    if (Configuration == null) return;
+		    try
+		    {
+			    Init();
+		    } 
+		    catch (Exception e) 
+		    {
+			    Log.Error("Exception for Init: " + e.Message);
+		    }
         }
 
 	    protected TargetBase(IBoardSubscriptionManager subscriptions, IConfigurationProvider<Configuration> configurationProvider, ILocalStorage<AppSettings> localStorage, ILeanKitClientFactory leanKitClientFactory)
@@ -112,17 +110,15 @@ namespace IntegrationService.Targets
             LeanKitClientFactory = leanKitClientFactory;
 
 	        LoadConfiguration();
-			if (Configuration != null)
-			{
-				try
-				{
-					Init();
-				} 
-				catch (Exception e) 
-				{
-					Log.Error("Exception for Init: " + e.Message);
-				}
-			}
+		    if (Configuration == null) return;
+		    try
+		    {
+			    Init();
+		    } 
+		    catch (Exception e) 
+		    {
+			    Log.Error("Exception for Init: " + e.Message);
+		    }
         }
 
 		public virtual void Process()
@@ -354,101 +350,99 @@ namespace IntegrationService.Targets
             {
                 Log.Error(ex, string.Format("Error getting Board: {0}",  boardMapping.Identity.LeanKit));
             }
-            if (board != null)
-            {
-                if (board.CardTypes != null && board.CardTypes.Any())
-                {
-                    boardMapping.ValidCardTypes = board.CardTypes;
+	        
+			if (board == null) return;
+	        
+			if (board.CardTypes != null && board.CardTypes.Any())
+	        {
+		        boardMapping.ValidCardTypes = board.CardTypes;
                     
-                    // check to make sure we have a default card type
-                    var defaultCard = boardMapping.ValidCardTypes.FirstOrDefault(x => x.IsDefault);
-                    if (defaultCard == null)
-                    {
-                        // if we do not have a default card type then check 
-                        // to see if there is a Task card type and make that the default
-                        var taskCardType = boardMapping.ValidCardTypes.FirstOrDefault(x => x.Name.ToLowerInvariant() == "task");
-                        if (taskCardType != null)
-                        {
-                            boardMapping.ValidCardTypes.FirstOrDefault(x => x.Name.ToLowerInvariant() == "task").IsDefault = true;
-                        }
-                        else
-                        {
-                            // otherwise just set the first card type to be the default
-                            boardMapping.ValidCardTypes.FirstOrDefault().IsDefault = true;
-                        }
-                    }
-                }
+		        // check to make sure we have a default card type
+		        var defaultCard = boardMapping.ValidCardTypes.FirstOrDefault(x => x.IsDefault);
+		        if (defaultCard == null)
+		        {
+			        // if we do not have a default card type then check 
+			        // to see if there is a Task card type and make that the default
+			        var taskCardType = boardMapping.ValidCardTypes.FirstOrDefault(x => x.Name.ToLowerInvariant() == "task");
+			        if (taskCardType != null)
+			        {
+				        boardMapping.ValidCardTypes.FirstOrDefault(x => x.Name.ToLowerInvariant() == "task").IsDefault = true;
+			        }
+			        else
+			        {
+				        // otherwise just set the first card type to be the default
+				        boardMapping.ValidCardTypes.FirstOrDefault().IsDefault = true;
+			        }
+		        }
+	        }
 
-                if (board.ArchiveTopLevelLaneId.HasValue)
-                {
-                    boardMapping.ArchiveLaneId = board.ArchiveTopLevelLaneId.Value;
-                }
-                else
-                {
-                    var archive = board.Archive.FirstOrDefault(x => x.ParentLaneId == 0);
-                    if (archive != null && archive.Id.HasValue)
-                    {
-                        boardMapping.ArchiveLaneId = archive.Id.Value;
-                    }
+	        if (board.ArchiveTopLevelLaneId.HasValue)
+	        {
+		        boardMapping.ArchiveLaneId = board.ArchiveTopLevelLaneId.Value;
+	        }
+	        else
+	        {
+		        var archive = board.Archive.FirstOrDefault(x => x.ParentLaneId == 0);
+		        if (archive != null && archive.Id.HasValue)
+		        {
+			        boardMapping.ArchiveLaneId = archive.Id.Value;
+		        }
 
-                    if (boardMapping.ArchiveLaneId == 0)
-                    {
-                        var allLanes = board.AllLanes();
-                        archive = allLanes.FirstOrDefault(x => x.ClassType == LaneClassType.Archive && x.ParentLaneId == 0);
-                        if (archive != null && archive.Id.HasValue)
-                        {
-                            boardMapping.ArchiveLaneId = archive.Id.Value;
-                        }
-                    }
-                }
+		        if (boardMapping.ArchiveLaneId == 0)
+		        {
+			        var allLanes = board.AllLanes();
+			        archive = allLanes.FirstOrDefault(x => x.ClassType == LaneClassType.Archive && x.ParentLaneId == 0);
+			        if (archive != null && archive.Id.HasValue)
+			        {
+				        boardMapping.ArchiveLaneId = archive.Id.Value;
+			        }
+		        }
+	        }
 
-	            if (board.Lanes != null && board.Lanes.Any())
-                {
-					var validLanes = board.AllLanes().Where(x => x.ClassType != LaneClassType.Archive).OrderBy(x => x.Index).ToList();
-                    var maxIndex = validLanes.Max(x => x.Index);
+	        if (board.Lanes != null && board.Lanes.Any())
+	        {
+		        var validLanes = board.AllLanes().Where(x => x.ClassType != LaneClassType.Archive).OrderBy(x => x.Index).ToList();
+		        var maxIndex = validLanes.Max(x => x.Index);
 
-                    // only use active lanes for the purpose of selecting the default drop lane
-                    var activeLanes = board.Lanes.Where(x => x.ClassType == LaneClassType.Active).OrderBy(x => x.Index).ToList();
-	                var defaultDropLaneId = GetDefaultDropLane(activeLanes);
+		        // only use active lanes for the purpose of selecting the default drop lane
+		        var activeLanes = board.Lanes.Where(x => x.ClassType == LaneClassType.Active).OrderBy(x => x.Index).ToList();
+		        var defaultDropLaneId = GetDefaultDropLane(activeLanes);
 
-                    boardMapping.ValidLanes = validLanes
-                        .Select(x => new Lane
-	                        {
-		                        Id = x.Id.Value, 
-								Name = x.Title, 
-								IsFirst = x.Id == defaultDropLaneId, 
-								ChildLaneIds = (x.ChildLaneIds != null && x.ChildLaneIds.Any()) ? x.ChildLaneIds : null,
-								IsLast = (boardMapping.ArchiveLaneId > 0) ? x.Id == boardMapping.ArchiveLaneId : x.Index == maxIndex
-	                        })
-                        .ToList();
+		        boardMapping.ValidLanes = validLanes
+			        .Select(x => new Lane
+			        {
+				        Id = x.Id.Value, 
+				        Name = x.Title, 
+				        IsFirst = x.Id == defaultDropLaneId, 
+				        ChildLaneIds = (x.ChildLaneIds != null && x.ChildLaneIds.Any()) ? x.ChildLaneIds : null,
+				        IsLast = (boardMapping.ArchiveLaneId > 0) ? x.Id == boardMapping.ArchiveLaneId : x.Index == maxIndex
+			        })
+			        .ToList();
 
-                    if (boardMapping.ArchiveLaneId > 0)
-                    {
-                        var archiveLane = board.GetLaneById(boardMapping.ArchiveLaneId);
-                        if (archiveLane != null)
-                        {
-							boardMapping.ValidLanes.Add(new Lane
-								{
-									Id = boardMapping.ArchiveLaneId,
-									Name = archiveLane.Title,
-									IsFirst = false,
-									IsLast = true
-								});
-                        }
-                    }
-                }
+		        if (boardMapping.ArchiveLaneId > 0)
+		        {
+			        var archiveLane = board.GetLaneById(boardMapping.ArchiveLaneId);
+			        if (archiveLane != null)
+			        {
+				        boardMapping.ValidLanes.Add(new Lane
+				        {
+					        Id = boardMapping.ArchiveLaneId,
+					        Name = archiveLane.Title,
+					        IsFirst = false,
+					        IsLast = true
+				        });
+			        }
+		        }
+	        }
 
-                if (boardMapping.Types == null)
-                    boardMapping.Types = new List<WorkItemType>();
+	        if (boardMapping.Types == null)
+		        boardMapping.Types = new List<WorkItemType>();
 
-                // values in LaneToStatesMap are assumed to valid, as they were configured using valid values.
-                if(boardMapping.LaneToStatesMap==null)
-                {
-                   Log.Fatal("An unexpected error occurred -- there is no valid lane-to-states mapping.");
-                }
-
-            }
-            
+	        // values in LaneToStatesMap are assumed to valid, as they were configured using valid values.
+	        if(boardMapping.LaneToStatesMap==null)
+	        {
+		        Log.Fatal("An unexpected error occurred -- there is no valid lane-to-states mapping.");
+	        }
         }
 
 		// This method is based on method of same name from Kanban.ApplicationServices.BoardService
@@ -518,79 +512,82 @@ namespace IntegrationService.Targets
 		    else
 		    {
 		        Log.Info("Checking for updated cards.");
-		        if (eventArgs.UpdatedCards.Any())
-		        {
-		            var itemsUpdated = new List<string>();
-			        foreach (var updatedCardEvent in eventArgs.UpdatedCards)
-		            {
-		                var card = updatedCardEvent.UpdatedCard;
-		                if (string.IsNullOrEmpty(card.ExternalCardID) && !string.IsNullOrEmpty(card.ExternalSystemUrl))
-		                {
-		                    // try to grab id from url
-		                    var pos = card.ExternalSystemUrl.LastIndexOf('=');
-		                    if (pos > 0)
-		                        card.ExternalCardID = card.ExternalSystemUrl.Substring(pos + 1);
-		                }
+			    if (eventArgs.UpdatedCards.Any())
+			    {
+				    var itemsUpdated = new List<string>();
+				    foreach (var updatedCardEvent in eventArgs.UpdatedCards)
+				    {
+					    try
+					    {
+						    if (updatedCardEvent.UpdatedCard == null) throw new Exception("Updated card is null");
+						    if (updatedCardEvent.OriginalCard == null) throw new Exception("Original card is null");
 
-		                if (string.IsNullOrEmpty(card.ExternalCardID)) continue; // still invalid; skip this card
+						    var card = updatedCardEvent.UpdatedCard;
 
-		                if (card.Title != updatedCardEvent.OriginalCard.Title)
-		                    itemsUpdated.Add("Title");
-		                if (card.Description != updatedCardEvent.OriginalCard.Description)
-		                    itemsUpdated.Add("Description");
-		                if (card.Tags != updatedCardEvent.OriginalCard.Tags)
-		                    itemsUpdated.Add("Tags");
-		                if (card.Priority != updatedCardEvent.OriginalCard.Priority)
-		                    itemsUpdated.Add("Priority");
-		                if (card.DueDate != updatedCardEvent.OriginalCard.DueDate)
-		                    itemsUpdated.Add("DueDate");
-		                if (card.Size != updatedCardEvent.OriginalCard.Size)
-		                    itemsUpdated.Add("Size");
-		                if (card.IsBlocked != updatedCardEvent.OriginalCard.IsBlocked)
-		                    itemsUpdated.Add("Blocked");
+						    if (string.IsNullOrEmpty(card.ExternalCardID) && !string.IsNullOrEmpty(card.ExternalSystemUrl))
+						    {
+							    // try to grab id from url
+							    var pos = card.ExternalSystemUrl.LastIndexOf('=');
+							    if (pos > 0)
+								    card.ExternalCardID = card.ExternalSystemUrl.Substring(pos + 1);
+						    }
 
-			            if (itemsUpdated.Count > 0)
-			            {
-				            try
-				            {
-					            CardUpdated(card, itemsUpdated, boardConfig);
-				            }
-				            catch (Exception e)
-				            {
-					            Log.Error("Exception for CardUpdated: " + e.Message);
-				            }
-			            }
-		            }
-		        }
-				if (eventArgs.BlockedCards.Any())
+						    if (string.IsNullOrEmpty(card.ExternalCardID)) continue; // still invalid; skip this card
+
+						    if (card.Title != updatedCardEvent.OriginalCard.Title)
+							    itemsUpdated.Add("Title");
+						    if (card.Description != updatedCardEvent.OriginalCard.Description)
+							    itemsUpdated.Add("Description");
+						    if (card.Tags != updatedCardEvent.OriginalCard.Tags)
+							    itemsUpdated.Add("Tags");
+						    if (card.Priority != updatedCardEvent.OriginalCard.Priority)
+							    itemsUpdated.Add("Priority");
+						    if (card.DueDate != updatedCardEvent.OriginalCard.DueDate)
+							    itemsUpdated.Add("DueDate");
+						    if (card.Size != updatedCardEvent.OriginalCard.Size)
+							    itemsUpdated.Add("Size");
+						    if (card.IsBlocked != updatedCardEvent.OriginalCard.IsBlocked)
+							    itemsUpdated.Add("Blocked");
+
+						    if (itemsUpdated.Count <= 0) continue;
+
+						    CardUpdated(card, itemsUpdated, boardConfig);
+					    }
+					    catch (Exception e)
+					    {
+							var card = updatedCardEvent.UpdatedCard ?? updatedCardEvent.OriginalCard ?? new Card();
+							string.Format("Error processing blocked card, [{0}]: {1}", card.Id, e.Message).Error(e);
+					    }
+				    }
+			    }
+			    if (eventArgs.BlockedCards.Any())
 				{
 		            var itemsUpdated = new List<string>();
 					foreach (var cardBlockedEvent in eventArgs.BlockedCards)
 					{
-						var card = cardBlockedEvent.BlockedCard;
-						if (string.IsNullOrEmpty(card.ExternalCardID) && !string.IsNullOrEmpty(card.ExternalSystemUrl)) 
+						try
 						{
-							// try to grab id from url
-							var pos = card.ExternalSystemUrl.LastIndexOf('=');
-							if (pos > 0)
-								card.ExternalCardID = card.ExternalSystemUrl.Substring(pos + 1);
-						}
-
-						if (string.IsNullOrEmpty(card.ExternalCardID)) continue; // still invalid; skip this card
-
-						if (card.IsBlocked != cardBlockedEvent.BlockedCard.IsBlocked)
-							itemsUpdated.Add("Blocked");
-
-						if (itemsUpdated.Count > 0)
-						{
-							try
+							var card = cardBlockedEvent.BlockedCard;
+							if (string.IsNullOrEmpty(card.ExternalCardID) && !string.IsNullOrEmpty(card.ExternalSystemUrl))
 							{
-								CardUpdated(card, itemsUpdated, boardConfig);							
-				            }
-				            catch (Exception e)
-				            {
-					            Log.Error("Exception for CardUpdated: " + e.Message);
-				            }
+								// try to grab id from url
+								var pos = card.ExternalSystemUrl.LastIndexOf('=');
+								if (pos > 0)
+									card.ExternalCardID = card.ExternalSystemUrl.Substring(pos + 1);
+							}
+
+							if (string.IsNullOrEmpty(card.ExternalCardID)) continue; // still invalid; skip this card
+
+							if (card.IsBlocked != cardBlockedEvent.BlockedCard.IsBlocked)
+								itemsUpdated.Add("Blocked");
+
+							if (itemsUpdated.Count <= 0) continue;
+							CardUpdated(card, itemsUpdated, boardConfig);
+						}
+						catch (Exception e)
+						{
+							var card = cardBlockedEvent.BlockedCard ?? new Card();
+							string.Format("Error processing blocked card, [{0}]: {1}", card.Id, e.Message).Error(e);
 						}
 					}
 				}
@@ -599,30 +596,29 @@ namespace IntegrationService.Targets
 					var itemsUpdated = new List<string>();
 					foreach (var cardUnblockedEvent in eventArgs.UnBlockedCards) 
 					{
-						var card = cardUnblockedEvent.UnBlockedCard;
-						if (string.IsNullOrEmpty(card.ExternalCardID) && !string.IsNullOrEmpty(card.ExternalSystemUrl)) 
+						try
 						{
-							// try to grab id from url
-							var pos = card.ExternalSystemUrl.LastIndexOf('=');
-							if (pos > 0)
-								card.ExternalCardID = card.ExternalSystemUrl.Substring(pos + 1);
-						}
-
-						if (string.IsNullOrEmpty(card.ExternalCardID)) continue; // still invalid; skip this card
-
-						if (card.IsBlocked != cardUnblockedEvent.UnBlockedCard.IsBlocked)
-							itemsUpdated.Add("Blocked");
-
-						if (itemsUpdated.Count > 0)
-						{
-							try
+							var card = cardUnblockedEvent.UnBlockedCard;
+							if (string.IsNullOrEmpty(card.ExternalCardID) && !string.IsNullOrEmpty(card.ExternalSystemUrl))
 							{
-								CardUpdated(card, itemsUpdated, boardConfig);
+								// try to grab id from url
+								var pos = card.ExternalSystemUrl.LastIndexOf('=');
+								if (pos > 0)
+									card.ExternalCardID = card.ExternalSystemUrl.Substring(pos + 1);
 							}
-				            catch (Exception e)
-				            {
-					            Log.Error("Exception for CardUpdated: " + e.Message);
-				            }
+
+							if (string.IsNullOrEmpty(card.ExternalCardID)) continue; // still invalid; skip this card
+
+							if (card.IsBlocked != cardUnblockedEvent.UnBlockedCard.IsBlocked)
+								itemsUpdated.Add("Blocked");
+
+							if (itemsUpdated.Count <= 0) continue;
+							CardUpdated(card, itemsUpdated, boardConfig);
+						}
+						catch (Exception e)
+						{
+							var card = cardUnblockedEvent.UnBlockedCard ?? new Card();
+							string.Format("Error processing unblocked card, [{0}]: {1}", card.Id, e.Message).Error(e);
 						}
 					}					
 				}
@@ -639,19 +635,16 @@ namespace IntegrationService.Targets
 				Log.Info("Checking for added cards.");
 				if (eventArgs.AddedCards.Any())
 				{
-					foreach (CardAddEvent cardAddEvent in eventArgs.AddedCards)
+					foreach (var newCard in eventArgs.AddedCards.Select(cardAddEvent => cardAddEvent.AddedCard)
+						.Where(newCard => newCard != null && string.IsNullOrEmpty(newCard.ExternalCardID)))
 					{
-						var newCard = cardAddEvent.AddedCard;
-						if (newCard != null && string.IsNullOrEmpty(newCard.ExternalCardID))
+						try
 						{
-							try
-							{
-								CreateNewItem(newCard, boardConfig);
-							}
-				            catch (Exception e)
-				            {
-					            Log.Error("Exception for CreateNewItem: " + e.Message);
-				            }
+							CreateNewItem(newCard, boardConfig);
+						}
+						catch (Exception e)
+						{
+							string.Format("Error processing newly created card, [{0}]: {1}", newCard.Id, e.Message).Error(e);
 						}
 					}
 				}
@@ -667,33 +660,39 @@ namespace IntegrationService.Targets
 			UpdateBoardVersion(boardId);
 
 			Log.Debug("Checking for cards moved to mapped lanes.");
-			foreach (var movedCardEvent in eventArgs.MovedCards.Where(x => x != null && x.ToLane != null)) 
+			foreach (var movedCardEvent in eventArgs.MovedCards.Where(x => x != null && x.ToLane != null && x.MovedCard != null))
 			{
-                if (movedCardEvent.ToLane.Id.HasValue)
-                {
-	                if (boardConfig.LaneToStatesMap.Any() &&
-	                    boardConfig.LaneToStatesMap.ContainsKey(movedCardEvent.ToLane.Id.Value))
-	                {
-		                var states = boardConfig.LaneToStatesMap[movedCardEvent.ToLane.Id.Value];
-		                if (states != null && states.Count > 0)
-		                {
-			                try
-			                {
-				                UpdateStateOfExternalItem(movedCardEvent.MovedCard, states, boardConfig);
-							} 
-							catch (Exception e) 
+				try
+				{
+					if (!movedCardEvent.ToLane.Id.HasValue) continue;
+					
+					if (boardConfig.LaneToStatesMap.Any() &&
+					    boardConfig.LaneToStatesMap.ContainsKey(movedCardEvent.ToLane.Id.Value))
+					{
+						var states = boardConfig.LaneToStatesMap[movedCardEvent.ToLane.Id.Value];
+						if (states != null && states.Count > 0)
+						{
+							try
+							{
+								UpdateStateOfExternalItem(movedCardEvent.MovedCard, states, boardConfig);
+							}
+							catch (Exception e)
 							{
 								Log.Error("Exception for UpdateStateOfExternalItem: " + e.Message);
 							}
-		                }
+						}
 						else
-							Log.Debug(String.Format("No states are mapped to the Lane [{0}]", movedCardEvent.ToLane.Id.Value));		         
-	                }
-	                else
-	                {
-						Log.Debug(String.Format("No states are mapped to the Lane [{0}]", movedCardEvent.ToLane.Id.Value));		                
-	                }
-                }
+							Log.Debug(String.Format("No states are mapped to the Lane [{0}]", movedCardEvent.ToLane.Id.Value));
+					}
+					else
+					{
+						Log.Debug(String.Format("No states are mapped to the Lane [{0}]", movedCardEvent.ToLane.Id.Value));
+					}
+				}
+				catch (Exception e)
+				{
+					string.Format("Error processing moved card, [{0}]: {1}", movedCardEvent.MovedCard.Id, e.Message).Error(e);
+				}
 			}
 		}
 
