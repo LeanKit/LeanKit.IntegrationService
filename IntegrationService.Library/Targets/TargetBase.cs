@@ -674,7 +674,11 @@ namespace IntegrationService.Targets
 						{
 							try
 							{
-								UpdateStateOfExternalItem(movedCardEvent.MovedCard, states, boardConfig);
+								if (!string.IsNullOrEmpty(movedCardEvent.MovedCard.ExternalCardID))
+									UpdateStateOfExternalItem(movedCardEvent.MovedCard, states, boardConfig);
+								else if (boardConfig.CreateTargetItems) 
+									// This may be a task card being moved to the parent board, or card being moved from another board
+									CreateNewItem(movedCardEvent.MovedCard, boardConfig);
 							}
 							catch (Exception e)
 							{
