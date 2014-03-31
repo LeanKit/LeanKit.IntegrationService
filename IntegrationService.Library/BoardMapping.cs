@@ -36,6 +36,7 @@ namespace IntegrationService
 		public bool UpdateTargetItems { get; set; }
 		public bool CreateTargetItems { get; set; }
 		public bool TagCardsWithTargetSystemName { get; set; }
+		public long DefaultCardCreationLaneId { get; set; }
 
 		// populated by app
 		public string ExcludedTypeQuery { get; set; }
@@ -48,6 +49,32 @@ namespace IntegrationService
 			return (from lane in LaneToStatesMap 
 					where lane.Value.Any(val => val.Equals(state, StringComparison.OrdinalIgnoreCase)) 
 					select lane.Key).ToList();
+		}
+
+		public List<long> LanesFromState(string state, bool creationEvent)
+		{
+			// identify all valid lanes for card creation
+			var validNonChildLaneIds = ValidLanes.Where(x => x.HasChildLanes.Equals(false))
+				.Select(x => x.Id).ToArray();
+
+			// identify all mapped lanes for this state
+			var mappedLaneIds = (from lane in LaneToStatesMap
+				where lane.Value.Any(val => val.Equals(state, StringComparison.OrdinalIgnoreCase))
+				select lane.Key).ToArray();
+
+			// identify all valid mapped lanes
+			var validMappedLaneIds = (validNonChildLaneIds.Intersect(mappedLaneIds)).ToList();
+
+			// in case no valid mapped lanes exist but the DefaultCardCreationLane is specified, add it
+			// otherwise, add first valid non-mapped lane
+			if (!validMappedLaneIds.Any())
+			{
+				validMappedLaneIds = (DefaultCardCreationLaneId > 0)
+					? new List<long> {DefaultCardCreationLaneId}
+					: new List<long> {validNonChildLaneIds.First()};
+			}
+
+			return validMappedLaneIds;
 		}
 
 		public override string ToString() 
@@ -104,7 +131,8 @@ namespace IntegrationService
 			sb.AppendLine("     UpdateCards :                   " + UpdateCards);
 			sb.AppendLine("     UpdateCardLanes :               " + UpdateCardLanes);
 			sb.AppendLine("     UpdateTargetItems :             " + UpdateTargetItems);
-			return sb.ToString();
+            sb.AppendLine("     DefaultCardCreationLaneId :             " + DefaultCardCreationLaneId);
+            return sb.ToString();
 		}
 	}
 }
