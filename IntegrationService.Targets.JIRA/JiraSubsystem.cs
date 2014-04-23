@@ -159,7 +159,7 @@ namespace IntegrationService.Targets.JIRA
 						var updatedDescription = updatedCard.Description;
 						if (!string.IsNullOrEmpty(updatedDescription)) 
 						{
-							updatedDescription = updatedDescription.Replace("<p>", "").Replace("</p>", "");
+							updatedDescription = updatedDescription.Replace("<p>", "").Replace("</p>", "").Replace("\n", "\\n");
 						}
 						updateJson += ", \"description\": \"" + updatedDescription + "\"";
 						isDirty = true;
@@ -728,7 +728,7 @@ namespace IntegrationService.Targets.JIRA
 			string json = "{ \"fields\": { ";
 			json += "\"project\":  { \"key\": \"" + boardMapping.Identity.Target + "\" }";
 			json += ", \"summary\": \"" + card.Title + "\" ";
-			json += ", \"description\": \"" + (card.Description != null ? card.Description.Replace("</p>", "").Replace("<p>", "") : "") + "\" ";
+			json += ", \"description\": \"" + (card.Description != null ? card.Description.Replace("</p>", "").Replace("<p>", "").Replace("\n","\\n") : "") + "\" ";
 			json += ", \"issuetype\": { \"name\": \"" + jiraIssueType + "\" }";
 			json += ", \"priority\": { \"name\": \"" + GetPriority(card.Priority) + "\" }";
 
