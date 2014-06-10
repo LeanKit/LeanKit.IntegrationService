@@ -9,9 +9,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using IntegrationService.Util;
+using Microsoft.ProjectServer.Client;
+using Microsoft.SharePoint.Client;
+using Wictor.Office365;
 using net.sf.mpxj;
 using net.sf.mpxj.ExtensionMethods;
 using net.sf.mpxj.reader;
+using Task = net.sf.mpxj.Task;
 
 namespace IntegrationService.Targets.MicrosoftProject
 {
@@ -20,16 +24,16 @@ namespace IntegrationService.Targets.MicrosoftProject
 	    protected string FolderPath;
 	    protected string FilePath;
 		protected string File;
+        protected string ProjectServerUrl;
+        protected MsOnlineClaimsHelper ClaimsHelper;
 
         public ConnectionResult Connect(string protocol, string host, string user, string password)
         {
 			string.Format("Connecting to Microsoft Project '{0}'", host).Debug();
 
-	        if (protocol.ToLowerInvariant().StartsWith("folder path"))
-	        {
+	        if (protocol.ToLowerInvariant().StartsWith("folder path")) {
 		        FolderPath = host;
-	        } else if (protocol.ToLowerInvariant().StartsWith("file"))
-	        {
+	        } else if (protocol.ToLowerInvariant().StartsWith("file")) {
 		        FilePath = host;
 	        }
 
@@ -64,11 +68,27 @@ namespace IntegrationService.Targets.MicrosoftProject
 				}
 			}
 	        else
-	        {
-		        // connect to project server
-				return ConnectionResult.InvalidUrl;
-	        }
-
+			{
+                if (string.IsNullOrEmpty(host))
+                    return ConnectionResult.InvalidUrl;
+			    try
+			    {
+			        ProjectServerUrl = protocol + host;
+			        ClaimsHelper = new MsOnlineClaimsHelper(ProjectServerUrl, user, password);
+			        using (ClientContext context = new ClientContext(ProjectServerUrl))
+			        {
+			            context.ExecutingWebRequest += ClaimsHelper.clientContext_ExecutingWebRequest;
+			            context.Load(context.Web);
+			            context.ExecuteQuery();
+			            //Console.WriteLine("Name of the web is: " + context.Web.Title);
+			        }
+			    }
+			    catch (Exception ex)
+			    {
+                    ex.Message.Debug();
+			        return ConnectionResult.FailedToConnect;
+			    }
+			}
 	        return ConnectionResult.Success;
         }
 
@@ -133,9 +153,22 @@ namespace IntegrationService.Targets.MicrosoftProject
 				                     ));
 		        }
 	        }
-	        else
+	        else if (!string.IsNullOrEmpty(ProjectServerUrl) && ClaimsHelper != null)
 	        {
-		        // connect to project server
+                using (ProjectContext projContext = new ProjectContext(ProjectServerUrl))
+                {
+                    projContext.ExecutingWebRequest += ClaimsHelper.clientContext_ExecutingWebRequest;
+
+                    // Get the list of published projects in Project Web App.
+                    projContext.Load(projContext.Projects);
+                    projContext.ExecuteQuery();
+
+                    foreach (PublishedProject pubProj in projContext.Projects)
+                    {
+                        projects.Add(new Project(pubProj.Id.ToString(), pubProj.Name));
+                        //Console.WriteLine("\n\t{0}\n\t{1} : {2}", pubProj.Id.ToString(), pubProj.Name, pubProj.CreatedDate.ToString());
+                    }                    
+                }
 	        }
 
 	        return projects;
@@ -300,6 +333,10 @@ namespace IntegrationService.Targets.MicrosoftProject
 					}
 				}
 			}
+            else if (!string.IsNullOrEmpty(ProjectServerUrl))
+            {
+                // get task types from Project Server
+            }
 			return taskTypes;
 		}
 
