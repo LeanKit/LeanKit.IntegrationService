@@ -6,9 +6,13 @@ using System.Threading;
 using IntegrationService.Util;
 using LeanKit.API.Client.Library;
 using LeanKit.API.Client.Library.TransferObjects;
+using Microsoft.ProjectServer.Client;
+using Microsoft.SharePoint.Client;
+using Wictor.Office365;
 using net.sf.mpxj;
 using net.sf.mpxj.ExtensionMethods;
 using net.sf.mpxj.reader;
+using File = System.IO.File;
 using Task = net.sf.mpxj.Task;
 
 namespace IntegrationService.Targets.MicrosoftProject 
@@ -31,82 +35,137 @@ namespace IntegrationService.Targets.MicrosoftProject
 			Log.Debug("Initializing Microsoft Project integration...");
 		}
 
+        // TODO: create local Task object and map the MPXJ task object to the local task. Same for Project Server
+        // Then we can refactor some of the code below to get the tasks from either system and then act on them.
+
 		protected override void Synchronize(BoardMapping boardMapping) 
 		{
 			Log.Debug("Polling Microsoft Project for Tasks");
 
 			string filePath = "";
+		    string projectServerUrl = "";
 			if (Configuration.Target.Protocol.ToLowerInvariant().StartsWith("file"))
 			{
 				filePath = Configuration.Target.Host;
 			}
 			else if (Configuration.Target.Protocol.ToLowerInvariant().StartsWith("folder path"))
 			{
-				filePath = Path.Combine(Configuration.Target.Host, boardMapping.Identity.Target);
+			    filePath = Path.Combine(Configuration.Target.Host, boardMapping.Identity.Target);
 			}
-
-			if (!File.Exists(filePath))
+			else if (!(string.IsNullOrEmpty(Configuration.Target.Host)))
 			{
-				Log.Error(string.Format("File {0} does not exist.", filePath));
+			    projectServerUrl = Configuration.Target.Protocol + Configuration.Target.Host;
 			}
 
-			ProjectReader reader = ProjectReaderUtility.getProjectReader(filePath);
-			ProjectFile mpx = reader.read(filePath);
+            var futureDate = DateTime.Now.AddDays(boardMapping.QueryDaysOut);
+            var importFields = GetImportFields(boardMapping);
+            var startDates = importFields.GetTargetFieldsFor(LeanKitField.StartDate);
 
-			var futureDate = DateTime.Now.AddDays(boardMapping.QueryDaysOut);
+            List<Task> tasks = new List<Task>();
 
-			var importFields = GetImportFields(boardMapping);
+		    if (!string.IsNullOrEmpty(filePath))
+		    {
+		        if (!File.Exists(filePath))
+		        {
+		            Log.Error(string.Format("File {0} does not exist.", filePath));
+		        }
 
-			var startDates = importFields.GetTargetFieldsFor(LeanKitField.StartDate);
+		        ProjectReader reader = ProjectReaderUtility.getProjectReader(filePath);
+		        ProjectFile mpx = reader.read(filePath);
 
-			// for now we'll only get child tasks. 
-			// TODO: add tasks as a card, add any child tasks to a taskboard on the card?
-			var tasks = (from Task task in mpx.AllTasks.ToIEnumerable() 
-								where ((1 == 1) 
-									&& FilterTasks(task, boardMapping.Filters)
-									&& ((startDates.Contains("Start") && task.Start != null && task.Start.ToDateTime() < futureDate)
-										|| (startDates.Contains("BaselineStart") && task.BaselineStart != null && task.BaselineStart.ToDateTime() < futureDate)
-										|| (startDates.Contains("EarlyStart") && task.EarlyStart != null && task.EarlyStart.ToDateTime() < futureDate)))
-									&& (task.Summary || task.Milestone) 
-									&& (task.ChildTasks == null || task.ChildTasks.isEmpty())
-								select task).ToList();
+		        // for now we'll only get child tasks. 
+		        // TODO: add tasks as a card, add any child tasks to a taskboard on the card?
+		        var mtasks = (from net.sf.mpxj.Task task in mpx.AllTasks.ToIEnumerable()
+		                     where ((1 == 1)
+		                            && FilterTasks(task, boardMapping.Filters)
+		                            &&
+		                            ((startDates.Contains("Start") && task.Start != null &&
+		                              task.Start.ToDateTime() < futureDate)
+		                             ||
+		                             (startDates.Contains("BaselineStart") && task.BaselineStart != null &&
+		                              task.BaselineStart.ToDateTime() < futureDate)
+		                             ||
+		                             (startDates.Contains("EarlyStart") && task.EarlyStart != null &&
+		                              task.EarlyStart.ToDateTime() < futureDate)))
+		                           && (task.Summary || task.Milestone)
+		                           && (task.ChildTasks == null || task.ChildTasks.isEmpty())
+		                     select task).ToList();
 
-			if (!tasks.Any())
-			{
-				Log.Info("No tasks start within target date range.");
-				return;
-			}
+		        if (!mtasks.Any())
+		        {
+		            Log.Info("No tasks start within target date range.");
+		            return;
+		        }
 
-			Log.Info("\nQueried [{0}] at {1} for tasks starting before {2}", mpx.ProjectHeader.Name, QueryDate, futureDate);
+		        foreach (var mtask in mtasks)
+		        {
+		            tasks.Add(mtask.ToTask());
+		        }
 
-			foreach (var task in tasks) 
-			{
-				if (task.UniqueID.intValue() > 0) 
-				{
-					Log.Info("Task [{0}]: {1}, {2}, {3}", task.UniqueID.ToString(), task.Name, "", task.ResourceGroup);
+		        Log.Info("\nQueried [{0}] at {1} for tasks starting before {2}", mpx.ProjectHeader.Name, QueryDate, futureDate);
+		    }
+            else if (!string.IsNullOrEmpty(projectServerUrl))
+            {
+                var claimsHelper = new MsOnlineClaimsHelper(projectServerUrl, Configuration.Target.User, Configuration.Target.Protocol);
+                using (ProjectContext projContext = new ProjectContext(projectServerUrl))
+                {
+                    projContext.ExecutingWebRequest += claimsHelper.clientContext_ExecutingWebRequest;
 
-					//does this task have a corresponding card?
-					var card = LeanKit.GetCardByExternalId(boardMapping.Identity.LeanKit, task.UniqueID.ToString());
+                    // Get the list of published projects in Project Web App.
+                    projContext.Load(projContext.Projects);
+                    projContext.ExecuteQuery();
 
-					if (card == null || card.ExternalSystemName != ServiceName) 
-					{
-						Log.Debug("Create new card for Task [{0}]", task.UniqueID.ToString());
-						CreateCardFromTask(boardMapping, task, importFields);
-					} 
-					else 
-					{
-						Log.Debug("Previously created a card for Task [{0}]", task.UniqueID.ToString());
-							if (boardMapping.UpdateCards)
-								TaskUpdated(task, card, boardMapping, importFields);
-							else
-								Log.Info("Skipped card update because 'UpdateCards' is disabled.");
-					}
-				}
-			}
-			Log.Info("{0} item(s) queried.\n", tasks.Count);
+                    foreach (var task in projContext.Projects[0].Tasks)
+                    {
+                        //var tasks = (from Task task in mpx.AllTasks.ToIEnumerable()
+                        //             where ((1 == 1)
+                        //                    && FilterTasks(task, boardMapping.Filters)
+                        //                    &&
+                        //                    ((startDates.Contains("Start") && task.Start != null &&
+                        //                      task.Start.ToDateTime() < futureDate)
+                        //                     ||
+                        //                     (startDates.Contains("BaselineStart") && task.BaselineStart != null &&
+                        //                      task.BaselineStart.ToDateTime() < futureDate)
+                        //                     ||
+                        //                     (startDates.Contains("EarlyStart") && task.EarlyStart != null &&
+                        //                      task.EarlyStart.ToDateTime() < futureDate)))
+                        //                   && (task.Summary || task.Milestone)
+                        //                   && (task.ChildTasks == null || task.ChildTasks.isEmpty())
+                        //             select task).ToList();
+                    }
+                }
+
+            }
+
+            foreach (var task in tasks)
+            {
+                if (task.UniqueId > 0)
+                {
+                    Log.Info("Task [{0}]: {1}, {2}, {3}", task.UniqueId.ToString(), task.Name, "", task.ResourceGroup);
+
+                    //does this task have a corresponding card?
+                    var card = LeanKit.GetCardByExternalId(boardMapping.Identity.LeanKit, task.UniqueId.ToString());
+
+                    if (card == null || card.ExternalSystemName != ServiceName)
+                    {
+                        Log.Debug("Create new card for Task [{0}]", task.UniqueId.ToString());
+                        CreateCardFromTask(boardMapping, task, importFields);
+                    }
+                    else
+                    {
+                        Log.Debug("Previously created a card for Task [{0}]", task.UniqueId.ToString());
+                        if (boardMapping.UpdateCards)
+                            TaskUpdated(task, card, boardMapping, importFields);
+                        else
+                            Log.Info("Skipped card update because 'UpdateCards' is disabled.");
+                    }
+                }
+            }
+
+            Log.Info("{0} item(s) queried.\n", tasks.Count);
 		}
 
-		private bool FilterTasks(Task task, List<Filter> filters)
+		private bool FilterTasks(net.sf.mpxj.Task task, List<Filter> filters)
 		{
 			if (!filters.Any())
 				return true;
@@ -115,7 +174,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 			       && FilterExcludeTasks(task, filters.Where(x => x.FilterType == FilterType.Exclude).ToList());
 		}
 
-		private bool FilterIncludeTasks(Task task, List<Filter> filters)
+		private bool FilterIncludeTasks(net.sf.mpxj.Task task, List<Filter> filters)
 		{
 			// Include filters are ANDed - the task must meet all the include requirements
 			// For example: Text3 must equal true AND Text5 must equal ToLeanKit
@@ -134,7 +193,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 			return true;		
 		}
 
-		private bool FilterExcludeTasks(Task task, List<Filter> filters)
+		private bool FilterExcludeTasks(net.sf.mpxj.Task task, List<Filter> filters)
 		{
 			// Exclude filters are ORed - it any exclude is matched then the task is not imported
 			// For example: given 2 excludes Text2 = false, Text7 = exclude. If either is the case 
@@ -170,7 +229,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 				TypeId = mappedCardType.Id,
 				TypeName = mappedCardType.Name,
 				LaneId = laneId,
-				ExternalCardID = task.UniqueID.ToString(),
+				ExternalCardID = task.UniqueId.ToString(),
 				ExternalSystemName = ServiceName				
 			};
 
@@ -233,7 +292,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 			{
 				var assignedUserIds = new List<long>();
 
-				var emails = task.ResourceAssignments.ToIEnumerable<ResourceAssignment>()
+				var emails = task.ResourceAssignments
 				                       .Where(x => x != null && 
 												   x.Resource != null && 
 												   !string.IsNullOrEmpty(x.Resource.EmailAddress))
@@ -256,7 +315,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 					card.AssignedUserIds = assignedUserIds.ToArray();
 			}
 
-			Log.Info("Creating a card of type [{0}] for Task [{1}] on Board [{2}] on Lane [{3}]", mappedCardType.Name, task.UniqueID.toString(), boardId, laneId);
+			Log.Info("Creating a card of type [{0}] for Task [{1}] on Board [{2}] on Lane [{3}]", mappedCardType.Name, task.UniqueId.ToString(), boardId, laneId);
 
 			CardAddResult cardAddResult = null;
 
@@ -266,7 +325,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 			{
 				if (tries > 0) 
 				{
-					Log.Error(string.Format("Attempting to create card for Task [{0}] attempt number [{1}]", task.UniqueID.toString(),
+					Log.Error(string.Format("Attempting to create card for Task [{0}] attempt number [{1}]", task.UniqueId.ToString(),
 											 tries));
 					// wait 5 seconds before trying again
 					Thread.Sleep(new TimeSpan(0, 0, 5));
@@ -282,12 +341,12 @@ namespace IntegrationService.Targets.MicrosoftProject
 			}
 			card.Id = cardAddResult.CardId;
 
-			Log.Info("Created a card [{0}] of type [{1}] for Task [{2}] on Board [{3}] on Lane [{4}]", card.Id, mappedCardType.Name, task.UniqueID.toString(), boardId, laneId);
+			Log.Info("Created a card [{0}] of type [{1}] for Task [{2}] on Board [{3}] on Lane [{4}]", card.Id, mappedCardType.Name, task.UniqueId.ToString(), boardId, laneId);
 		}
 
 		private void TaskUpdated(Task task, Card card, BoardMapping boardMapping, Dictionary<LeanKitField, List<string>> importFields) 
 		{
-			Log.Info("Task [{0}] updated, comparing to corresponding card...", task.UniqueID.toString());
+			Log.Info("Task [{0}] updated, comparing to corresponding card...", task.UniqueId.ToString());
 
 			long boardId = boardMapping.Identity.LeanKit;
 
@@ -406,7 +465,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 			if (task.ResourceAssignments != null) 
 			{
 
-				var emails = task.ResourceAssignments.ToIEnumerable<ResourceAssignment>()
+				var emails = task.ResourceAssignments
 									   .Where(x => x != null &&
 												   x.Resource != null &&
 												   !string.IsNullOrEmpty(x.Resource.EmailAddress))

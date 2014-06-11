@@ -110,7 +110,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 						ProjectFile mpx = reader.read(projectFile);
 
 						// Get the top level task
-						var topTask = (from Task task in mpx.AllTasks.ToIEnumerable()
+						var topTask = (from net.sf.mpxj.Task task in mpx.AllTasks.ToIEnumerable()
 									   where task.ID.intValue() == 0
 									   select task).FirstOrDefault();
 
@@ -134,7 +134,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 		        ProjectFile mpx = reader.read(FilePath);
 
 		        // Get the top level task
-		        var topTask = (from Task task in mpx.AllTasks.ToIEnumerable()
+		        var topTask = (from net.sf.mpxj.Task task in mpx.AllTasks.ToIEnumerable()
 		                       where task.ID.intValue() == 0
 		                       select task).FirstOrDefault();
 
@@ -302,7 +302,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 					ProjectFile mpx = reader.read(projectFile);
 
 					// add types and states
-					var projTaskTypes = (from Task task in mpx.AllTasks.ToIEnumerable<Task>()
+					var projTaskTypes = (from net.sf.mpxj.Task task in mpx.AllTasks.ToIEnumerable<Task>()
 										 select task.GetText(field))
 										 .Where(x => !string.IsNullOrEmpty(x))
 										 .Distinct()
@@ -322,7 +322,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 					ProjectFile mpx = reader.read(FilePath);
 
 					// add types and states
-					var projTaskTypes = (from Task task in mpx.AllTasks.ToIEnumerable<Task>()
+					var projTaskTypes = (from net.sf.mpxj.Task task in mpx.AllTasks.ToIEnumerable<Task>()
 										 select task.GetText(field))
 										 .Where(x => !string.IsNullOrEmpty(x))
 										 .Distinct()
@@ -333,9 +333,20 @@ namespace IntegrationService.Targets.MicrosoftProject
 					}
 				}
 			}
-            else if (!string.IsNullOrEmpty(ProjectServerUrl))
+            else if (!string.IsNullOrEmpty(ProjectServerUrl) && ClaimsHelper != null)
             {
-                // get task types from Project Server
+                using (var projContext = new ProjectContext(ProjectServerUrl))
+                {
+                    //projContext.ExecutingWebRequest += ClaimsHelper.clientContext_ExecutingWebRequest;
+                    //projContext.Load(projContext.Projects.Where());
+                    //projContext.ExecuteQuery();
+
+                    //foreach (PublishedProject pubProj in projContext.Projects)
+                    //{
+                    //    projects.Add(new Project(pubProj.Id.ToString(), pubProj.Name));
+                    //    //Console.WriteLine("\n\t{0}\n\t{1} : {2}", pubProj.Id.ToString(), pubProj.Name, pubProj.CreatedDate.ToString());
+                    //}
+                }
             }
 			return taskTypes;
 		}
