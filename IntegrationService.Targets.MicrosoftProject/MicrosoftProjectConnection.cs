@@ -159,6 +159,9 @@ namespace IntegrationService.Targets.MicrosoftProject
                 {
                     projContext.ExecutingWebRequest += ClaimsHelper.clientContext_ExecutingWebRequest;
 
+                    projContext.Load(projContext.Web);
+                    projContext.ExecuteQuery();
+ 
                     // Get the list of published projects in Project Web App.
                     projContext.Load(projContext.Projects);
                     projContext.ExecuteQuery();
