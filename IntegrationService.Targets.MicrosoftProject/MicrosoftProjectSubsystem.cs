@@ -13,7 +13,6 @@ using net.sf.mpxj;
 using net.sf.mpxj.ExtensionMethods;
 using net.sf.mpxj.reader;
 using File = System.IO.File;
-using Task = net.sf.mpxj.Task;
 
 namespace IntegrationService.Targets.MicrosoftProject 
 {
@@ -106,54 +105,78 @@ namespace IntegrationService.Targets.MicrosoftProject
 		    }
             else if (!string.IsNullOrEmpty(projectServerUrl))
             {
-                var claimsHelper = new MsOnlineClaimsHelper(projectServerUrl, Configuration.Target.User, Configuration.Target.Protocol);
+                var claimsHelper = new MsOnlineClaimsHelper(projectServerUrl, Configuration.Target.User, Configuration.Target.Password);
                 using (ProjectContext projContext = new ProjectContext(projectServerUrl))
                 {
                     projContext.ExecutingWebRequest += claimsHelper.clientContext_ExecutingWebRequest;
 
+					projContext.Load(projContext.Web);
+					projContext.ExecuteQuery();
+
                     // Get the list of published projects in Project Web App.
-                    projContext.Load(projContext.Projects);
+
+                    var projects = projContext.LoadQuery(projContext.Projects);
                     projContext.ExecuteQuery();
 
-                    foreach (var task in projContext.Projects[0].Tasks)
-                    {
-                        //var tasks = (from Task task in mpx.AllTasks.ToIEnumerable()
-                        //             where ((1 == 1)
-                        //                    && FilterTasks(task, boardMapping.Filters)
-                        //                    &&
-                        //                    ((startDates.Contains("Start") && task.Start != null &&
-                        //                      task.Start.ToDateTime() < futureDate)
-                        //                     ||
-                        //                     (startDates.Contains("BaselineStart") && task.BaselineStart != null &&
-                        //                      task.BaselineStart.ToDateTime() < futureDate)
-                        //                     ||
-                        //                     (startDates.Contains("EarlyStart") && task.EarlyStart != null &&
-                        //                      task.EarlyStart.ToDateTime() < futureDate)))
-                        //                   && (task.Summary || task.Milestone)
-                        //                   && (task.ChildTasks == null || task.ChildTasks.isEmpty())
-                        //             select task).ToList();
-                    }
-                }
+	                var projectId = Guid.Parse(boardMapping.Identity.Target);
+	                var project = projects.FirstOrDefault(x => x.Id == projectId);
 
+	                var isScheduledStart = startDates.Contains("Start");
+	                var isBaselineStart = startDates.Contains("BaselineStart");
+	                var isEarlyStart = startDates.Contains("EarlyStart");
+	                var isLateStart = startDates.Contains("LateStart");
+
+					if (project != null)
+					{
+						var ts = project.Tasks;
+						projContext.Load(ts);
+						projContext.ExecuteQuery();
+
+						//TODO : add back in task filter
+						// FilterTasks(t, boardMapping.Filters) &&
+
+						var filteredTasks = 
+							projContext.LoadQuery(
+								ts.IncludeWithDefaultProperties(task => 
+									task.Assignments.IncludeWithDefaultProperties(assignment => assignment.Resource))
+								.Where(t => 
+									(((isScheduledStart && t.ScheduledStart < futureDate)
+										||
+									  (isBaselineStart && t.BaselineStart < futureDate)
+										||
+									  (isEarlyStart && t.EarliestStart < futureDate)
+										||
+									  (isLateStart && t.LatestStart < futureDate))
+									 && t.IsActive
+									 && (t.IsSummary || t.IsMilestone || !t.IsSubProject)
+									 )));
+						projContext.ExecuteQuery();
+
+						foreach (var task in filteredTasks) {
+							tasks.Add(task.ToTask());
+						}
+					}
+
+                }
             }
 
             foreach (var task in tasks)
             {
-                if (task.UniqueId > 0)
+                if (!string.IsNullOrEmpty(task.UniqueId))
                 {
-                    Log.Info("Task [{0}]: {1}, {2}, {3}", task.UniqueId.ToString(), task.Name, "", task.ResourceGroup);
+                    Log.Info("Task [{0}]: {1}, {2}, {3}", task.UniqueId, task.Name, "", task.ResourceGroup);
 
                     //does this task have a corresponding card?
-                    var card = LeanKit.GetCardByExternalId(boardMapping.Identity.LeanKit, task.UniqueId.ToString());
+                    var card = LeanKit.GetCardByExternalId(boardMapping.Identity.LeanKit, task.UniqueId);
 
                     if (card == null || card.ExternalSystemName != ServiceName)
                     {
-                        Log.Debug("Create new card for Task [{0}]", task.UniqueId.ToString());
+                        Log.Debug("Create new card for Task [{0}]", task.UniqueId);
                         CreateCardFromTask(boardMapping, task, importFields);
                     }
                     else
                     {
-                        Log.Debug("Previously created a card for Task [{0}]", task.UniqueId.ToString());
+                        Log.Debug("Previously created a card for Task [{0}]", task.UniqueId);
                         if (boardMapping.UpdateCards)
                             TaskUpdated(task, card, boardMapping, importFields);
                         else
@@ -172,6 +195,14 @@ namespace IntegrationService.Targets.MicrosoftProject
 
 			return FilterIncludeTasks(task, filters.Where(x => x.FilterType == FilterType.Include).ToList())
 			       && FilterExcludeTasks(task, filters.Where(x => x.FilterType == FilterType.Exclude).ToList());
+		}
+
+		private bool FilterTasks(Microsoft.ProjectServer.Client.PublishedTask task, List<Filter> filters) {
+			if (!filters.Any())
+				return true;
+
+			return FilterIncludeTasks(task, filters.Where(x => x.FilterType == FilterType.Include).ToList())
+				   && FilterExcludeTasks(task, filters.Where(x => x.FilterType == FilterType.Exclude).ToList());
 		}
 
 		private bool FilterIncludeTasks(net.sf.mpxj.Task task, List<Filter> filters)
@@ -193,6 +224,22 @@ namespace IntegrationService.Targets.MicrosoftProject
 			return true;		
 		}
 
+		private bool FilterIncludeTasks(Microsoft.ProjectServer.Client.PublishedTask task, List<Filter> filters) {
+			// Include filters are ANDed - the task must meet all the include requirements
+			// For example: Text3 must equal true AND Text5 must equal ToLeanKit
+			if (!filters.Any())
+				return true;
+
+			foreach (var filter in filters) {
+//				var res = task.GetText(filter.TargetFieldName);
+//				if (res != null && !string.IsNullOrEmpty(res) && !string.IsNullOrEmpty(filter.FilterValue)) {
+//					if (res.ToLowerInvariant() != filter.FilterValue.ToLowerInvariant())
+//						return false;
+//				}
+			}
+			return true;
+		}
+
 		private bool FilterExcludeTasks(net.sf.mpxj.Task task, List<Filter> filters)
 		{
 			// Exclude filters are ORed - it any exclude is matched then the task is not imported
@@ -210,6 +257,25 @@ namespace IntegrationService.Targets.MicrosoftProject
 				}
 			}
 			return true;				
+		}
+
+		private bool FilterExcludeTasks(Microsoft.ProjectServer.Client.PublishedTask task, List<Filter> filters) 
+		{
+			// Exclude filters are ORed - it any exclude is matched then the task is not imported
+			// For example: given 2 excludes Text2 = false, Text7 = exclude. If either is the case 
+			// then the item will not be imported.
+			if (!filters.Any())
+				return true;
+
+			foreach (var filter in filters) 
+			{
+//				var res = task.GetText(filter.TargetFieldName);
+//				if (res != null && !string.IsNullOrEmpty(res) && !string.IsNullOrEmpty(filter.FilterValue)) {
+//					if (res.ToLowerInvariant() == filter.FilterValue.ToLowerInvariant())
+//						return false;
+//				}
+			}
+			return true;
 		}
 
 		private void CreateCardFromTask(BoardMapping project, Task task, Dictionary<LeanKitField, List<string>> importFields) 
@@ -292,16 +358,15 @@ namespace IntegrationService.Targets.MicrosoftProject
 			{
 				var assignedUserIds = new List<long>();
 
-				var emails = task.ResourceAssignments
+				var resources = task.ResourceAssignments
 				                       .Where(x => x != null && 
-												   x.Resource != null && 
-												   !string.IsNullOrEmpty(x.Resource.EmailAddress))
-									   .Select(x => x.Resource.EmailAddress)
+												   x.Resource != null)
+									   .Select(x => x.Resource)
 									   .ToList();
 
-				foreach (var email in emails)
+				foreach (var resource in resources)
 				{
-					var assignedUserId = CalculateAssignedUserId(boardId, email);
+					var assignedUserId = CalculateAssignedUserId(boardId, resource);
 					if (assignedUserId > 0)
 					{
 						if (!assignedUserIds.Contains(assignedUserId))
@@ -465,15 +530,14 @@ namespace IntegrationService.Targets.MicrosoftProject
 			if (task.ResourceAssignments != null) 
 			{
 
-				var emails = task.ResourceAssignments
+				var resources = task.ResourceAssignments
 									   .Where(x => x != null &&
-												   x.Resource != null &&
-												   !string.IsNullOrEmpty(x.Resource.EmailAddress))
-									   .Select(x => x.Resource.EmailAddress)
+												   x.Resource != null)
+									   .Select(x => x.Resource)
 									   .ToList();
 
-				foreach (var email in emails) {
-					var assignedUserId = CalculateAssignedUserId(boardId, email);
+				foreach (var resource in resources) {
+					var assignedUserId = CalculateAssignedUserId(boardId, resource);
 					if (assignedUserId > 0) 
 					{
 						if (!assignedUserIds.Contains(assignedUserId)) 
@@ -518,17 +582,21 @@ namespace IntegrationService.Targets.MicrosoftProject
 			Log.Debug(String.Format("TODO: Create a Task from Card [{0}]", card.Id));
 		}
 
-		private long CalculateAssignedUserId(long boardId, string emailAddress)
+		private long CalculateAssignedUserId(long boardId, Resource resource)
 		{
 			long userId = 0;
 
-			if (!string.IsNullOrEmpty(emailAddress))
-			{
-				var lkUser = LeanKit.GetBoard(boardId).BoardUsers.FirstOrDefault(x => x != null &&
-											(((!String.IsNullOrEmpty(x.EmailAddress)) && x.EmailAddress.ToLowerInvariant() == emailAddress.ToLowerInvariant())));
-				if (lkUser != null)
-					userId = lkUser.Id;				
-			}
+			if (resource == null)
+				return userId;
+
+			if (string.IsNullOrEmpty(resource.EmailAddress) && string.IsNullOrEmpty(resource.Name))
+				return userId;
+
+			var lkUser = LeanKit.GetBoard(boardId).BoardUsers.FirstOrDefault(x => x != null &&
+											((!String.IsNullOrEmpty(x.EmailAddress) && !string.IsNullOrEmpty(resource.EmailAddress) && x.EmailAddress.ToLowerInvariant() == resource.EmailAddress.ToLowerInvariant())
+											|| (!String.IsNullOrEmpty(x.FullName) && !string.IsNullOrEmpty(resource.Name) && x.FullName.ToLowerInvariant() == resource.Name.ToLowerInvariant())));
+			if (lkUser != null)
+				userId = lkUser.Id;				
 
 			return userId;
 		}

@@ -324,12 +324,15 @@ namespace IntegrationService.Targets.MicrosoftProject
                 newTask.BaselineStart = task.BaselineStart.ToNullableDateTime();
                 newTask.EarlyStart = task.EarlyStart.ToNullableDateTime();
                 newTask.Start = task.Start.ToNullableDateTime();
+	            newTask.BaselineFinish = task.BaselineFinish.ToNullableDateTime();
+	            newTask.EarlyFinish = task.EarlyFinish.ToNullableDateTime();
+	            newTask.Finish = task.Finish.ToNullableDateTime();
                 newTask.Hyperlink = task.Hyperlink;
                 newTask.Milestone = task.Milestone;
                 newTask.Name = task.Name;
                 newTask.Notes = task.Notes;
                 newTask.Summary = task.Summary;
-                newTask.UniqueId = task.UniqueID.intValue();
+                newTask.UniqueId = task.UniqueID.intValue().ToString();
                 newTask.Priority = task.Priority.Value;
                 newTask.BaselineWork = task.BaselineWork.Duration;
                 newTask.Work = task.Work.Duration;
@@ -363,6 +366,58 @@ namespace IntegrationService.Targets.MicrosoftProject
 
             return newTask;
         }
+
+		private static DateTime? ToNullableDate(this DateTime date)
+		{
+			if (date > new DateTime(1002, 1, 1))
+				return date;
+			return null;
+		}
+
+		public static Task ToTask(this Microsoft.ProjectServer.Client.PublishedTask task) 
+		{
+			var newTask = new Task();
+
+			if (task != null) {
+				newTask.BaselineStart = task.BaselineStart.ToNullableDate();
+				newTask.EarlyStart = task.EarliestStart.ToNullableDate();
+				newTask.Start = task.ScheduledStart.ToNullableDate();
+				newTask.BaselineFinish = task.BaselineFinish.ToNullableDate();
+				newTask.EarlyFinish = task.EarliestFinish.ToNullableDate();
+				newTask.Finish = task.ScheduledFinish.ToNullableDate();
+				newTask.Hyperlink = "";
+				newTask.Milestone = task.IsMilestone;
+				newTask.Name = task.Name;
+				newTask.Notes = task.Notes;
+				newTask.Summary = task.IsSummary;
+				newTask.UniqueId = task.Id.ToString();
+				newTask.Priority = task.Priority;
+				newTask.BaselineWork = 0; // task.BaselineWork;
+				newTask.Work = 0; // task.RegularWork;
+				newTask.Cost = task.BudgetCost;
+				newTask.BaselineCost = task.BaselineCost;
+
+//				if (!task.ChildTasks.isEmpty()) {
+//					foreach (net.sf.mpxj.Task childTask in task.ChildTasks.ToIEnumerable()) {
+//						newTask.ChildTasks.Add(childTask.ToTask());
+//					}
+//				}
+
+				if (task.Assignments.Any()) {
+					foreach (var assignment in task.Assignments) {
+						newTask.ResourceAssignments.Add(new ResourceAssignment() { Resource = new Resource() { EmailAddress = assignment.Resource.Email, Name = assignment.Resource.Name } });
+					}
+				}
+
+//				for (int i = 1; i <= 20; i++) {
+//					var val = task.getText(i);
+//					if (!string.IsNullOrEmpty(val))
+//						newTask.Text[i] = task.getText(i);
+//				}
+			}
+
+			return newTask;
+		}
 
 		private static int GetTargetTextFieldNumber(this String textField)
 		{

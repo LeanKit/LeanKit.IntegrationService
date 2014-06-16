@@ -7,9 +7,15 @@ namespace IntegrationService.Targets.MicrosoftProject
 {
     public class Task
     {
+		public Task()
+		{
+			ResourceAssignments = new List<ResourceAssignment>();
+			ChildTasks = new List<Task>();
+		}
+
         public string Name { get; set; }
         public string Notes { get; set; }
-        public int UniqueId { get; set; }
+        public string UniqueId { get; set; }
         public DateTime? Start { get; set; }
         public DateTime? BaselineStart { get; set; }
         public DateTime? EarlyStart { get; set; }
@@ -24,8 +30,8 @@ namespace IntegrationService.Targets.MicrosoftProject
         public string ResourceGroup { get; set; }
         public string[] Text { get; set; }
         public int Priority { get; set; }
-        public float Cost { get; set; }
-        public float BaselineCost { get; set; }
+        public double Cost { get; set; }
+        public double BaselineCost { get; set; }
         public double Work { get; set; }
         public double BaselineWork { get; set; }
 
@@ -45,6 +51,7 @@ namespace IntegrationService.Targets.MicrosoftProject
 
     public class Resource
     {
+		public string Name { get; set; }
         public string EmailAddress { get; set; }
     }
 }
