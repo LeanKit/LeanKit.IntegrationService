@@ -170,9 +170,15 @@ namespace IntegrationService.API
 
 			"Getting list of projects...".Debug();
 
-			var projects = target.GetProjects();
-
-			return OK(projects);
+			try
+			{
+				var projects = target.GetProjects();
+				return OK(projects);
+			}
+			catch (Exception ex)
+			{
+				return ServerError(ex.Message);
+			}
 		}
 
 		public object Get(TaskTypesRequest request)
@@ -191,8 +197,15 @@ namespace IntegrationService.API
 
 				if (request.Field.ToLowerInvariant() != "none")
 				{
-					var taskTypes = ((IConfigurableConnection) target).GetTaskTypes(request.Project, request.Field);
-					return OK(taskTypes);
+					try
+					{
+						var taskTypes = ((IConfigurableConnection) target).GetTaskTypes(request.Project, request.Field);
+						return OK(taskTypes);
+					}
+					catch (Exception ex)
+					{
+						return ServerError(ex.Message);
+					}
 				}
 			}
 
