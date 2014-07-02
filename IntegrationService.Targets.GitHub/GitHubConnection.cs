@@ -129,7 +129,9 @@ namespace IntegrationService.Targets.GitHub
 					{
 						break;
 					}
-				}					
+				} else {
+					throw new ApplicationException("Error reading projects: " + reposResponse.StatusCode + " - " + reposResponse.StatusDescription + ". " + reposResponse.Content);
+				}				
 			} while (totalCount > pageNumber * pageSize);
 
 			return projects;
@@ -187,6 +189,8 @@ namespace IntegrationService.Targets.GitHub
 					} else {
 						break;
 					}
+				} else {
+					throw new ApplicationException("Error reading projects: " + reposResponse.StatusCode + " - " + reposResponse.StatusDescription + ". " + reposResponse.Content);
 				}
 			} while (totalCount > pageNumber * pageSize);
 

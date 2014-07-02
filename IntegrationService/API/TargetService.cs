@@ -136,9 +136,12 @@ namespace IntegrationService.API
 
 			"Getting list of projects...".Debug();
 
-			var projects = target.GetProjects();
-
-			return OK(projects);
+			try {
+				var projects = target.GetProjects();
+				return OK(projects);
+			} catch (Exception ex) {
+				return ServerError(ex.Message);
+			}
 		}
 	}
 }
