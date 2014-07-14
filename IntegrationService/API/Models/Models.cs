@@ -91,13 +91,13 @@ namespace IntegrationService.API.Models
                 .ForMember(m => m.LeanKitType, opt => opt.MapFrom(s => s.LeanKit))
                 .ForMember(m => m.TargetType, opt => opt.MapFrom(s => s.Target));
 
-            Mapper.CreateMap<BoardMapping, BoardMappingModel>()
-                .ForMember(m => m.Id, opt => opt.MapFrom(s => s.Identity.LeanKit))
-                .ForMember(m => m.BoardId, opt => opt.MapFrom(s => s.Identity.LeanKit))
-                .ForMember(m => m.TargetProjectId, opt => opt.MapFrom(s => s.Identity.Target))
-                .ForMember(m => m.TypeMap, opt=>opt.MapFrom(s=>s.Types))
-                .ForMember(m => m.TargetProjectName, opt=>opt.MapFrom(s=>s.Identity.TargetName))
-	              .ForMember(m => m.Title, opt => opt.MapFrom(s => s.Identity.LeanKitTitle));
+	        Mapper.CreateMap<BoardMapping, BoardMappingModel>()
+		        .ForMember(m => m.Id, opt => opt.MapFrom(s => s.Identity.LeanKit))
+		        .ForMember(m => m.BoardId, opt => opt.MapFrom(s => s.Identity.LeanKit))
+		        .ForMember(m => m.TargetProjectId, opt => opt.MapFrom(s => s.Identity.Target))
+		        .ForMember(m => m.TypeMap, opt => opt.MapFrom(s => s.Types))
+		        .ForMember(m => m.TargetProjectName, opt => opt.MapFrom(s => s.Identity.TargetName))
+		        .ForMember(m => m.Title, opt => opt.MapFrom(s => s.Identity.LeanKitTitle));
 
             Mapper.CreateMap<BoardMappingModel, BoardMapping>()
                 .ForMember(m => m.Identity, opt => opt.ResolveUsing(board => new Identity { LeanKit = board.BoardId, LeanKitTitle = board.Title, Target = board.TargetProjectId, TargetName = board.TargetProjectName }))
@@ -107,7 +107,8 @@ namespace IntegrationService.API.Models
                 .ForMember(m => m.ExcludedTypeQuery, opt => opt.Ignore())
                 .ForMember(m => m.ValidLanes, opt => opt.Ignore())
                 .ForMember(m => m.ValidCardTypes, opt => opt.Ignore())
-                .ForMember(m => m.ArchiveLaneId, opt => opt.Ignore());
+                .ForMember(m => m.ArchiveLaneId, opt => opt.Ignore())
+				.ForMember(m => m.DefaultCardCreationLaneId, opt => opt.Ignore());
 
         }
 
