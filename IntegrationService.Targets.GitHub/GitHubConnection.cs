@@ -198,6 +198,8 @@ namespace IntegrationService.Targets.GitHub
 					} else {
 						break;
 					}
+				} else {
+					throw new ApplicationException("Error reading projects: " + reposResponse.StatusCode + " - " + reposResponse.StatusDescription + ". " + reposResponse.Content);
 				} 
 				else 
 				{

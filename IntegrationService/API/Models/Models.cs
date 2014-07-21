@@ -187,7 +187,8 @@ namespace IntegrationService.API.Models
                 .ForMember(m => m.ExcludedTypeQuery, opt => opt.Ignore())
                 .ForMember(m => m.ValidLanes, opt => opt.Ignore())
                 .ForMember(m => m.ValidCardTypes, opt => opt.Ignore())
-                .ForMember(m => m.ArchiveLaneId, opt => opt.Ignore());
+                .ForMember(m => m.ArchiveLaneId, opt => opt.Ignore())
+				.ForMember(m => m.DefaultCardCreationLaneId, opt => opt.Ignore());
 
         }
 

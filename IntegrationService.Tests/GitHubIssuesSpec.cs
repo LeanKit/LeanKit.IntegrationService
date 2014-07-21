@@ -651,6 +651,7 @@ namespace IntegrationService.Tests.GitHub.Issues
 			_testCardAddResult1.CardId = 1;
 			_mapping.Identity.LeanKit = _testBoard.Id;
 			_mapping.LaneToStatesMap.Add(1, new List<string> { "open" });
+			_mapping.QueryStates = new List<string> { "Open", "Closed" };
 			TestConfig = Test<Configuration>.Item;
 			TestConfig.PollingFrequency = 5000;
 			TestConfig.Mappings = new List<BoardMapping> {_mapping};
@@ -697,11 +698,15 @@ namespace IntegrationService.Tests.GitHub.Issues
 					StatusCode = HttpStatusCode.OK
 				};
 
-			MockRestClient.Setup(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/1/issues") && y.Method == Method.GET))).Returns(restResponse1);
+			var noRestResponse = new RestResponse() {StatusCode = HttpStatusCode.OK, Content = ""};
+
+			MockRestClient.Setup(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/1/issues") && y.Method == Method.GET && y.Parameters[0].Value.ToString() == "Open"))).Returns(restResponse1);
+			MockRestClient.Setup(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/1/issues") && y.Method == Method.GET && y.Parameters[0].Value.ToString() != "Open"))).Returns(noRestResponse);
 			MockLeanKitApi.Setup(x => x.GetCardByExternalId(1, It.IsAny<string>())).Returns((Card)null);
 			MockLeanKitApi.Setup(x => x.AddCard(1, It.IsAny<Card>(), It.IsAny<string>())).Returns(_testCardAddResult1);
-			
-			MockRestClient.Setup(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/2/issues") && y.Method == Method.GET))).Returns(restResponse1);
+
+			MockRestClient.Setup(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/2/issues") && y.Method == Method.GET && y.Parameters[0].Value.ToString() == "Open"))).Returns(restResponse1);
+			MockRestClient.Setup(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/2/issues") && y.Method == Method.GET && y.Parameters[0].Value.ToString() != "Open"))).Returns(noRestResponse);
 			MockLeanKitApi.Setup(x => x.GetCardByExternalId(2, It.IsAny<string>())).Returns((Card)null);
 			MockLeanKitApi.Setup(x => x.AddCard(2, It.IsAny<Card>(), It.IsAny<string>())).Returns(_testCardAddResult1);
 			
@@ -711,15 +716,18 @@ namespace IntegrationService.Tests.GitHub.Issues
 					StatusCode = HttpStatusCode.OK
 				};
 
-			MockRestClient.Setup(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/3/issues") && y.Method == Method.GET))).Returns(restResponse3);
+			MockRestClient.Setup(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/3/issues") && y.Method == Method.GET && y.Parameters[0].Value.ToString() == "Open"))).Returns(restResponse3);
+			MockRestClient.Setup(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/3/issues") && y.Method == Method.GET && y.Parameters[0].Value.ToString() != "Open"))).Returns(noRestResponse);
 			MockLeanKitApi.Setup(x => x.GetCardByExternalId(3, It.IsAny<string>())).Returns((Card)null);
 			MockLeanKitApi.Setup(x => x.AddCard(3, It.IsAny<Card>(), It.IsAny<string>())).Returns(_testCardAddResult1);
-			
-			MockRestClient.Setup(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/4/issues") && y.Method == Method.GET))).Returns(restResponse1);
+
+			MockRestClient.Setup(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/4/issues") && y.Method == Method.GET && y.Parameters[0].Value.ToString() == "Open"))).Returns(restResponse1);
+			MockRestClient.Setup(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/4/issues") && y.Method == Method.GET && y.Parameters[0].Value.ToString() != "Open"))).Returns(noRestResponse);
 			MockLeanKitApi.Setup(x => x.GetCardByExternalId(4, It.IsAny<string>())).Returns(new Card() { Id = 4, ExternalSystemName = "GitHub"});
 			MockLeanKitApi.Setup(x => x.AddCard(4, It.IsAny<Card>(), It.IsAny<string>())).Returns(_testCardAddResult1);
 
-			MockRestClient.Setup(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/5/issues") && y.Method == Method.GET))).Returns(restResponse1);
+			MockRestClient.Setup(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/5/issues") && y.Method == Method.GET && y.Parameters[0].Value.ToString() == "Open"))).Returns(restResponse1);
+			MockRestClient.Setup(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/5/issues") && y.Method == Method.GET && y.Parameters[0].Value.ToString() != "Open"))).Returns(noRestResponse);
 			MockLeanKitApi.Setup(x => x.GetCardByExternalId(5, It.IsAny<string>())).Returns(new Card() { Id = 4, ExternalSystemName = "GitHubby" });
 			MockLeanKitApi.Setup(x => x.AddCard(5, It.IsAny<Card>(), It.IsAny<string>())).Returns(_testCardAddResult1);
 		}
@@ -740,7 +748,7 @@ namespace IntegrationService.Tests.GitHub.Issues
 			_mapping.Identity.LeanKit = 1;
 			_mapping.Identity.Target = "1";
 			((TestGitHubIssues) TestItem).Syncronize(_mapping);
-			MockRestClient.Verify(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/1/issues") && y.Method == Method.GET)), Times.Exactly(1));
+			MockRestClient.Verify(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/1/issues") && y.Method == Method.GET)), Times.Exactly(_mapping.QueryStates.Count));
 			MockLeanKitApi.Verify(x => x.AddCard(1, It.IsAny<Card>(), It.IsAny<string>()), Times.Exactly(1));
 		}
 
@@ -750,7 +758,7 @@ namespace IntegrationService.Tests.GitHub.Issues
 			_mapping.Identity.LeanKit = 2;
 			_mapping.Identity.Target = "2";
 			((TestGitHubIssues)TestItem).Syncronize(_mapping);
-			MockRestClient.Verify(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/2/issues") && y.Method == Method.GET)), Times.Exactly(1));
+			MockRestClient.Verify(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/2/issues") && y.Method == Method.GET)), Times.Exactly(_mapping.QueryStates.Count));
 			MockLeanKitApi.Verify(x => x.AddCard(2, It.IsAny<Card>(), It.IsAny<string>()), Times.Exactly(1));
 		}
 
@@ -760,7 +768,7 @@ namespace IntegrationService.Tests.GitHub.Issues
 			_mapping.Identity.LeanKit = 3;
 			_mapping.Identity.Target = "3";
 			((TestGitHubIssues)TestItem).Syncronize(_mapping);
-			MockRestClient.Verify(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/3/issues") && y.Method == Method.GET)), Times.Exactly(1));
+			MockRestClient.Verify(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/3/issues") && y.Method == Method.GET)), Times.Exactly(_mapping.QueryStates.Count));
 			MockLeanKitApi.Verify(x => x.AddCard(3, It.IsAny<Card>(), It.IsAny<string>()), Times.Exactly(3));
 		}
 
@@ -770,7 +778,7 @@ namespace IntegrationService.Tests.GitHub.Issues
 			_mapping.Identity.LeanKit = 4;
 			_mapping.Identity.Target = "4";
 			((TestGitHubIssues)TestItem).Syncronize(_mapping);
-			MockRestClient.Verify(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/4/issues") && y.Method == Method.GET)), Times.Exactly(1));
+			MockRestClient.Verify(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/4/issues") && y.Method == Method.GET)), Times.Exactly(_mapping.QueryStates.Count));
 			MockLeanKitApi.Verify(x => x.AddCard(4, It.IsAny<Card>(), It.IsAny<string>()), Times.Never());
 		}
 
@@ -780,7 +788,7 @@ namespace IntegrationService.Tests.GitHub.Issues
 			_mapping.Identity.LeanKit = 5;
 			_mapping.Identity.Target = "5";
 			((TestGitHubIssues)TestItem).Syncronize(_mapping);
-			MockRestClient.Verify(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/5/issues") && y.Method == Method.GET)), Times.Exactly(1));
+			MockRestClient.Verify(x => x.Execute(It.Is<RestRequest>(y => y.Resource.Contains("/5/issues") && y.Method == Method.GET)), Times.Exactly(_mapping.QueryStates.Count));
 			MockLeanKitApi.Verify(x => x.AddCard(5, It.IsAny<Card>(), It.IsAny<string>()), Times.Exactly(1));
 		}
 	}

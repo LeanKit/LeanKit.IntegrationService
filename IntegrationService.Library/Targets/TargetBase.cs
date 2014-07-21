@@ -133,6 +133,7 @@ namespace IntegrationService.Targets
 		{
 			if (Configuration != null && Configuration.Mappings != null)
 			{
+				var pollingInSeconds = Configuration.PollingFrequency / 1000;
 				// pickup any changes since the last time the service ran
 				// start subscription to each board in board mappings			
 				foreach (var mapping in Configuration.Mappings)
@@ -140,7 +141,7 @@ namespace IntegrationService.Targets
 					CheckForMissedCardMoves(mapping);
 					try
 					{
-						Subscriptions.Subscribe(LeanKitAccount, mapping.Identity.LeanKit, BoardUpdate);
+						Subscriptions.Subscribe(LeanKitAccount, mapping.Identity.LeanKit, pollingInSeconds, BoardUpdate);
 					}
 					catch (Exception ex)
 					{

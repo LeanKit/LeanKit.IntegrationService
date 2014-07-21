@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using IntegrationService.Util;
 using LeanKit.API.Client.Library;
@@ -18,7 +19,7 @@ namespace IntegrationService
 {
     public interface IBoardSubscriptionManager
     {
-        ILeanKitApi Subscribe(LeanKitAccountAuth auth, long boardId,Action<long, BoardChangedEventArgs, ILeanKitApi> notification);
+        ILeanKitApi Subscribe(LeanKitAccountAuth auth, long boardId, int pollingFrequency, Action<long, BoardChangedEventArgs, ILeanKitApi> notification);
         void Unsubscribe(long boardId);
         void Shutdown();
     }
@@ -39,11 +40,12 @@ namespace IntegrationService
             internal ILeanKitIntegration Integration;
             internal readonly List<Action<long, BoardChangedEventArgs, ILeanKitApi>> Notifications = new List<Action<long, BoardChangedEventArgs, ILeanKitApi>>();
             
-            internal BoardSubscription(LeanKitAccountAuth auth, long boardId)
+            internal BoardSubscription(LeanKitAccountAuth auth, long boardId, int pollingFrequency)
             {
                 _boardId = boardId;
 				LkClientApi = new LeanKitClientFactory().Create(auth);
-				Integration = new LeanKitIntegrationFactory().Create(_boardId, auth);
+	            var settings = new IntegrationSettings {CheckForUpdatesIntervalSeconds = pollingFrequency};
+	            Integration = new LeanKitIntegrationFactory().Create(_boardId, auth, settings);
 
                 new Thread(WatchThread).Start();
             }
@@ -82,7 +84,7 @@ namespace IntegrationService
 	        }
         }
 
-        public ILeanKitApi Subscribe(LeanKitAccountAuth auth, long boardId, Action<long, BoardChangedEventArgs, ILeanKitApi> notification)
+        public ILeanKitApi Subscribe(LeanKitAccountAuth auth, long boardId, int pollingFrequency, Action<long, BoardChangedEventArgs, ILeanKitApi> notification)
         {
             if (notification == null)
             {
@@ -92,7 +94,7 @@ namespace IntegrationService
             {
                 if (!BoardSubscriptions.ContainsKey(boardId))
                 {
-	                BoardSubscriptions[boardId] = new BoardSubscription(auth, boardId);
+	                BoardSubscriptions[boardId] = new BoardSubscription(auth, boardId, pollingFrequency);
                 }
  
                 BoardSubscriptions[boardId].Notifications.Add(notification);

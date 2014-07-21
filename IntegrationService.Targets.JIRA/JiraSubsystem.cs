@@ -564,7 +564,7 @@ namespace IntegrationService.Targets.JIRA
 
         protected void UpdateStateOfExternalItem(Card card, List<string> states, BoardMapping mapping, bool runOnlyOnce)
 		{
-			if (!card.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase))
+			if (string.IsNullOrEmpty(card.ExternalSystemName) || !card.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase))
 				return;
 
 			if (string.IsNullOrEmpty(card.ExternalCardID)) 
