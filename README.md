@@ -2,7 +2,7 @@ Read the [LeanKit Integration Service Guide](https://support.leankit.com/entries
 
 The **LeanKit Integration Service** synchronizes items between a Target system and LeanKit.
 
-- Supported Target systems: Microsoft Team Foundation Server (TFS), JIRA, and GitHub
+- Supported Target systems: Visual Studio Online, Microsoft Team Foundation Server (TFS) 2010/2012/2013, JIRA 5.x+, and GitHub
 - Runs as a Windows service, or from command line for testing
 - One Target + LeanKit account per instance
 - Multiple Target projects / LeanKit boards per instance
