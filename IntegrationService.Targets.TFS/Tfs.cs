@@ -539,8 +539,8 @@ namespace IntegrationService.Targets.TFS
 					var tfsTagsArr = tfsTags.Split(',');
 					foreach (var tag in tfsTagsArr)
 					{
-						if (card.Tags.ToLowerInvariant().Contains(tag.ToLowerInvariant())) continue;
-						if (card.Tags == string.Empty)
+						if (card.Tags != null && card.Tags.ToLowerInvariant().Contains(tag.ToLowerInvariant())) continue;
+						if (string.IsNullOrEmpty(card.Tags))
 							card.Tags = tag;
 						else
 							card.Tags += "," + tag;
@@ -941,53 +941,40 @@ namespace IntegrationService.Targets.TFS
 
         public void LoadTfsUsers()
         {
-            if (_projectCollection == null)
-                return;
-            
-            try
+	        if (_projectCollection == null || Configuration == null) return;
+
+			try
             {
 				Log.Info("Loading TFS Users...");
                 var users = new List<Microsoft.TeamFoundation.Server.Identity>();
                 var iss = _projectCollection.GetService<ICommonStructureService>();
-                if (iss != null)
-                {
-                    var projects = iss.ListAllProjects();
-                    if (projects != null && projects.Any())
-                    {
-                        var gss = (IGroupSecurityService) _projectCollection.GetService(typeof (IGroupSecurityService));
-                        if (gss != null)
-                        {
-                            foreach (var project in projects)
-                            {
-                                var groupsInProject = gss.ListApplicationGroups(project.Uri);
-                                if (groupsInProject != null && groupsInProject.Any())
-                                {
-                                    foreach (var groupInProject in groupsInProject)
-                                    {
-                                        var pg = gss.ReadIdentity(SearchFactor.Sid, groupInProject.Sid,
-                                                                  QueryMembership.Expanded);
-                                        if (pg != null && pg.Members != null && pg.Members.Any())
-                                        {
-                                            foreach (var memberId in pg.Members)
-                                            {
-                                                var member = gss.ReadIdentity(SearchFactor.Sid, memberId,
-                                                                              QueryMembership.Expanded);
-                                                if (member != null && member.Type != IdentityType.ApplicationGroup)
-                                                {
-                                                    if (!users.Contains(member))
-                                                    {
-                                                        users.Add(member);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                _tfsUsers = users;
+				var gss = (IGroupSecurityService) _projectCollection.GetService(typeof (IGroupSecurityService));
+	            if (iss == null || gss == null)
+	            {
+		            _tfsUsers = users;
+		            return;
+	            }
+				foreach (var boardMapping in Configuration.Mappings)
+	            {
+					var project = _projectCollectionWorkItemStore.Projects[boardMapping.Identity.TargetName];
+					var groupsInProject = gss.ListApplicationGroups(project.Uri.ToString());
+					if (groupsInProject == null || !groupsInProject.Any()) continue;
+					foreach (var groupInProject in groupsInProject)
+					{
+						var pg = gss.ReadIdentity(SearchFactor.Sid, groupInProject.Sid, QueryMembership.Expanded);
+						if (pg == null || pg.Members == null || !pg.Members.Any()) continue;
+						foreach (var memberId in pg.Members)
+						{
+							var member = gss.ReadIdentity(SearchFactor.Sid, memberId, QueryMembership.Expanded);
+							if (member == null || member.Type == IdentityType.ApplicationGroup) continue;
+							if (!users.Contains(member))
+							{
+								users.Add(member);
+							}
+						}
+					}
+				}
+				_tfsUsers = users;
             }
             catch (Exception ex)
             {

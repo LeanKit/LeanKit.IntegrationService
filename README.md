@@ -18,12 +18,12 @@ The **LeanKit Integration Service** synchronizes items between a Target system a
 
 To build the LeanKit Integration Service from source, you will need the following:
 
+- Microsoft .NET 4.5, or higher
 - Visual Studio 2012 with Update 3, or higher
 - [node.js](http://nodejs.org/) and [Grunt](http://gruntjs.com/) -- to bundle and minify JavaScript files for *Release* builds
-- [Microsoft Visual Studio Team Explorer 2010](http://www.microsoft.com/en-us/download/details.aspx?id=329)\*
-- [Team Explorer for Microsoft Visual Studio 2012](http://www.microsoft.com/en-us/download/details.aspx?id=30656)\*
+- [Team Foundation Server 2013 Object Model Installer](http://visualstudiogallery.msdn.microsoft.com/3278bfa7-64a7-4a75-b0da-ec4ccb8d21b6)\*
 
-\* *If you do not need support for TFS, you can remove references to `IntegrationService.Targets.TFS` from your projects.*
+\* *If you do not need support for Visual Studio Online or Team Foundation Server, you can remove references to `IntegrationService.Targets.TFS` from your projects.*
 
 ### Configuring node.js
 
@@ -49,7 +49,7 @@ Visit [support.leankit.com](http://support.leankit.com).
 
 ## Copyright
 
-Copyright &copy; 2013 LeanKit Inc.
+Copyright &copy; 2013-2014 LeanKit Inc.
 
 ## License
 

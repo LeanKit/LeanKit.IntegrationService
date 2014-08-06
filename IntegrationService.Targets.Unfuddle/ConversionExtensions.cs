@@ -28,18 +28,14 @@ namespace IntegrationService.Targets.Unfuddle
 			switch (ticket.Priority) {
 				case 5:
 					return 3;
-					break;
 				case 4:
 					return 2;
-					break;
 				case 2:
 				case 1:
 					return 0;
-					break;
 				case 3:
 				default:
 					return 1;
-					break;
 			}
 		}
 
