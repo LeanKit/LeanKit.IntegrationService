@@ -466,9 +466,8 @@ namespace IntegrationService.Targets.JIRA
 
 	        var mappedCardType = issue.LeanKitCardType(project);
 
-	        long laneId = 0;
 	        var validLanes = project.LanesFromState(issue.Fields.Status.Name);
-	        laneId = validLanes.Any() ? validLanes.First() : project.DefaultCardCreationLaneId;
+	        var laneId = validLanes.Any() ? validLanes.First() : project.DefaultCardCreationLaneId;
 
 	        var card = new Card
                 {
