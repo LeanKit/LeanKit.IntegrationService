@@ -163,7 +163,7 @@ namespace IntegrationService.Targets.TFS
 
 			if (workItem.Fields.Contains("Tags") && workItem.Fields["Tags"] != null && workItem.Fields["Tags"].Value != null)
 			{
-				card.Tags = workItem.Fields["Tags"].Value.ToString();
+				card.Tags = workItem.Fields["Tags"].Value.ToString().Replace(";", ",");
 			}
 
             if (project.TagCardsWithTargetSystemName && (card.Tags == null || !card.Tags.Contains(ServiceName))) 
@@ -536,7 +536,7 @@ namespace IntegrationService.Targets.TFS
 				// with what is in TFS. Instead we can only add TFS tags to LK
 				if (!string.IsNullOrEmpty(tfsTags))
 				{
-					var tfsTagsArr = tfsTags.Split(',');
+					var tfsTagsArr = tfsTags.Contains(',') ? tfsTags.Split(',') : tfsTags.Split(';');
 					foreach (var tag in tfsTagsArr)
 					{
 						if (card.Tags != null && card.Tags.ToLowerInvariant().Contains(tag.ToLowerInvariant())) continue;
