@@ -205,18 +205,6 @@ namespace IntegrationService.Util
             XmlConfigurator.ConfigureAndWatch(domConfigFile);
         }
 
-        public static string DumpObject(object element)
-        {
-            return DumpObject(element, 0);
-        }
-
-        public static string DumpObject(object element, int depth)
-        {
-            TextWriter textWriter = new StringWriter();
-            ObjectDumper.Write(element, depth, textWriter);
-            return textWriter.ToString();
-        }
-
         #endregion
 
         #region Log methods
