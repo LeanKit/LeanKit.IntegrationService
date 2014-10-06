@@ -87,11 +87,21 @@ namespace IntegrationService.Targets.JIRA
 			_restClient = restClient;
 		}
 
-		public override void Init() 
+		public override void Init()
 		{
-			if (Configuration != null)
+			if (Configuration == null) return;
+
+			_externalUrlTemplate = Configuration.Target.Url + "/browse/{0}";
+
+			// per project, if exclusions are defined, build type filter to exclude them
+			foreach (var mapping in Configuration.Mappings)
 			{
-				_externalUrlTemplate = Configuration.Target.Url + "/browse/{0}";
+				mapping.ExcludedTypeQuery = "";
+				if (string.IsNullOrEmpty(mapping.Excludes)) continue;
+				Log.Debug("Excluded issue types for [{0}]: [{1}]", mapping.Identity.Target, mapping.Excludes);
+				var excludedTypes = mapping.Excludes.Split(',');
+
+				mapping.ExcludedTypeQuery = string.Format(" and issueType not in ({0})", string.Join(",", excludedTypes.Select(x => "'" + x.Trim() + "'").ToList()));
 			}
 		}
 
@@ -406,8 +416,12 @@ namespace IntegrationService.Targets.JIRA
 			}
 			else
 			{
-                var stateQuery = String.Format(" and ({0})", String.Join(" or ", project.QueryStates.Select(x => "status = '" + x.Trim() + "'").ToList()));
-				jqlQuery = string.Format("project=\"{0}\" {1} and updated > \"{2}\" order by created asc", project.Identity.Target, stateQuery, queryAsOfDate.ToString("yyyy/MM/dd HH:mm"));	
+                var queryFilter = string.Format(" and ({0})", string.Join(" or ", project.QueryStates.Select(x => "status = '" + x.Trim() + "'").ToList()));
+				if (!string.IsNullOrEmpty(project.ExcludedTypeQuery))
+				{
+					queryFilter += project.ExcludedTypeQuery;
+				}
+				jqlQuery = string.Format("project=\"{0}\" {1} and updated > \"{2}\" order by created asc", project.Identity.Target, queryFilter, queryAsOfDate.ToString("yyyy/MM/dd HH:mm"));	
 			}
 
 			//https://yoursite.atlassian.net/rest/api/latest/search?jql=project=%22More+Tests%22+and+status=%22open%22+and+created+%3E+%222008/12/31+12:00%22+order+by+created+asc&fields=id,status,priority,summary,description
