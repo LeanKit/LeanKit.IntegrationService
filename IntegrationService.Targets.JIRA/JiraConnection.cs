@@ -30,7 +30,7 @@ namespace IntegrationService.Targets.JIRA
 
         public ConnectionResult Connect(string host, string user, string password)
         {
-			_restClient.BaseUrl = host;
+			_restClient.BaseUrl = new Uri(host);
 			_restClient.Authenticator = new HttpBasicAuthenticator(user, password);
 
             try

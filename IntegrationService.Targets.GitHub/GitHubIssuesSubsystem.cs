@@ -27,7 +27,7 @@ namespace IntegrationService.Targets.GitHub
         {
 			_restClient = new RestClient
 				{
-					BaseUrl = "https://api.github.com",
+					BaseUrl = new Uri("https://api.github.com"),
 					Authenticator = new HttpBasicAuthenticator(Configuration.Target.User, Configuration.Target.Password)
 				};
         }

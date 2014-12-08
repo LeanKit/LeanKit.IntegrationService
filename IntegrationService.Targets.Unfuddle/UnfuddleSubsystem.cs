@@ -27,7 +27,7 @@ namespace IntegrationService.Targets.Unfuddle
         {
 			_restClient = new RestClient
 				{
-					BaseUrl = Configuration.Target.Url,
+					BaseUrl = new Uri(Configuration.Target.Url),
 					Authenticator = new HttpBasicAuthenticator(Configuration.Target.User, Configuration.Target.Password)
 				};
         }

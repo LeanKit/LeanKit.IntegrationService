@@ -31,7 +31,7 @@ namespace IntegrationService.Targets.GitHub
         public ConnectionResult Connect(string host, string user, string password)
         {
 	        Host = host;
-	        RestClient.BaseUrl = "https://api.github.com";
+	        RestClient.BaseUrl = new Uri("https://api.github.com");
 			RestClient.Authenticator = new HttpBasicAuthenticator(user, password);
             
 			try
