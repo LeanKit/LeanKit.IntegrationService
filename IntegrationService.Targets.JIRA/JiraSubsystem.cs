@@ -147,7 +147,7 @@ namespace IntegrationService.Targets.JIRA
 						updateEpicName = true;
 					}
 
-					updateJson += "\"summary\": \"" + issueToUpdate.Fields.Summary + "\"";
+					updateJson += "\"summary\": \"" + issueToUpdate.Fields.Summary.Replace("\"", "\\\"") + "\"";
 
 					if (updateEpicName) 
 					{
@@ -158,7 +158,7 @@ namespace IntegrationService.Targets.JIRA
 								var epicNameField = CustomFields.FirstOrDefault(x => x.Name == "Epic Name");
 								if (epicNameField != null)
 								{
-									updateJson += ", \"" + epicNameField.Id + "\": \"" + updatedCard.Title + "\"";
+									updateJson += ", \"" + epicNameField.Id + "\": \"" + updatedCard.Title.Replace("\"", "\\\"") + "\"";
 								}
 							}
 						}						
@@ -169,7 +169,7 @@ namespace IntegrationService.Targets.JIRA
 						var updatedDescription = updatedCard.Description;
 						if (!string.IsNullOrEmpty(updatedDescription)) 
 						{
-							updatedDescription = updatedDescription.Replace("<p>", "").Replace("</p>", "").Replace("\n", "\\n");
+							updatedDescription = updatedDescription.Replace("<p>", "").Replace("</p>", "").Replace("\r", "\\r").Replace("\n", "\\n").Replace("\"", "\\\"");
 						}
 						updateJson += ", \"description\": \"" + updatedDescription + "\"";
 						isDirty = true;
@@ -742,8 +742,8 @@ namespace IntegrationService.Targets.JIRA
 
 			string json = "{ \"fields\": { ";
 			json += "\"project\":  { \"key\": \"" + boardMapping.Identity.Target + "\" }";
-			json += ", \"summary\": \"" + card.Title + "\" ";
-			json += ", \"description\": \"" + (card.Description != null ? card.Description.Replace("</p>", "").Replace("<p>", "").Replace("\n","\\n") : "") + "\" ";
+			json += ", \"summary\": \"" + card.Title.Replace("\"", "\\\"") + "\" ";
+			json += ", \"description\": \"" + (card.Description != null ? card.Description.Replace("</p>", "").Replace("<p>", "").Replace("\r", "\\r").Replace("\n", "\\n").Replace("\"", "\\\"") : "") + "\" ";
 			json += ", \"issuetype\": { \"name\": \"" + jiraIssueType + "\" }";
 			json += ", \"priority\": { \"name\": \"" + GetPriority(card.Priority) + "\" }";
 
@@ -754,7 +754,7 @@ namespace IntegrationService.Targets.JIRA
 					var epicNameField = CustomFields.FirstOrDefault(x => x.Name == "Epic Name");
 					if (epicNameField != null)
 					{
-						json += ", \"" + epicNameField.Id + "\": \"" + card.Title + "\"";
+						json += ", \"" + epicNameField.Id + "\": \"" + card.Title.Replace("\"", "\\\"") + "\"";
 					}
 				}
 			}

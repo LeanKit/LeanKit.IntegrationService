@@ -91,7 +91,7 @@ namespace IntegrationService.Targets.GitHub
 
 					if (updatedItems.Contains("Title") && pullToUpdate.Title != updatedCard.Title) 
 					{
-						pullToUpdate.Title = updatedCard.Title;
+						pullToUpdate.Title = updatedCard.Title.Replace("\"", "\\\"");
 						isDirty = true;
 					}
 

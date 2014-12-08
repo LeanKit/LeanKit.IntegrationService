@@ -90,11 +90,11 @@ namespace IntegrationService.Targets.GitHub
 				        isDirty = true;
 			        }
 
-			        string updateJson = "{ \"title\": \"" + issueToUpdate.Title + "\"";
+					string updateJson = "{ \"title\": \"" + issueToUpdate.Title.Replace("\"", "\\\"") + "\"";
 
 			        if (updatedItems.Contains("Description") && issueToUpdate.Body.SanitizeCardDescription() != updatedCard.Description)
 			        {
-				        updateJson += ", \"body\": \"" + updatedCard.Description + "\"";
+						updateJson += ", \"body\": \"" + updatedCard.Description.Replace("\"", "\\\"") + "\"";
 				        isDirty = true;
 			        }
 
