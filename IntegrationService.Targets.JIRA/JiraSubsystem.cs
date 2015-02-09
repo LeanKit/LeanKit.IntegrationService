@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -22,7 +23,8 @@ namespace IntegrationService.Targets.JIRA
 	    private readonly IRestClient _restClient;
 		private string _externalUrlTemplate;
 	    private const string ServiceName = "JIRA";
-
+		private const string QueryDateFormat = "yyyy/MM/dd HH:mm";
+	        
 		private object _customFieldsLock = new object();
 
 	    private List<Field> _customFields; 
@@ -181,14 +183,19 @@ namespace IntegrationService.Targets.JIRA
 						isDirty = true;
 					}
 
-					if (updatedItems.Contains("DueDate")) 
+					if (updatedItems.Contains("DueDate") && CurrentUser != null) 
 					{
-						DateTime updatedDate;
-						var isDate = DateTime.TryParse(updatedCard.DueDate, out updatedDate);
-						if (isDate) 
+						try
 						{
-							updateJson += ", \"duedate\": \"" + updatedDate.ToString("o") + "\"";
-							isDirty = true;
+							var dateFormat = CurrentUser.DateFormat ?? "MM/dd/yyyy";
+							var parsed = DateTime.ParseExact(updatedCard.DueDate, dateFormat, CultureInfo.InvariantCulture);
+
+							updateJson += ", \"duedate\": \"" + parsed.ToString("o") + "\"";
+
+						}
+						catch (Exception ex)
+						{
+							Log.Warn(ex, "Could not parse due date: {0}", updatedCard.DueDate);
 						}
 					}
 
@@ -338,17 +345,14 @@ namespace IntegrationService.Targets.JIRA
 					saveCard = true;
 				}
 
-				if (issue.Fields.DueDate != null) 
+				if (issue.Fields.DueDate != null && CurrentUser != null) 
 				{
-					if (CurrentUser != null) 
+					var dateFormat = CurrentUser.DateFormat ?? "MM/dd/yyyy";
+					var dueDateString = issue.Fields.DueDate.Value.ToString(dateFormat, CultureInfo.InvariantCulture);
+					if (card.DueDate != dueDateString)
 					{
-						var dateFormat = CurrentUser.DateFormat ?? "MM/dd/yyyy";
-						var dueDateString = issue.Fields.DueDate.Value.ToString(dateFormat);
-						if (card.DueDate != dueDateString)
-						{
-							card.DueDate = dueDateString;
-							saveCard = true;
-						}
+						card.DueDate = dueDateString;
+						saveCard = true;
 					}
 				} 
 				else if (!string.IsNullOrEmpty(card.DueDate)) 
@@ -410,9 +414,10 @@ namespace IntegrationService.Targets.JIRA
 			var queryAsOfDate = QueryDate.AddMilliseconds(Configuration.PollingFrequency * -1.5);
 
 	        string jqlQuery;
-			if (!string.IsNullOrEmpty(project.Query))
-			{
-				jqlQuery = string.Format(project.Query, queryAsOfDate.ToString("yyyy/MM/dd hh:mm"));
+	        var formattedQueryDate = queryAsOfDate.ToString(QueryDateFormat, CultureInfo.InvariantCulture);
+	        if (!string.IsNullOrEmpty(project.Query))
+	        {
+				jqlQuery = string.Format(project.Query, formattedQueryDate);
 			}
 			else
 			{
@@ -421,7 +426,7 @@ namespace IntegrationService.Targets.JIRA
 				{
 					queryFilter += project.ExcludedTypeQuery;
 				}
-				jqlQuery = string.Format("project=\"{0}\" {1} and updated > \"{2}\" order by created asc", project.Identity.Target, queryFilter, queryAsOfDate.ToString("yyyy/MM/dd HH:mm"));	
+				jqlQuery = string.Format("project=\"{0}\" {1} and updated > \"{2}\" order by created asc", project.Identity.Target, queryFilter, formattedQueryDate);	
 			}
 
 			//https://yoursite.atlassian.net/rest/api/latest/search?jql=project=%22More+Tests%22+and+status=%22open%22+and+created+%3E+%222008/12/31+12:00%22+order+by+created+asc&fields=id,status,priority,summary,description
@@ -501,13 +506,10 @@ namespace IntegrationService.Targets.JIRA
 			if (assignedUserId != null)
 				card.AssignedUserIds = new[] { assignedUserId.Value };
 
-			if (issue.Fields != null && issue.Fields.DueDate != null)
+			if (issue.Fields != null && issue.Fields.DueDate != null && CurrentUser != null)
 			{
-				if (CurrentUser != null) 
-				{
-					var dateFormat = CurrentUser.DateFormat ?? "MM/dd/yyyy";
-					card.DueDate = issue.Fields.DueDate.Value.ToString(dateFormat);
-				}
+				var dateFormat = CurrentUser.DateFormat ?? "MM/dd/yyyy";
+				card.DueDate = issue.Fields.DueDate.Value.ToString(dateFormat, CultureInfo.InvariantCulture);
 			}
 
 			if (issue.Fields != null && issue.Fields.Labels != null && issue.Fields.Labels.Any()) 
@@ -759,13 +761,19 @@ namespace IntegrationService.Targets.JIRA
 				}
 			}
 
-			if (!string.IsNullOrEmpty(card.DueDate)) 
+			if (!string.IsNullOrEmpty(card.DueDate) && CurrentUser != null) 
 			{
-				DateTime updatedDate;
-				var isDate = DateTime.TryParse(card.DueDate, out updatedDate);
-				if (isDate) 
+				try
 				{
-					json += ", \"duedate\": \"" + updatedDate.ToString("o") + "\"";
+					var dateFormat = CurrentUser.DateFormat ?? "MM/dd/yyyy";
+					var parsed = DateTime.ParseExact(card.DueDate, dateFormat, CultureInfo.InvariantCulture);
+
+					json += ", \"duedate\": \"" + parsed.ToString("o") + "\"";
+					
+				}
+				catch (Exception ex)
+				{
+					Log.Warn(ex, "Could not parse due date: {0}", card.DueDate);
 				}
 			}
 
