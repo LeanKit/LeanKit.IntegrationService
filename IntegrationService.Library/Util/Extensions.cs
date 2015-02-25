@@ -7,6 +7,7 @@
 using System;
 using System.Globalization;
 using System.Reflection;
+using RestSharp;
 
 namespace IntegrationService.Util
 {
@@ -38,27 +39,32 @@ namespace IntegrationService.Util
 
 		public static void Info(this string message)
 		{
-			Log.Info(message);
+			if (message != null) Log.Info(message);
 		}
 
 		public static void Debug(this string message)
 		{
-			Log.Debug(message);
+			if (message != null) Log.Debug(message);
+		}
+
+		public static void Debug(this RestRequest request, IRestClient client)
+		{
+			Log.Debug("Attempting API: {0} {1}", request.Method, client.BaseUrl + request.Resource);
 		}
 
 		public static void Warn(this string message)
 		{
-			Log.Warn(message);
+			if (message != null) Log.Warn(message);
 		}
 
 		public static void Error(this string message)
 		{
-			Log.Error(message);
+			if (message != null) Log.Error(message);
 		}
 
 		public static void Error(this string message, Exception ex)
 		{
-			Log.Error(ex, message);
+			if (message != null) Log.Error(ex, message);
 		}
 	}
 }

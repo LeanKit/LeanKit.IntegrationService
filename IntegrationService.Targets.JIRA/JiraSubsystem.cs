@@ -23,8 +23,8 @@ namespace IntegrationService.Targets.JIRA
 	    private readonly IRestClient _restClient;
 		private string _externalUrlTemplate;
 	    private const string ServiceName = "JIRA";
-		private const string QueryDateFormat = "yyyy/MM/dd HH:mm";
-	        
+		private const string QueryDateFormat = "yyyy-MM-dd HH:mm";
+	    private string _sessionCookie;
 		private object _customFieldsLock = new object();
 
 	    private List<Field> _customFields; 
@@ -39,8 +39,8 @@ namespace IntegrationService.Targets.JIRA
 						if (_customFields == null)
 						{
 							_customFields = new List<Field>();
-							var request = new RestRequest(string.Format("/rest/api/latest/field"), Method.GET);
-							var jiraResp = _restClient.Execute(request);
+							var request = CreateRequest(string.Format("rest/api/latest/field"), Method.GET);
+							var jiraResp = ExecuteRequest(request);
 
 							if (jiraResp.StatusCode != HttpStatusCode.OK)
 							{
@@ -75,7 +75,7 @@ namespace IntegrationService.Targets.JIRA
 			_restClient = new RestClient
 				{
 					BaseUrl = new Uri(Configuration.Target.Url),
-					Authenticator = new HttpBasicAuthenticator(Configuration.Target.User, Configuration.Target.Password)
+					//Authenticator = new HttpBasicAuthenticator(Configuration.Target.User, Configuration.Target.Password)
 				};
         }
 
@@ -88,6 +88,56 @@ namespace IntegrationService.Targets.JIRA
 		{
 			_restClient = restClient;
 		}
+
+
+		public void AddSessionCookieToRequest(RestRequest request)
+		{
+			if (_sessionCookie == null) RefreshSessionCookie(Configuration.Target.Url, Configuration.Target.User, Configuration.Target.Password);
+			if (_sessionCookie != null) request.AddCookie("JSESSIONID", _sessionCookie);
+		}
+
+		private void RefreshSessionCookie(string host, string user, string password)
+		{
+			_sessionCookie = JiraConnection.GetSessionCookie(host, user, password);
+		}
+
+		private RestRequest CreateRequest(string resource, Method method)
+		{
+			var request = new RestRequest(resource, method);
+			AddSessionCookieToRequest(request);
+			return request;
+		}
+
+		private IRestResponse ExecuteRequest(RestRequest request)
+		{
+			request.Debug(_restClient);
+			return _restClient.Execute(request);
+		}
+
+		//private string GetSessionCookie(string host, string user, string password)
+		//{
+		//	string sessionCookie = null;
+		//	try
+		//	{
+		//		_restClient.BaseUrl = new Uri(host);
+		//		var request = new RestRequest("rest/auth/1/session", Method.POST);
+		//		request.AddJsonBody(new { username = user, password = password });
+		//		var response = ExecuteRequest(request);
+		//		if (response.StatusCode != HttpStatusCode.OK)
+		//		{
+		//			string.Format("Error connecting to {0}{1}", _restClient.BaseUrl, request.Resource).Error();
+		//			if (response.Content != null) response.Content.Error();
+		//			return null;
+		//		};
+		//		var cookie = response.Cookies.FirstOrDefault(c => c.Name.Equals("JSESSIONID", StringComparison.OrdinalIgnoreCase));
+		//		if (cookie != null) sessionCookie = cookie.Value;
+		//	}
+		//	catch (Exception ex)
+		//	{
+		//		"Error getting session using rest/auth/1/session.".Error(ex);
+		//	}
+		//	return sessionCookie;
+		//}
 
 		public override void Init()
 		{
@@ -122,8 +172,8 @@ namespace IntegrationService.Targets.JIRA
 			}
 
 			//https://yoursite.atlassian.net/rest/api/latest/issue/{issueIdOrKey}
-			var request = new RestRequest(string.Format("/rest/api/latest/issue/{0}", updatedCard.ExternalCardID), Method.GET);
-			var jiraResp = _restClient.Execute(request);
+			var request = CreateRequest(string.Format("rest/api/latest/issue/{0}", updatedCard.ExternalCardID), Method.GET);
+			var jiraResp = ExecuteRequest(request);
 
 			if (jiraResp.StatusCode != HttpStatusCode.OK)
 			{
@@ -235,10 +285,11 @@ namespace IntegrationService.Targets.JIRA
 						try
 						{
 							//https://yoursite.atlassian.net/rest/api/latest/issue/{issueIdOrKey}
-							var updateRequest = new RestRequest(string.Format("/rest/api/latest/issue/{0}", updatedCard.ExternalCardID),
+							var updateRequest = CreateRequest(string.Format("rest/api/latest/issue/{0}", updatedCard.ExternalCardID),
 							                                    Method.PUT);
 							updateRequest.AddParameter("application/json", updateJson, ParameterType.RequestBody);
-							var resp = _restClient.Execute(updateRequest);
+							
+							var resp = ExecuteRequest(updateRequest);
 
 							if (resp.StatusCode != HttpStatusCode.OK && resp.StatusCode != HttpStatusCode.NoContent)
 							{
@@ -262,12 +313,13 @@ namespace IntegrationService.Targets.JIRA
 					{
 						try {
 							//https://yoursite.atlassian.net/rest/api/latest/issue/{issueIdOrKey}
-							var updateRequest = new RestRequest(string.Format("/rest/api/latest/issue/{0}/comment", updatedCard.ExternalCardID), Method.POST);
+							var updateRequest = CreateRequest(string.Format("rest/api/latest/issue/{0}/comment", updatedCard.ExternalCardID), Method.POST);
 							updateRequest.AddParameter(
 									"application/json", 
 									"{ \"body\": \"" + comment + "\"}", 
 									ParameterType.RequestBody);
-							var resp = _restClient.Execute(updateRequest);
+
+							var resp = ExecuteRequest(updateRequest);
 
 							if (resp.StatusCode != HttpStatusCode.OK && 
 								resp.StatusCode != HttpStatusCode.NoContent && 
@@ -430,12 +482,13 @@ namespace IntegrationService.Targets.JIRA
 			}
 
 			//https://yoursite.atlassian.net/rest/api/latest/search?jql=project=%22More+Tests%22+and+status=%22open%22+and+created+%3E+%222008/12/31+12:00%22+order+by+created+asc&fields=id,status,priority,summary,description
-			var request = new RestRequest("/rest/api/latest/search", Method.GET);
+			var request = CreateRequest("rest/api/latest/search", Method.GET);
+
 			request.AddParameter("jql", jqlQuery);
 			request.AddParameter("fields", "id,status,priority,summary,description,issuetype,type,assignee,duedate,labels");
 	        request.AddParameter("maxResults", "9999");
 
-			var jiraResp = _restClient.Execute(request);
+			var jiraResp = ExecuteRequest(request);
 
 			if (jiraResp.StatusCode != HttpStatusCode.OK) 
 			{
@@ -607,8 +660,8 @@ namespace IntegrationService.Targets.JIRA
 				}
 
 				//https://yoursite.atlassian.net/rest/api/latest/issue/{issueIdOrKey}
-				var request = new RestRequest(string.Format("/rest/api/latest/issue/{0}", card.ExternalCardID), Method.GET);
-				var jiraResp = _restClient.Execute(request);
+				var request = CreateRequest(string.Format("rest/api/latest/issue/{0}", card.ExternalCardID), Method.GET);
+				var jiraResp = ExecuteRequest(request);
 
 				if (jiraResp.StatusCode != HttpStatusCode.OK)
 				{
@@ -663,8 +716,8 @@ namespace IntegrationService.Targets.JIRA
 					try
 					{
 						// first get a list of available transitions
-						var transitionsRequest = new RestRequest(string.Format("/rest/api/2/issue/{0}/transitions?expand=transitions.fields", card.ExternalCardID), Method.GET);
-						var transitionsResponse = _restClient.Execute(transitionsRequest);
+						var transitionsRequest = CreateRequest(string.Format("rest/api/2/issue/{0}/transitions?expand=transitions.fields", card.ExternalCardID), Method.GET);
+						var transitionsResponse = ExecuteRequest(transitionsRequest);
 
 						if (transitionsResponse.StatusCode != HttpStatusCode.OK)
 						{
@@ -706,9 +759,9 @@ namespace IntegrationService.Targets.JIRA
 								{
 									// go ahead and try to update the state of the issue in JIRA
 									//https://yoursite.atlassian.net/rest/api/latest/issue/{issueIdOrKey}/transitions?expand=transitions.fields
-									var updateRequest = new RestRequest(string.Format("/rest/api/latest/issue/{0}/transitions?expand=transitions.fields", card.ExternalCardID), Method.POST);
+									var updateRequest = CreateRequest(string.Format("rest/api/latest/issue/{0}/transitions?expand=transitions.fields", card.ExternalCardID), Method.POST);
 									updateRequest.AddParameter("application/json", "{ \"transition\": { \"id\": \"" + validTransition.Id + "\"}}", ParameterType.RequestBody);
-									var resp = _restClient.Execute(updateRequest);
+									var resp = ExecuteRequest(updateRequest);
 
 									if (resp.StatusCode != HttpStatusCode.OK && resp.StatusCode != HttpStatusCode.NoContent) 
 									{
@@ -799,9 +852,9 @@ namespace IntegrationService.Targets.JIRA
 			try 
 			{
 				//https://yoursite.atlassian.net/rest/api/latest/issue
-				var createRequest = new RestRequest("/rest/api/latest/issue", Method.POST);
+				var createRequest = CreateRequest("rest/api/latest/issue", Method.POST);
 				createRequest.AddParameter("application/json", json, ParameterType.RequestBody);
-				var resp = _restClient.Execute(createRequest);
+				var resp = ExecuteRequest(createRequest);
 
 				if (resp.StatusCode != HttpStatusCode.OK && resp.StatusCode != HttpStatusCode.Created) 
 				{

@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Net;
 using IntegrationService.Util;
@@ -17,6 +18,7 @@ namespace IntegrationService.Targets.JIRA
     public class JiraConnection : IConnection
     {
 	    private readonly IRestClient _restClient;
+	    private string _sessionCookie;
 
 		public JiraConnection()
 		{
@@ -31,28 +33,86 @@ namespace IntegrationService.Targets.JIRA
         public ConnectionResult Connect(string host, string user, string password)
         {
 			_restClient.BaseUrl = new Uri(host);
-			_restClient.Authenticator = new HttpBasicAuthenticator(user, password);
+			RefreshSessionCookie(host, user, password);
+	        return _sessionCookie == null ? ConnectionResult.FailedToConnect : ConnectionResult.Success;
 
-            try
-            {
-				//https://yoursite.atlassian.net/rest/api/2/serverInfo
-				var request = new RestRequest("/rest/api/2/serverInfo", Method.GET);
-				var jiraResp = _restClient.Execute(request);
+			//_restClient.BaseUrl = new Uri(host);
+			//// _restClient.Authenticator = new HttpBasicAuthenticator(user, password);
 
-	            if (jiraResp.StatusCode != HttpStatusCode.OK)
-	            {
-					//var serializer = new JsonSerializer<ErrorMessage>();
-					//var errorMessage = serializer.DeserializeFromString(jiraResp.Content);
-					return ConnectionResult.FailedToConnect;
-	            }
-            }
-            catch (Exception)
-            {
-                return ConnectionResult.FailedToConnect;
-            }
+			//try
+			//{
+			//	//https://yoursite.atlassian.net/rest/api/2/serverInfo
+			//	var request = CreateRequest("rest/api/2/serverInfo", Method.GET);
+			//	var jiraResp = ExecuteRequest(request);
 
-            return ConnectionResult.Success;
+			//	string.Format("Connection Status: {0}", jiraResp.StatusCode).Debug();
+			//	string.Format("Response: {0}", jiraResp.Content).Debug();
+			//	if (jiraResp.StatusCode != HttpStatusCode.OK)
+			//	{
+			//		//var serializer = new JsonSerializer<ErrorMessage>();
+			//		//var errorMessage = serializer.DeserializeFromString(jiraResp.Content);
+			//		return ConnectionResult.FailedToConnect;
+			//	}
+			//}
+			//catch (Exception ex)
+			//{
+			//	"Error connecting to JIRA.".Error(ex);
+			//	return ConnectionResult.FailedToConnect;
+			//}
+
+			//return ConnectionResult.Success;
         }
+
+	    public void AddSessionCookieToRequest(RestRequest request)
+	    {
+			if (_sessionCookie != null) request.AddCookie("JSESSIONID", _sessionCookie);
+	    }
+
+	    private void RefreshSessionCookie(string host, string user, string password)
+	    {
+		    _sessionCookie = GetSessionCookie(host, user, password);
+	    }
+
+	    private RestRequest CreateRequest(string resource, Method method)
+	    {
+			var request = new RestRequest(resource, method);
+			AddSessionCookieToRequest(request);
+		    return request;
+	    }
+
+	    private IRestResponse ExecuteRequest(RestRequest request)
+	    {
+		    request.Debug(_restClient);
+		    var response = _restClient.Execute(request);
+		    if (response.StatusCode == HttpStatusCode.Unauthorized) _sessionCookie = null;
+		    return response;
+	    }
+
+	    public static string GetSessionCookie(string host, string user, string password)
+	    {
+		    string sessionCookie = null;
+		    try
+		    {
+			    var restClient = new RestClient(host);
+				var request = new RestRequest("rest/auth/1/session", Method.POST);
+				request.AddJsonBody(new { username = user, password = password });
+				var response = restClient.Execute(request);
+			    if (response.StatusCode != HttpStatusCode.OK)
+			    {
+					string.Format("Error connecting to {0}{1}", restClient.BaseUrl, request.Resource).Error();
+					if (response.Content != null) response.Content.Error();
+				    return null;
+			    };
+
+			    var cookie = response.Cookies.FirstOrDefault(c => c.Name.Equals("JSESSIONID", StringComparison.OrdinalIgnoreCase));
+			    if (cookie != null) sessionCookie = cookie.Value;
+		    }
+		    catch (Exception ex)
+		    {
+				"Error getting session using rest/auth/1/session.".Error(ex);
+		    }
+		    return sessionCookie;
+	    }
 
         public List<Project> GetProjects()
         {
@@ -63,8 +123,8 @@ namespace IntegrationService.Targets.JIRA
             {
                 "Getting a list of issue types from JIRA".Debug();
                 //https://yoursite.atlassian.net/rest/api/2/issuetype
-                var issueTypeRequest = new RestRequest("/rest/api/2/issuetype", Method.GET);
-                var issueTypeResponse = _restClient.Execute(issueTypeRequest);
+				var issueTypeRequest = CreateRequest("rest/api/2/issuetype", Method.GET);
+				var issueTypeResponse = ExecuteRequest(issueTypeRequest);
                 if (issueTypeResponse.StatusCode == HttpStatusCode.OK)
                 {
                     "JIRA issue types retrieved. Deserializing results.".Debug();
@@ -79,9 +139,8 @@ namespace IntegrationService.Targets.JIRA
                 "Getting projects from JIRA".Debug();
 
                 //https://yoursite.atlassian.net/rest/api/2/project
-                var request = new RestRequest("/rest/api/2/project", Method.GET);
-
-                var jiraResp = _restClient.Execute(request);
+                var request = CreateRequest("rest/api/2/project", Method.GET);
+                var jiraResp = ExecuteRequest(request);
 
                 if (jiraResp.StatusCode != HttpStatusCode.OK)
                 {
@@ -119,8 +178,8 @@ namespace IntegrationService.Targets.JIRA
             try
 		    {
 		        //https://yoursite.atlassian.net/rest/api/2/project/{key}/statuses
-		        var request = new RestRequest(string.Format("/rest/api/2/project/{0}/statuses", projectKey), Method.GET);
-		        var response = _restClient.Execute(request);
+		        var request = CreateRequest(string.Format("rest/api/2/project/{0}/statuses", projectKey), Method.GET);
+				var response = ExecuteRequest(request);
 		        if (response.StatusCode == HttpStatusCode.OK)
 		        {
                     "Retrieved project states, deserializing.".Debug();
@@ -147,8 +206,8 @@ namespace IntegrationService.Targets.JIRA
                     
                     // JIRA 5.x has one list of statuses for all projects
 		            // http://example.com:8080/jira/rest/api/2/status
-		            request = new RestRequest("/rest/api/2/status", Method.GET);
-		            response = _restClient.Execute(request);
+		            request = CreateRequest("rest/api/2/status", Method.GET);
+		            response = ExecuteRequest(request);
 		            if (response.StatusCode == HttpStatusCode.OK)
 		            {
                         "Retrieved project states, deserializing.".Debug();
