@@ -24,7 +24,7 @@ namespace IntegrationService.Targets.JIRA
 		private string _externalUrlTemplate;
 	    private const string ServiceName = "JIRA";
 		private const string QueryDateFormat = "yyyy-MM-dd HH:mm";
-	    private string _sessionCookie;
+	    private Dictionary<string, string> _sessionCookies;
 		private object _customFieldsLock = new object();
 
 	    private List<Field> _customFields; 
@@ -92,13 +92,14 @@ namespace IntegrationService.Targets.JIRA
 
 		public void AddSessionCookieToRequest(RestRequest request)
 		{
-			if (_sessionCookie == null) RefreshSessionCookie(Configuration.Target.Url, Configuration.Target.User, Configuration.Target.Password);
-			if (_sessionCookie != null) request.AddCookie("JSESSIONID", _sessionCookie);
+			if (_sessionCookies == null || _sessionCookies.Count == 0) RefreshSessionCookie(Configuration.Target.Url, Configuration.Target.User, Configuration.Target.Password);
+			foreach (var k in _sessionCookies.Keys)
+				request.AddCookie(k, _sessionCookies[k]);
 		}
 
 		private void RefreshSessionCookie(string host, string user, string password)
 		{
-			_sessionCookie = JiraConnection.GetSessionCookie(host, user, password);
+			_sessionCookies = JiraConnection.GetSessionCookie(host, user, password);
 		}
 
 		private RestRequest CreateRequest(string resource, Method method)

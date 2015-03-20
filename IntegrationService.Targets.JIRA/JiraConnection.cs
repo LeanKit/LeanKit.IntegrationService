@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Dynamic;
 using System.Linq;
 using System.Net;
@@ -18,23 +19,25 @@ namespace IntegrationService.Targets.JIRA
     public class JiraConnection : IConnection
     {
 	    private readonly IRestClient _restClient;
-	    private string _sessionCookie;
+	    private Dictionary<string, string> _sessionCookies;
 
 		public JiraConnection()
 		{
 			_restClient = new RestClient();
+			_sessionCookies = new Dictionary<string, string>();
 		}
 
 		public JiraConnection(IRestClient restClient)
 		{
 			_restClient = restClient;
+			_sessionCookies = new Dictionary<string, string>();
 		}
 
         public ConnectionResult Connect(string host, string user, string password)
         {
 			_restClient.BaseUrl = new Uri(host);
 			RefreshSessionCookie(host, user, password);
-	        return _sessionCookie == null ? ConnectionResult.FailedToConnect : ConnectionResult.Success;
+			return _sessionCookies.Keys.Count == 0 ? ConnectionResult.FailedToConnect : ConnectionResult.Success;
 
 			//_restClient.BaseUrl = new Uri(host);
 			//// _restClient.Authenticator = new HttpBasicAuthenticator(user, password);
@@ -65,18 +68,21 @@ namespace IntegrationService.Targets.JIRA
 
 	    public void AddSessionCookieToRequest(RestRequest request)
 	    {
-			if (_sessionCookie != null) request.AddCookie("JSESSIONID", _sessionCookie);
+		    foreach (var k in _sessionCookies.Keys)
+			    request.AddCookie(k, _sessionCookies[k]);
 	    }
 
 	    private void RefreshSessionCookie(string host, string user, string password)
 	    {
-		    _sessionCookie = GetSessionCookie(host, user, password);
+			_sessionCookies = GetSessionCookie(host, user, password);
 	    }
 
 	    private RestRequest CreateRequest(string resource, Method method)
 	    {
 			var request = new RestRequest(resource, method);
 			AddSessionCookieToRequest(request);
+			request.RequestFormat = DataFormat.Json;
+			
 		    return request;
 	    }
 
@@ -84,13 +90,13 @@ namespace IntegrationService.Targets.JIRA
 	    {
 		    request.Debug(_restClient);
 		    var response = _restClient.Execute(request);
-		    if (response.StatusCode == HttpStatusCode.Unauthorized) _sessionCookie = null;
+		    if (response.StatusCode == HttpStatusCode.Unauthorized) _sessionCookies.Clear();
 		    return response;
 	    }
 
-	    public static string GetSessionCookie(string host, string user, string password)
+	    public static Dictionary<string, string> GetSessionCookie(string host, string user, string password)
 	    {
-		    string sessionCookie = null;
+		    var sessionCookies = new Dictionary<string, string>();
 		    try
 		    {
 			    var restClient = new RestClient(host);
@@ -103,15 +109,14 @@ namespace IntegrationService.Targets.JIRA
 					if (response.Content != null) response.Content.Error();
 				    return null;
 			    };
-
-			    var cookie = response.Cookies.FirstOrDefault(c => c.Name.Equals("JSESSIONID", StringComparison.OrdinalIgnoreCase));
-			    if (cookie != null) sessionCookie = cookie.Value;
+				foreach(var c in response.Cookies)
+					sessionCookies.Add(c.Name, c.Value);
 		    }
 		    catch (Exception ex)
 		    {
 				"Error getting session using rest/auth/1/session.".Error(ex);
 		    }
-		    return sessionCookie;
+			return sessionCookies;
 	    }
 
         public List<Project> GetProjects()
@@ -153,14 +158,18 @@ namespace IntegrationService.Targets.JIRA
                 "JIRA projects retrieved. Deserializing results.".Debug();
                 var resp = new JsonSerializer<List<JiraProject>>().DeserializeFromString(jiraResp.Content);
 
-                if (resp != null && resp.Any())
-                {
-                    projects.AddRange(
-                        resp.Select(
-                            jiraProject =>
-                                new Project(jiraProject.Key, jiraProject.Name, issueTypes,
-                                    GetProjectStates(jiraProject.Key))));
-                }
+	            if (resp != null && resp.Any())
+	            {
+		            projects.AddRange(
+			            resp.Select(
+				            jiraProject =>
+					            new Project(jiraProject.Key, jiraProject.Name, issueTypes,
+						            GetProjectStates(jiraProject.Key))));
+	            }
+	            else
+	            {
+		            "No JIRA projects were retrieved. Please check account access to projects.".Error();
+	            }
             }
             catch (Exception ex)
             {
