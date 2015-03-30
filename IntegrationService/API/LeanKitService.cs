@@ -201,7 +201,7 @@ namespace IntegrationService.API
 		{
 
 			LeanKitClientFactory = new LeanKitClientFactory();
-			var account = new LeanKitAccountAuth
+			var account = new LeanKitBasicAuth
 				{
 					Hostname = request.Host,
 					Username = request.User,
@@ -214,8 +214,10 @@ namespace IntegrationService.API
 			// expand host if necessary
 			if (account.Hostname == "kanban-cibuild")
 				account.UrlTemplateOverride = "http://kanban-cibuild.localkanban.com/";
-			else if (!account.Hostname.Contains("http://"))
+			else if (!account.Hostname.StartsWith("http:") && !account.Hostname.StartsWith("https:"))
 				account.UrlTemplateOverride = "https://" + account.Hostname + ".leankit.com/";
+			else
+				account.UrlTemplateOverride = account.Hostname;
 			
 			string.Format("Attempting connection to {0}", request).Debug();
 
@@ -224,7 +226,7 @@ namespace IntegrationService.API
 		}
 
 
-		private void SaveLogin(LeanKitAccountAuth account)
+		private void SaveLogin(LeanKitBasicAuth account)
 		{
 			"Saving LeanKit login information...".Debug();
 

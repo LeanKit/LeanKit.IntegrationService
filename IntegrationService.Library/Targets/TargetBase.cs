@@ -306,7 +306,8 @@ namespace IntegrationService.Targets
         private string GetTemplateOverride(string host)
         {
             if (host == "kanban-cibuild") return "http://kanban-cibuild.localkanban.com";
-            return "http://{0}.leankit.com";
+	        if (host.StartsWith("http:") || host.StartsWith("https:")) return host;
+            return "https://{0}.leankit.com";
         }
 
         protected void ConfigureDefaults()
