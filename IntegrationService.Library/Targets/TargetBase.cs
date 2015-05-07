@@ -126,10 +126,15 @@ namespace IntegrationService.Targets
 			if (Configuration != null && Configuration.Mappings != null)
 			{
 				var pollingInSeconds = Configuration.PollingFrequency / 1000;
-				// pickup any changes since the last time the service ran
-				// start subscription to each board in board mappings			
+				
+				// Add 3 seconds to reduce risk of race conditions
+				// between LeanKit and Target system
+				pollingInSeconds += 3; 
+
 				foreach (var mapping in Configuration.Mappings)
-				{					
+				{
+					// pickup any changes since the last time the service ran
+					// start subscription to each board in board mappings			
 					CheckForMissedCardMoves(mapping);
 					try
 					{
