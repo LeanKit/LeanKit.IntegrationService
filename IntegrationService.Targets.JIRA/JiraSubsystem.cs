@@ -1,7 +1,7 @@
 ﻿//------------------------------------------------------------------------------
 // <copyright company="LeanKit Inc.">
 //     Copyright (c) LeanKit Inc.  All rights reserved.
-// </copyright> 
+// </copyright>
 //------------------------------------------------------------------------------
 
 using System;
@@ -18,18 +18,21 @@ using ServiceStack.Text;
 
 namespace IntegrationService.Targets.JIRA
 {
-    public class Jira : TargetBase
-    {
-	    private readonly IRestClient _restClient;
+	public class Jira : TargetBase
+	{
+		private readonly IRestClient _restClient;
 		private string _externalUrlTemplate;
-	    private const string ServiceName = "JIRA";
+		private const string ServiceName = "JIRA";
 		private const string QueryDateFormat = "yyyy-MM-dd HH:mm";
-	    private Dictionary<string, string> _sessionCookies;
+		private Dictionary<string, string> _sessionCookies;
 		private object _customFieldsLock = new object();
+		private object _priorityLock = new object();
 
-	    private List<Field> _customFields; 
-	    protected List<Field> CustomFields
-	    {
+		private List<Field> _customFields;
+		private List<Priority> _priorities;
+
+		protected List<Field> CustomFields
+		{
 			get
 			{
 				if (_customFields == null)
@@ -39,7 +42,7 @@ namespace IntegrationService.Targets.JIRA
 						if (_customFields == null)
 						{
 							_customFields = new List<Field>();
-							var request = CreateRequest(string.Format("rest/api/latest/field"), Method.GET);
+							var request = CreateRequest("rest/api/latest/field", Method.GET);
 							var jiraResp = ExecuteRequest(request);
 
 							if (jiraResp.StatusCode != HttpStatusCode.OK)
@@ -53,12 +56,10 @@ namespace IntegrationService.Targets.JIRA
 							else
 							{
 								var resp = new JsonSerializer<List<Field>>().DeserializeFromString(jiraResp.Content);
-								if (resp != null && resp.Any())
+								if (resp == null || !resp.Any()) return _customFields;
+								foreach (var field in resp.Where(field => field.Custom))
 								{
-									foreach (var field in resp.Where(field => field.Custom))
-									{
-										_customFields.Add(field);
-									}
+									_customFields.Add(field);
 								}
 							}
 						}
@@ -68,22 +69,60 @@ namespace IntegrationService.Targets.JIRA
 			}
 
 			private set { _customFields = value; }
-	    }
+		}
 
-	    public Jira(IBoardSubscriptionManager subscriptions) : base(subscriptions)
-        {
-			_restClient = new RestClient
+		protected List<Priority> Priorities
+		{
+			get
+			{
+				if (_priorities != null) return _priorities;
+				lock (_priorityLock)
 				{
-					BaseUrl = new Uri(Configuration.Target.Url),
-					//Authenticator = new HttpBasicAuthenticator(Configuration.Target.User, Configuration.Target.Password)
-				};
-        }
+					if (_priorities == null)
+					{
+						_priorities = new List<Priority>();
+						var request = CreateRequest("rest/api/latest/priority", Method.GET);
+						var jiraResp = ExecuteRequest(request);
 
-		public Jira(IBoardSubscriptionManager subscriptions, 
-					IConfigurationProvider<Configuration> configurationProvider, 
-					ILocalStorage<AppSettings> localStorage, 
-					ILeanKitClientFactory leanKitClientFactory, 
-					IRestClient restClient) 
+						if (jiraResp.StatusCode != HttpStatusCode.OK)
+						{
+							var serializer = new JsonSerializer<JiraConnection.ErrorMessage>();
+							var errorMessage = serializer.DeserializeFromString(jiraResp.Content);
+							Log.Error(string.Format(
+								"Unable to get priorities from JIRA, Error: {0}. Check your JIRA connection configuration.",
+								errorMessage.Message));
+						}
+						else
+						{
+							var resp = new JsonSerializer<List<Priority>>().DeserializeFromString(jiraResp.Content);
+							if (resp == null || !resp.Any()) return _priorities;
+							foreach (var p in resp)
+							{
+								_priorities.Add(p);
+							}
+						}
+					}
+					return _priorities;
+				}
+			}
+
+			private set { _priorities = value; }
+		}
+
+		public Jira(IBoardSubscriptionManager subscriptions) : base(subscriptions)
+		{
+			_restClient = new RestClient
+			{
+				BaseUrl = new Uri(Configuration.Target.Url),
+				//Authenticator = new HttpBasicAuthenticator(Configuration.Target.User, Configuration.Target.Password)
+			};
+		}
+
+		public Jira(IBoardSubscriptionManager subscriptions,
+			IConfigurationProvider<Configuration> configurationProvider,
+			ILocalStorage<AppSettings> localStorage,
+			ILeanKitClientFactory leanKitClientFactory,
+			IRestClient restClient)
 			: base(subscriptions, configurationProvider, localStorage, leanKitClientFactory)
 		{
 			_restClient = restClient;
@@ -92,7 +131,8 @@ namespace IntegrationService.Targets.JIRA
 
 		public void AddSessionCookieToRequest(RestRequest request)
 		{
-			if (_sessionCookies == null || _sessionCookies.Count == 0) RefreshSessionCookie(Configuration.Target.Url, Configuration.Target.User, Configuration.Target.Password);
+			if (_sessionCookies == null || _sessionCookies.Count == 0)
+				RefreshSessionCookie(Configuration.Target.Url, Configuration.Target.User, Configuration.Target.Password);
 			foreach (var k in _sessionCookies.Keys)
 				request.AddCookie(k, _sessionCookies[k]);
 		}
@@ -154,39 +194,44 @@ namespace IntegrationService.Targets.JIRA
 				Log.Debug("Excluded issue types for [{0}]: [{1}]", mapping.Identity.Target, mapping.Excludes);
 				var excludedTypes = mapping.Excludes.Split(',');
 
-				mapping.ExcludedTypeQuery = string.Format(" and issueType not in ({0})", string.Join(",", excludedTypes.Select(x => "'" + x.Trim() + "'").ToList()));
+				mapping.ExcludedTypeQuery = string.Format(" and issueType not in ({0})",
+					string.Join(",", excludedTypes.Select(x => "'" + x.Trim() + "'").ToList()));
 			}
 		}
 
-        protected override void CardUpdated(Card updatedCard, List<string> updatedItems, BoardMapping boardMapping)
-        {
+		protected override void CardUpdated(Card updatedCard, List<string> updatedItems, BoardMapping boardMapping)
+		{
 			if (!updatedCard.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase))
 				return;
 
 			if (string.IsNullOrEmpty(updatedCard.ExternalCardID))
 				return;
 
-	        if (string.IsNullOrEmpty(updatedCard.ExternalCardID)) 
+			if (string.IsNullOrEmpty(updatedCard.ExternalCardID))
 			{
 				Log.Debug("Ignoring card [{0}] with missing external id value.", updatedCard.ExternalCardID);
 				return;
 			}
 
 			//https://yoursite.atlassian.net/rest/api/latest/issue/{issueIdOrKey}
-			var request = CreateRequest(string.Format("rest/api/latest/issue/{0}", updatedCard.ExternalCardID), Method.GET);
+			var request = CreateRequest(string.Format("rest/api/latest/issue/{0}", updatedCard.ExternalCardID),
+				Method.GET);
 			var jiraResp = ExecuteRequest(request);
 
 			if (jiraResp.StatusCode != HttpStatusCode.OK)
 			{
 				var serializer = new JsonSerializer<ErrorMessage>();
 				var errorMessage = serializer.DeserializeFromString(jiraResp.Content);
-				Log.Error(string.Format("Unable to get issues from Jira, Error: {0}. Check your board/repo mapping configuration.", errorMessage.Message));
+				Log.Error(
+					string.Format(
+						"Unable to get issues from Jira, Error: {0}. Check your board/repo mapping configuration.",
+						errorMessage.Message));
 			}
 			else
 			{
 				var issueToUpdate = new JsonSerializer<Issue>().DeserializeFromString(jiraResp.Content);
 
-				if (issueToUpdate != null && issueToUpdate.Key == updatedCard.ExternalCardID) 
+				if (issueToUpdate != null && issueToUpdate.Key == updatedCard.ExternalCardID)
 				{
 					bool isDirty = false;
 					bool updateEpicName = false;
@@ -202,7 +247,7 @@ namespace IntegrationService.Targets.JIRA
 
 					updateJson += "\"summary\": \"" + issueToUpdate.Fields.Summary.Replace("\"", "\\\"") + "\"";
 
-					if (updateEpicName) 
+					if (updateEpicName)
 					{
 						if (issueToUpdate.Fields.IssueType.Name.ToLowerInvariant() == "epic")
 						{
@@ -211,38 +256,45 @@ namespace IntegrationService.Targets.JIRA
 								var epicNameField = CustomFields.FirstOrDefault(x => x.Name == "Epic Name");
 								if (epicNameField != null)
 								{
-									updateJson += ", \"" + epicNameField.Id + "\": \"" + updatedCard.Title.Replace("\"", "\\\"") + "\"";
+									updateJson += ", \"" + epicNameField.Id + "\": \"" +
+									              updatedCard.Title.Replace("\"", "\\\"") + "\"";
 								}
 							}
-						}						
+						}
 					}
 
-					if (updatedItems.Contains("Description") && issueToUpdate.Fields.Description.SanitizeCardDescription() != updatedCard.Description)
+					if (updatedItems.Contains("Description") &&
+					    issueToUpdate.Fields.Description.SanitizeCardDescription() != updatedCard.Description)
 					{
 						var updatedDescription = updatedCard.Description;
-						if (!string.IsNullOrEmpty(updatedDescription)) 
+						if (!string.IsNullOrEmpty(updatedDescription))
 						{
-							updatedDescription = updatedDescription.Replace("<p>", "").Replace("</p>", "").Replace("\r", "\\r").Replace("\n", "\\n").Replace("\"", "\\\"");
+							updatedDescription =
+								updatedDescription.Replace("<p>", "")
+									.Replace("</p>", "")
+									.Replace("\r", "\\r")
+									.Replace("\n", "\\n")
+									.Replace("\"", "\\\"");
 						}
 						updateJson += ", \"description\": \"" + updatedDescription + "\"";
 						isDirty = true;
 					}
 
-					if (updatedItems.Contains("Priority")) 
+					if (updatedItems.Contains("Priority"))
 					{
 						updateJson += ", \"priority\": { \"name\": \"" + GetPriority(updatedCard.Priority) + "\"}";
 						isDirty = true;
 					}
 
-					if (updatedItems.Contains("DueDate") && CurrentUser != null) 
+					if (updatedItems.Contains("DueDate") && CurrentUser != null)
 					{
 						try
 						{
 							var dateFormat = CurrentUser.DateFormat ?? "MM/dd/yyyy";
-							var parsed = DateTime.ParseExact(updatedCard.DueDate, dateFormat, CultureInfo.InvariantCulture);
+							var parsed = DateTime.ParseExact(updatedCard.DueDate, dateFormat,
+								CultureInfo.InvariantCulture);
 
 							updateJson += ", \"duedate\": \"" + parsed.ToString("o") + "\"";
-
 						}
 						catch (Exception ex)
 						{
@@ -250,12 +302,12 @@ namespace IntegrationService.Targets.JIRA
 						}
 					}
 
-					if (updatedItems.Contains("Tags")) 
+					if (updatedItems.Contains("Tags"))
 					{
 						var newLabels = updatedCard.Tags.Split(',');
 						string updateLabels = "";
 						int ctr = 0;
-						foreach (string newLabel in newLabels) 
+						foreach (string newLabel in newLabels)
 						{
 							if (ctr > 0)
 								updateLabels += ", ";
@@ -269,10 +321,12 @@ namespace IntegrationService.Targets.JIRA
 					}
 
 					string comment = "";
-					if (updatedItems.Contains("Size")) {
+					if (updatedItems.Contains("Size"))
+					{
 						comment += "LeanKit card Size changed to " + updatedCard.Size + ". ";
 					}
-					if (updatedItems.Contains("Blocked")) {
+					if (updatedItems.Contains("Blocked"))
+					{
 						if (updatedCard.IsBlocked)
 							comment += "LeanKit card is blocked: " + updatedCard.BlockReason + ". ";
 						else
@@ -281,15 +335,16 @@ namespace IntegrationService.Targets.JIRA
 
 					updateJson += "}}";
 
-					if (isDirty) 
+					if (isDirty)
 					{
 						try
 						{
 							//https://yoursite.atlassian.net/rest/api/latest/issue/{issueIdOrKey}
-							var updateRequest = CreateRequest(string.Format("rest/api/latest/issue/{0}", updatedCard.ExternalCardID),
-							                                    Method.PUT);
+							var updateRequest =
+								CreateRequest(string.Format("rest/api/latest/issue/{0}", updatedCard.ExternalCardID),
+									Method.PUT);
 							updateRequest.AddParameter("application/json", updateJson, ParameterType.RequestBody);
-							
+
 							var resp = ExecuteRequest(updateRequest);
 
 							if (resp.StatusCode != HttpStatusCode.OK && resp.StatusCode != HttpStatusCode.NoContent)
@@ -297,54 +352,64 @@ namespace IntegrationService.Targets.JIRA
 								var serializer = new JsonSerializer<ErrorMessage>();
 								var errorMessage = serializer.DeserializeFromString(resp.Content);
 								Log.Error(string.Format("Unable to update Issue [{0}], Description: {1}, Message: {2}",
-								                         updatedCard.ExternalCardID, resp.StatusDescription, errorMessage.Message));
+									updatedCard.ExternalCardID, resp.StatusDescription, errorMessage.Message));
 							}
 							else
 							{
 								Log.Debug(String.Format("Updated Issue [{0}]", updatedCard.ExternalCardID));
 							}
-						}						 
-						catch (Exception ex) 
+						}
+						catch (Exception ex)
 						{
-							Log.Error(string.Format("Unable to update Issue [{0}], Exception: {1}", updatedCard.ExternalCardID, ex.Message));
-						}	
+							Log.Error(string.Format("Unable to update Issue [{0}], Exception: {1}",
+								updatedCard.ExternalCardID, ex.Message));
+						}
 					}
 
 					if (!string.IsNullOrEmpty(comment))
 					{
-						try {
+						try
+						{
 							//https://yoursite.atlassian.net/rest/api/latest/issue/{issueIdOrKey}
-							var updateRequest = CreateRequest(string.Format("rest/api/latest/issue/{0}/comment", updatedCard.ExternalCardID), Method.POST);
+							var updateRequest =
+								CreateRequest(
+									string.Format("rest/api/latest/issue/{0}/comment", updatedCard.ExternalCardID),
+									Method.POST);
 							updateRequest.AddParameter(
-									"application/json", 
-									"{ \"body\": \"" + comment + "\"}", 
-									ParameterType.RequestBody);
+								"application/json",
+								"{ \"body\": \"" + comment + "\"}",
+								ParameterType.RequestBody);
 
 							var resp = ExecuteRequest(updateRequest);
 
-							if (resp.StatusCode != HttpStatusCode.OK && 
-								resp.StatusCode != HttpStatusCode.NoContent && 
-								resp.StatusCode != HttpStatusCode.Created) 
+							if (resp.StatusCode != HttpStatusCode.OK &&
+							    resp.StatusCode != HttpStatusCode.NoContent &&
+							    resp.StatusCode != HttpStatusCode.Created)
 							{
 								var serializer = new JsonSerializer<ErrorMessage>();
 								var errorMessage = serializer.DeserializeFromString(resp.Content);
-								Log.Error(string.Format("Unable to create comment for updated Issue [{0}], Description: {1}, Message: {2}", updatedCard.ExternalCardID, resp.StatusDescription, errorMessage.Message));
-							} 
-							else 
-							{
-								Log.Debug(String.Format("Created comment for updated Issue [{0}]", updatedCard.ExternalCardID));
+								Log.Error(
+									string.Format(
+										"Unable to create comment for updated Issue [{0}], Description: {1}, Message: {2}",
+										updatedCard.ExternalCardID, resp.StatusDescription, errorMessage.Message));
 							}
-						} 
-						catch (Exception ex) 
+							else
+							{
+								Log.Debug(String.Format("Created comment for updated Issue [{0}]",
+									updatedCard.ExternalCardID));
+							}
+						}
+						catch (Exception ex)
 						{
-							Log.Error(string.Format("Unable to create comment for updated Issue [{0}], Exception: {1}", updatedCard.ExternalCardID, ex.Message));
-						}							
+							Log.Error(string.Format("Unable to create comment for updated Issue [{0}], Exception: {1}",
+								updatedCard.ExternalCardID, ex.Message));
+						}
 					}
 				}
 			}
-        }
+		}
 
-		private void IssueUpdated(Issue issue, Card card, BoardMapping boardMapping) 
+		private void IssueUpdated(Issue issue, Card card, BoardMapping boardMapping)
 		{
 			Log.Info("Issue [{0}] updated, comparing to corresponding card...", issue.Key);
 
@@ -361,7 +426,8 @@ namespace IntegrationService.Targets.JIRA
 					saveCard = true;
 				}
 
-				if (issue.Fields.Description != null && issue.Fields.Description.SanitizeCardDescription() != card.Description)
+				if (issue.Fields.Description != null &&
+				    issue.Fields.Description.SanitizeCardDescription() != card.Description)
 				{
 					card.Description = issue.Fields.Description.SanitizeCardDescription();
 					saveCard = true;
@@ -389,7 +455,7 @@ namespace IntegrationService.Targets.JIRA
 					saveCard = true;
 				}
 
-				if ((card.Tags == null || !card.Tags.Contains(ServiceName)) && boardMapping.TagCardsWithTargetSystemName) 
+				if ((card.Tags == null || !card.Tags.Contains(ServiceName)) && boardMapping.TagCardsWithTargetSystemName)
 				{
 					if (string.IsNullOrEmpty(card.Tags))
 						card.Tags = ServiceName;
@@ -398,7 +464,7 @@ namespace IntegrationService.Targets.JIRA
 					saveCard = true;
 				}
 
-				if (issue.Fields.DueDate != null && CurrentUser != null) 
+				if (issue.Fields.DueDate != null && CurrentUser != null)
 				{
 					var dateFormat = CurrentUser.DateFormat ?? "MM/dd/yyyy";
 					var dueDateString = issue.Fields.DueDate.Value.ToString(dateFormat, CultureInfo.InvariantCulture);
@@ -407,15 +473,15 @@ namespace IntegrationService.Targets.JIRA
 						card.DueDate = dueDateString;
 						saveCard = true;
 					}
-				} 
-				else if (!string.IsNullOrEmpty(card.DueDate)) 
+				}
+				else if (!string.IsNullOrEmpty(card.DueDate))
 				{
 					card.DueDate = "";
 					saveCard = true;
 				}
 			}
 
-			if (saveCard) 
+			if (saveCard)
 			{
 				Log.Info("Updating card [{0}]", card.Id);
 				LeanKit.UpdateCard(boardId, card);
@@ -424,7 +490,8 @@ namespace IntegrationService.Targets.JIRA
 			// check the state of the work item
 			// if we have the state mapped to a lane then check to see if the card is in that lane
 			// if it is not in that lane then move it to that lane
-			if (boardMapping.UpdateCardLanes && issue.Fields != null && issue.Fields.Status != null && !string.IsNullOrEmpty(issue.Fields.Status.Name)) 
+			if (boardMapping.UpdateCardLanes && issue.Fields != null && issue.Fields.Status != null &&
+			    !string.IsNullOrEmpty(issue.Fields.Status.Name))
 			{
 				// if card is already in archive lane then we do not want to move it to the end lane
 				// because it is effectively the same thing with respect to integrating with TFS
@@ -434,91 +501,100 @@ namespace IntegrationService.Targets.JIRA
 				}
 
 				var laneIds = boardMapping.LanesFromState(issue.Fields.Status.Name);
-				if (laneIds.Any()) 
+				if (laneIds.Any())
 				{
 					if (!laneIds.Contains(card.LaneId))
 					{
-						// first let's see if any of the lanes are sibling lanes, if so then 
+						// first let's see if any of the lanes are sibling lanes, if so then
 						// we should be using one of them. So we'll limit the results to just siblings
 						if (boardMapping.ValidLanes != null)
 						{
 							var siblingLaneIds = (from siblingLaneId in laneIds
-							                             let parentLane =
-								                             boardMapping.ValidLanes.FirstOrDefault(x =>
-									                             x.HasChildLanes && 
-																 x.ChildLaneIds.Contains(siblingLaneId) &&
-									                             x.ChildLaneIds.Contains(card.LaneId))
-							                             where parentLane != null
-							                             select siblingLaneId).ToList();
+								let parentLane =
+									boardMapping.ValidLanes.FirstOrDefault(x =>
+										x.HasChildLanes &&
+										x.ChildLaneIds.Contains(siblingLaneId) &&
+										x.ChildLaneIds.Contains(card.LaneId))
+								where parentLane != null
+								select siblingLaneId).ToList();
 							if (siblingLaneIds.Any())
 								laneIds = siblingLaneIds;
 						}
 
-						LeanKit.MoveCard(boardMapping.Identity.LeanKit, card.Id, laneIds.First(), 0, "Moved Lane From Jira Issue");
+						LeanKit.MoveCard(boardMapping.Identity.LeanKit, card.Id, laneIds.First(), 0,
+							"Moved Lane From Jira Issue");
 					}
 				}
 			}
 		}
 
-        protected override void Synchronize(BoardMapping project)
-        {
-            Log.Debug("Polling Jira for Issues");
+		protected override void Synchronize(BoardMapping project)
+		{
+			Log.Debug("Polling Jira for Issues");
 
-			var queryAsOfDate = QueryDate.AddMilliseconds(Configuration.PollingFrequency * -1.5);
+			var queryAsOfDate = QueryDate.AddMilliseconds(Configuration.PollingFrequency*-1.5);
 
-	        string jqlQuery;
-	        var formattedQueryDate = queryAsOfDate.ToString(QueryDateFormat, CultureInfo.InvariantCulture);
-	        if (!string.IsNullOrEmpty(project.Query))
-	        {
+			string jqlQuery;
+			var formattedQueryDate = queryAsOfDate.ToString(QueryDateFormat, CultureInfo.InvariantCulture);
+			if (!string.IsNullOrEmpty(project.Query))
+			{
 				jqlQuery = string.Format(project.Query, formattedQueryDate);
 			}
 			else
 			{
-                var queryFilter = string.Format(" and ({0})", string.Join(" or ", project.QueryStates.Select(x => "status = '" + x.Trim() + "'").ToList()));
+				var queryFilter = string.Format(" and ({0})",
+					string.Join(" or ", project.QueryStates.Select(x => "status = '" + x.Trim() + "'").ToList()));
 				if (!string.IsNullOrEmpty(project.ExcludedTypeQuery))
 				{
 					queryFilter += project.ExcludedTypeQuery;
 				}
-				jqlQuery = string.Format("project=\"{0}\" {1} and updated > \"{2}\" order by created asc", project.Identity.Target, queryFilter, formattedQueryDate);	
+				jqlQuery = string.Format("project=\"{0}\" {1} and updated > \"{2}\" order by created asc",
+					project.Identity.Target, queryFilter, formattedQueryDate);
 			}
 
 			//https://yoursite.atlassian.net/rest/api/latest/search?jql=project=%22More+Tests%22+and+status=%22open%22+and+created+%3E+%222008/12/31+12:00%22+order+by+created+asc&fields=id,status,priority,summary,description
 			var request = CreateRequest("rest/api/latest/search", Method.GET);
 
 			request.AddParameter("jql", jqlQuery);
-			request.AddParameter("fields", "id,status,priority,summary,description,issuetype,type,assignee,duedate,labels");
-	        request.AddParameter("maxResults", "9999");
+			request.AddParameter("fields",
+				"id,status,priority,summary,description,issuetype,type,assignee,duedate,labels");
+			request.AddParameter("maxResults", "9999");
 
 			var jiraResp = ExecuteRequest(request);
 
-			if (jiraResp.StatusCode != HttpStatusCode.OK) 
+			if (jiraResp.StatusCode != HttpStatusCode.OK)
 			{
 				var serializer = new JsonSerializer<ErrorMessage>();
 				var errorMessage = serializer.DeserializeFromString(jiraResp.Content);
-				Log.Error(string.Format("Unable to get issues from Jira, Error: {0}. Check your board/project mapping configuration.", errorMessage.Message));
+				Log.Error(
+					string.Format(
+						"Unable to get issues from Jira, Error: {0}. Check your board/project mapping configuration.",
+						errorMessage.Message));
 				return;
 			}
 
 			var resp = new JsonSerializer<IssuesResponse>().DeserializeFromString(jiraResp.Content);
 
-			Log.Info("\nQueried [{0}] at {1} for changes after {2}", project.Identity.Target, QueryDate, queryAsOfDate.ToString("o"));
-			
+			Log.Info("\nQueried [{0}] at {1} for changes after {2}", project.Identity.Target, QueryDate,
+				queryAsOfDate.ToString("o"));
+
 			if (resp != null && resp.Issues != null && resp.Issues.Any())
 			{
 				var issues = resp.Issues;
 				foreach (var issue in issues)
- 				{
-					Log.Info("Issue [{0}]: {1}, {2}, {3}", issue.Key, issue.Fields.Summary, issue.Fields.Status.Name, issue.Fields.Priority.Name);
+				{
+					Log.Info("Issue [{0}]: {1}, {2}, {3}", issue.Key, issue.Fields.Summary, issue.Fields.Status.Name,
+						issue.Fields.Priority.Name);
 
 					// does this workitem have a corresponding card?
 					var card = LeanKit.GetCardByExternalId(project.Identity.LeanKit, issue.Key);
-				
-					if (card == null || !card.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase)) 
+
+					if (card == null || !card.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase))
 					{
 						Log.Debug("Create new card for Issue [{0}]", issue.Key);
 						CreateCardFromItem(project, issue);
 					}
-					else 
+					else
 					{
 						Log.Debug("Previously created a card for Issue [{0}]", issue.Key);
 						if (project.UpdateCards)
@@ -527,38 +603,38 @@ namespace IntegrationService.Targets.JIRA
 							Log.Info("Skipped card update because 'UpdateCards' is disabled.");
 					}
 				}
-				Log.Info("{0} item(s) queried.\n", issues.Count);				
-			}     
-        }
+				Log.Info("{0} item(s) queried.\n", issues.Count);
+			}
+		}
 
-        private void CreateCardFromItem(BoardMapping project, Issue issue)
-        {
-            if (issue == null) return;
+		private void CreateCardFromItem(BoardMapping project, Issue issue)
+		{
+			if (issue == null) return;
 
-            var boardId = project.Identity.LeanKit;
+			var boardId = project.Identity.LeanKit;
 
-	        var mappedCardType = issue.LeanKitCardType(project);
+			var mappedCardType = issue.LeanKitCardType(project);
 
-	        var validLanes = project.LanesFromState(issue.Fields.Status.Name);
-	        var laneId = validLanes.Any() ? validLanes.First() : project.DefaultCardCreationLaneId;
+			var validLanes = project.LanesFromState(issue.Fields.Status.Name);
+			var laneId = validLanes.Any() ? validLanes.First() : project.DefaultCardCreationLaneId;
 
-	        var card = new Card
-                {
-                    Active = true,
-                    Title = issue.Fields.Summary,
-                    Description = issue.Fields.Description.SanitizeCardDescription(),
-                    Priority = issue.LeanKitPriority(),
-                    TypeId = mappedCardType.Id,
-                    TypeName = mappedCardType.Name,
-                    LaneId = laneId,
-                    ExternalCardID = issue.Key,
-                    ExternalSystemName = ServiceName,
-                    ExternalSystemUrl = string.Format(_externalUrlTemplate, issue.Key)
-                };
+			var card = new Card
+			{
+				Active = true,
+				Title = issue.Fields.Summary,
+				Description = issue.Fields.Description.SanitizeCardDescription(),
+				Priority = issue.LeanKitPriority(),
+				TypeId = mappedCardType.Id,
+				TypeName = mappedCardType.Name,
+				LaneId = laneId,
+				ExternalCardID = issue.Key,
+				ExternalSystemName = ServiceName,
+				ExternalSystemUrl = string.Format(_externalUrlTemplate, issue.Key)
+			};
 
 			var assignedUserId = issue.LeanKitAssignedUserId(boardId, LeanKit);
 			if (assignedUserId != null)
-				card.AssignedUserIds = new[] { assignedUserId.Value };
+				card.AssignedUserIds = new[] {assignedUserId.Value};
 
 			if (issue.Fields != null && issue.Fields.DueDate != null && CurrentUser != null)
 			{
@@ -566,7 +642,7 @@ namespace IntegrationService.Targets.JIRA
 				card.DueDate = issue.Fields.DueDate.Value.ToString(dateFormat, CultureInfo.InvariantCulture);
 			}
 
-			if (issue.Fields != null && issue.Fields.Labels != null && issue.Fields.Labels.Any()) 
+			if (issue.Fields != null && issue.Fields.Labels != null && issue.Fields.Labels.Any())
 			{
 				card.Tags = string.Join(",", issue.Fields.Labels);
 			}
@@ -579,42 +655,86 @@ namespace IntegrationService.Targets.JIRA
 					card.Tags += "," + ServiceName;
 			}
 
-			// TODO: Add size from the custom story points field. 
+			// TODO: Add size from the custom story points field.
 
-            Log.Info("Creating a card of type [{0}] for issue [{1}] on Board [{2}] on Lane [{3}]", mappedCardType.Name, issue.Key, boardId, laneId);
+			Log.Info("Creating a card of type [{0}] for issue [{1}] on Board [{2}] on Lane [{3}]", mappedCardType.Name,
+				issue.Key, boardId, laneId);
 
-	        CardAddResult cardAddResult = null;
+			CardAddResult cardAddResult = null;
 
-	        int tries = 0;
-	        bool success = false;
-	        while (tries < 10 && !success)
-	        {
-		        if (tries > 0)
-		        {
-			        Log.Error(string.Format("Attempting to create card for work item [{0}] attempt number [{1}]", issue.Key, tries));
-			        // wait 5 seconds before trying again
-			        Thread.Sleep(new TimeSpan(0, 0, 5));
-		        }
+			int tries = 0;
+			bool success = false;
+			while (tries < 10 && !success)
+			{
+				if (tries > 0)
+				{
+					Log.Error(string.Format("Attempting to create card for work item [{0}] attempt number [{1}]",
+						issue.Key, tries));
+					// wait 5 seconds before trying again
+					Thread.Sleep(new TimeSpan(0, 0, 5));
+				}
 
-		        try
-		        {
-			        cardAddResult = LeanKit.AddCard(boardId, card, "New Card From Jira Issue");
-			        success = true;
-		        }
-		        catch (Exception ex)
-		        {
-			        Log.Error(string.Format("An error occurred: {0} - {1} - {2}", ex.GetType(), ex.Message, ex.StackTrace));
-		        }
-		        tries++;
-	        }
-	        card.Id = cardAddResult.CardId;
+				try
+				{
+					cardAddResult = LeanKit.AddCard(boardId, card, "New Card From Jira Issue");
+					success = true;
+				}
+				catch (Exception ex)
+				{
+					Log.Error(string.Format("An error occurred: {0} - {1} - {2}", ex.GetType(), ex.Message,
+						ex.StackTrace));
+				}
+				tries++;
+			}
+			card.Id = cardAddResult.CardId;
 
-            Log.Info("Created a card [{0}] of type [{1}] for work item [{2}] on Board [{3}] on Lane [{4}]", card.Id, mappedCardType.Name, issue.Key, boardId, laneId);
-        }
+			Log.Info("Created a card [{0}] of type [{1}] for work item [{2}] on Board [{3}] on Lane [{4}]", card.Id,
+				mappedCardType.Name, issue.Key, boardId, laneId);
+		}
 
 		public string GetPriority(int priority)
 		{
-			switch (priority) 
+			var priorities = Priorities;
+			if (priorities != null && priorities.Count > 0)
+			{
+				// Highest, High, Medium, Low, Lowest
+				switch (priority)
+				{
+					case 3:
+						var p3 =
+							priorities.Find(
+								x =>
+									x.Name.Equals("critical", StringComparison.OrdinalIgnoreCase) ||
+									x.Name.Equals("highest", StringComparison.OrdinalIgnoreCase));
+						return (p3 != null) ? p3.Name : priorities[0].Name;
+					case 2:
+						var p2 =
+							priorities.Find(
+								x =>
+									x.Name.Equals("major", StringComparison.OrdinalIgnoreCase) ||
+									x.Name.Equals("high", StringComparison.OrdinalIgnoreCase));
+						return (p2 != null) ? p2.Name : (priorities.Count > 1) ? priorities[1].Name : priorities[0].Name;
+					case 0:
+						var p0 =
+							priorities.Find(
+								x =>
+									x.Name.Equals("trivial", StringComparison.OrdinalIgnoreCase) ||
+									x.Name.Equals("low", StringComparison.OrdinalIgnoreCase));
+						return (p0 != null)
+							? p0.Name
+							: (priorities.Count > 3) ? priorities[3].Name : priorities[priorities.Count - 1].Name;
+					default:
+						var p1 =
+							priorities.Find(
+								x =>
+									x.Name.Equals("medium", StringComparison.OrdinalIgnoreCase) ||
+									x.Name.Equals("minor", StringComparison.OrdinalIgnoreCase));
+						return (p1 != null)
+							? p1.Name
+							: (priorities.Count > 2) ? priorities[2].Name : priorities[priorities.Count - 1].Name;
+				}
+			}
+			switch (priority)
 			{
 				case 3:
 					return "Critical";
@@ -625,20 +745,21 @@ namespace IntegrationService.Targets.JIRA
 				case 1:
 				default:
 					return "Minor";
-			}			
+			}
 		}
 
-	    protected override void UpdateStateOfExternalItem(Card card, List<string> states, BoardMapping boardMapping)
-	    {
-			UpdateStateOfExternalItem(card, states, boardMapping, false);
-	    }
-
-        protected void UpdateStateOfExternalItem(Card card, List<string> states, BoardMapping mapping, bool runOnlyOnce)
+		protected override void UpdateStateOfExternalItem(Card card, List<string> states, BoardMapping boardMapping)
 		{
-			if (string.IsNullOrEmpty(card.ExternalSystemName) || !card.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase))
+			UpdateStateOfExternalItem(card, states, boardMapping, false);
+		}
+
+		protected void UpdateStateOfExternalItem(Card card, List<string> states, BoardMapping mapping, bool runOnlyOnce)
+		{
+			if (string.IsNullOrEmpty(card.ExternalSystemName) ||
+			    !card.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase))
 				return;
 
-			if (string.IsNullOrEmpty(card.ExternalCardID)) 
+			if (string.IsNullOrEmpty(card.ExternalCardID))
 			{
 				Log.Debug("Ignoring card [{0}] with missing external id value.", card.Id);
 				return;
@@ -654,8 +775,9 @@ namespace IntegrationService.Targets.JIRA
 			{
 				if (tries > 0)
 				{
-					Log.Warn(string.Format("Attempting to update external work item [{0}] attempt number [{1}]", card.ExternalCardID,
-					                         tries));
+					Log.Warn(string.Format("Attempting to update external work item [{0}] attempt number [{1}]",
+						card.ExternalCardID,
+						tries));
 					// wait 5 seconds before trying again
 					Thread.Sleep(new TimeSpan(0, 0, 5));
 				}
@@ -668,19 +790,24 @@ namespace IntegrationService.Targets.JIRA
 				{
 					var serializer = new JsonSerializer<ErrorMessage>();
 					var errorMessage = serializer.DeserializeFromString(jiraResp.Content);
-					Log.Error(string.Format("Unable to get issues from Jira, Error: {0}. Check your board/repo mapping configuration.", errorMessage.Message));
+					Log.Error(
+						string.Format(
+							"Unable to get issues from Jira, Error: {0}. Check your board/repo mapping configuration.",
+							errorMessage.Message));
 				}
 				else
 				{
 					var issueToUpdate = new JsonSerializer<Issue>().DeserializeFromString(jiraResp.Content);
 
 					// Check for a workflow mapping to the closed state
-					if (states != null && states.Count > 0 && states[0].Contains(">")) 
+					if (states != null && states.Count > 0 && states[0].Contains(">"))
 					{
 						var workflowStates = states[0].Split('>');
 
 						// check to see if the workitem is already in one of the workflow states
-						var alreadyInState = workflowStates.FirstOrDefault(x => x.Trim().ToLowerInvariant() == issueToUpdate.Fields.Status.Name.ToLowerInvariant());
+						var alreadyInState =
+							workflowStates.FirstOrDefault(
+								x => x.Trim().ToLowerInvariant() == issueToUpdate.Fields.Status.Name.ToLowerInvariant());
 						if (!string.IsNullOrEmpty(alreadyInState))
 						{
 							// change workflowStates to only use the states after the currently set state
@@ -695,11 +822,12 @@ namespace IntegrationService.Targets.JIRA
 								workflowStates = updatedWorkflowStates.ToArray();
 							}
 						}
-						if (workflowStates.Length > 0) 
+						if (workflowStates.Length > 0)
 						{
-							foreach (string workflowState in workflowStates) 
+							foreach (string workflowState in workflowStates)
 							{
-                                UpdateStateOfExternalItem(card, new List<string> { workflowState.Trim() }, mapping, runOnlyOnce);
+								UpdateStateOfExternalItem(card, new List<string> {workflowState.Trim()}, mapping,
+									runOnlyOnce);
 							}
 							return;
 						}
@@ -717,33 +845,39 @@ namespace IntegrationService.Targets.JIRA
 					try
 					{
 						// first get a list of available transitions
-						var transitionsRequest = CreateRequest(string.Format("rest/api/2/issue/{0}/transitions?expand=transitions.fields", card.ExternalCardID), Method.GET);
+						var transitionsRequest =
+							CreateRequest(
+								string.Format("rest/api/2/issue/{0}/transitions?expand=transitions.fields",
+									card.ExternalCardID), Method.GET);
 						var transitionsResponse = ExecuteRequest(transitionsRequest);
 
 						if (transitionsResponse.StatusCode != HttpStatusCode.OK)
 						{
 							var serializer = new JsonSerializer<ErrorMessage>();
 							var errorMessage = serializer.DeserializeFromString(jiraResp.Content);
-							Log.Error(string.Format("Unable to get available transitions from Jira, Error: {0}.", errorMessage.Message));
+							Log.Error(string.Format("Unable to get available transitions from Jira, Error: {0}.",
+								errorMessage.Message));
 						}
 						else
 						{
-							var availableTransitions = new JsonSerializer<TransitionsResponse>().DeserializeFromString(transitionsResponse.Content);
+							var availableTransitions =
+								new JsonSerializer<TransitionsResponse>().DeserializeFromString(
+									transitionsResponse.Content);
 
 							if (availableTransitions != null &&
-								availableTransitions.Transitions != null &&
-								availableTransitions.Transitions.Any()) 
+							    availableTransitions.Transitions != null &&
+							    availableTransitions.Transitions.Any())
 							{
 								// now find match from available transitions to states
 								var valid = false;
 								Transition validTransition = null;
-								foreach (var st in states) 
+								foreach (var st in states)
 								{
 									validTransition = availableTransitions.Transitions.FirstOrDefault(
 										x =>
-										x.Name.ToLowerInvariant() == st.ToLowerInvariant() ||
-										x.To.Name.ToLowerInvariant() == st.ToLowerInvariant());
-									if (validTransition != null) 
+											x.Name.ToLowerInvariant() == st.ToLowerInvariant() ||
+											x.To.Name.ToLowerInvariant() == st.ToLowerInvariant());
+									if (validTransition != null)
 									{
 										// if you find one then set it
 										valid = true;
@@ -751,41 +885,60 @@ namespace IntegrationService.Targets.JIRA
 									}
 								}
 
-								if (!valid) 
+								if (!valid)
 								{
 									// if not then write an error message
-									Log.Error(string.Format("Unable to update Issue [{0}] to [{1}] because the status transition is invalid. Try adding additional states to the config.", card.ExternalCardID,states.Join(",")));
-								} 
-								else 
+									Log.Error(
+										string.Format(
+											"Unable to update Issue [{0}] to [{1}] because the status transition is invalid. Try adding additional states to the config.",
+											card.ExternalCardID, states.Join(",")));
+								}
+								else
 								{
 									// go ahead and try to update the state of the issue in JIRA
 									//https://yoursite.atlassian.net/rest/api/latest/issue/{issueIdOrKey}/transitions?expand=transitions.fields
-									var updateRequest = CreateRequest(string.Format("rest/api/latest/issue/{0}/transitions?expand=transitions.fields", card.ExternalCardID), Method.POST);
-									updateRequest.AddParameter("application/json", "{ \"transition\": { \"id\": \"" + validTransition.Id + "\"}}", ParameterType.RequestBody);
+									var updateRequest =
+										CreateRequest(
+											string.Format(
+												"rest/api/latest/issue/{0}/transitions?expand=transitions.fields",
+												card.ExternalCardID), Method.POST);
+									updateRequest.AddParameter("application/json",
+										"{ \"transition\": { \"id\": \"" + validTransition.Id + "\"}}",
+										ParameterType.RequestBody);
 									var resp = ExecuteRequest(updateRequest);
 
-									if (resp.StatusCode != HttpStatusCode.OK && resp.StatusCode != HttpStatusCode.NoContent) 
+									if (resp.StatusCode != HttpStatusCode.OK &&
+									    resp.StatusCode != HttpStatusCode.NoContent)
 									{
 										var serializer = new JsonSerializer<ErrorMessage>();
 										var errorMessage = serializer.DeserializeFromString(resp.Content);
-										Log.Error(string.Format("Unable to update Issue [{0}] to [{1}], Description: {2}, Message: {3}", card.ExternalCardID, validTransition.To.Name, resp.StatusDescription, errorMessage.Message));
-									} 
-									else 
+										Log.Error(
+											string.Format(
+												"Unable to update Issue [{0}] to [{1}], Description: {2}, Message: {3}",
+												card.ExternalCardID, validTransition.To.Name, resp.StatusDescription,
+												errorMessage.Message));
+									}
+									else
 									{
 										success = true;
-										Log.Debug(String.Format("Updated state for Issue [{0}] to [{1}]", card.ExternalCardID, validTransition.To.Name));
+										Log.Debug(String.Format("Updated state for Issue [{0}] to [{1}]",
+											card.ExternalCardID, validTransition.To.Name));
 									}
 								}
-							} 
-							else 
+							}
+							else
 							{
-								Log.Error(string.Format("Unable to update Issue [{0}] to [{1}] because no transitions were available from its current status [{2}]. The user account you are using to connect may not have proper privileges.", card.ExternalCardID, states.Join(","), issueToUpdate.Fields.Status.Name));
+								Log.Error(
+									string.Format(
+										"Unable to update Issue [{0}] to [{1}] because no transitions were available from its current status [{2}]. The user account you are using to connect may not have proper privileges.",
+										card.ExternalCardID, states.Join(","), issueToUpdate.Fields.Status.Name));
 							}
 						}
-					}				
+					}
 					catch (Exception ex)
 					{
-						Log.Error(string.Format("Unable to update Issue [{0}] to [{1}], Exception: {2}", card.ExternalCardID, states.Join(","), ex.Message));
+						Log.Error(string.Format("Unable to update Issue [{0}] to [{1}], Exception: {2}",
+							card.ExternalCardID, states.Join(","), ex.Message));
 					}
 				}
 				tries++;
@@ -799,7 +952,14 @@ namespace IntegrationService.Targets.JIRA
 			string json = "{ \"fields\": { ";
 			json += "\"project\":  { \"key\": \"" + boardMapping.Identity.Target + "\" }";
 			json += ", \"summary\": \"" + card.Title.Replace("\"", "\\\"") + "\" ";
-			json += ", \"description\": \"" + (card.Description != null ? card.Description.Replace("</p>", "").Replace("<p>", "").Replace("\r", "\\r").Replace("\n", "\\n").Replace("\"", "\\\"") : "") + "\" ";
+			json += ", \"description\": \"" +
+			        (card.Description != null
+				        ? card.Description.Replace("</p>", "")
+					        .Replace("<p>", "")
+					        .Replace("\r", "\\r")
+					        .Replace("\n", "\\n")
+					        .Replace("\"", "\\\"")
+				        : "") + "\" ";
 			json += ", \"issuetype\": { \"name\": \"" + jiraIssueType + "\" }";
 			json += ", \"priority\": { \"name\": \"" + GetPriority(card.Priority) + "\" }";
 
@@ -815,7 +975,7 @@ namespace IntegrationService.Targets.JIRA
 				}
 			}
 
-			if (!string.IsNullOrEmpty(card.DueDate) && CurrentUser != null) 
+			if (!string.IsNullOrEmpty(card.DueDate) && CurrentUser != null)
 			{
 				try
 				{
@@ -823,7 +983,6 @@ namespace IntegrationService.Targets.JIRA
 					var parsed = DateTime.ParseExact(card.DueDate, dateFormat, CultureInfo.InvariantCulture);
 
 					json += ", \"duedate\": \"" + parsed.ToString("o") + "\"";
-					
 				}
 				catch (Exception ex)
 				{
@@ -831,12 +990,13 @@ namespace IntegrationService.Targets.JIRA
 				}
 			}
 
-			if (!string.IsNullOrEmpty(card.Tags)) 
+			if (!string.IsNullOrEmpty(card.Tags))
 			{
 				var newLabels = card.Tags.Split(',');
 				string updateLabels = "";
 				int ctr = 0;
-				foreach (string newLabel in newLabels) {
+				foreach (string newLabel in newLabels)
+				{
 					if (ctr > 0)
 						updateLabels += ", ";
 
@@ -850,29 +1010,28 @@ namespace IntegrationService.Targets.JIRA
 			json += "}}";
 
 			Issue newIssue = null;
-			try 
+			try
 			{
 				//https://yoursite.atlassian.net/rest/api/latest/issue
 				var createRequest = CreateRequest("rest/api/latest/issue", Method.POST);
 				createRequest.AddParameter("application/json", json, ParameterType.RequestBody);
 				var resp = ExecuteRequest(createRequest);
 
-				if (resp.StatusCode != HttpStatusCode.OK && resp.StatusCode != HttpStatusCode.Created) 
+				if (resp.StatusCode != HttpStatusCode.OK && resp.StatusCode != HttpStatusCode.Created)
 				{
-					var serializer = new JsonSerializer<ErrorMessage>();
-					var errorMessage = serializer.DeserializeFromString(resp.Content);
 					Log.Error(string.Format("Unable to create Issue from card [{0}], Description: {1}, Message: {2}",
-											 card.ExternalCardID, resp.StatusDescription, errorMessage.Message));
-				} 
-				else 
+						card.ExternalCardID, resp.StatusDescription, resp.Content));
+				}
+				else
 				{
 					newIssue = new JsonSerializer<Issue>().DeserializeFromString(resp.Content);
 					Log.Debug(String.Format("Created Issue [{0}]", newIssue.Key));
 				}
-			} 
-			catch (Exception ex) 
+			}
+			catch (Exception ex)
 			{
-				Log.Error(string.Format("Unable to create Issue from Card [{0}], Exception: {1}", card.ExternalCardID, ex.Message));
+				Log.Error(string.Format("Unable to create Issue from Card [{0}], Exception: {1}", card.ExternalCardID,
+					ex.Message));
 			}
 
 			if (newIssue != null)
@@ -885,17 +1044,18 @@ namespace IntegrationService.Targets.JIRA
 
 					// now that we've created the work item let's try to set it to any matching state defined by lane
 					var states = boardMapping.LaneToStatesMap[card.LaneId];
-                    if (states != null) 
+					if (states != null)
 					{
 						UpdateStateOfExternalItem(card, states, boardMapping, true);
-					}	
+					}
 
 					LeanKit.UpdateCard(boardMapping.Identity.LeanKit, card);
 				}
 				catch (Exception ex)
 				{
-					Log.Error(string.Format("Error updating Card [{0}] after creating new Issue, Exception: {1}", card.ExternalCardID,
-					                         ex.Message));
+					Log.Error(string.Format("Error updating Card [{0}] after creating new Issue, Exception: {1}",
+						card.ExternalCardID,
+						ex.Message));
 				}
 			}
 		}
@@ -903,17 +1063,21 @@ namespace IntegrationService.Targets.JIRA
 		private string GetJiraIssueType(BoardMapping boardMapping, long cardTypeId)
 		{
 			const string defaultIssueType = "Bug";
-			if (cardTypeId <= 0 
-				|| boardMapping == null 
-				|| boardMapping.Types == null 
-				|| boardMapping.ValidCardTypes == null 
-				|| !boardMapping.ValidCardTypes.Any()
-				|| !boardMapping.Types.Any())
+			if (cardTypeId <= 0
+			    || boardMapping == null
+			    || boardMapping.Types == null
+			    || boardMapping.ValidCardTypes == null
+			    || !boardMapping.ValidCardTypes.Any()
+			    || !boardMapping.Types.Any())
 				return defaultIssueType;
 
 			var lkType = boardMapping.ValidCardTypes.FirstOrDefault(x => x.Id == cardTypeId);
 			if (lkType == null) return defaultIssueType;
-			var mappedType = boardMapping.Types.FirstOrDefault(x => x != null && !string.IsNullOrEmpty(x.LeanKit) && String.Equals(x.LeanKit, lkType.Name, StringComparison.OrdinalIgnoreCase));
+			var mappedType =
+				boardMapping.Types.FirstOrDefault(
+					x =>
+						x != null && !string.IsNullOrEmpty(x.LeanKit) &&
+						String.Equals(x.LeanKit, lkType.Name, StringComparison.OrdinalIgnoreCase));
 			return mappedType != null ? mappedType.Target : "Bug";
 		}
 
@@ -932,14 +1096,14 @@ namespace IntegrationService.Targets.JIRA
 		public class TransitionsResponse
 		{
 			public List<Transition> Transitions { get; set; }
- 
+
 			public TransitionsResponse()
 			{
 				Transitions = new List<Transition>();
 			}
 		}
 
-		public class Issue 
+		public class Issue
 		{
 			public long Id { get; set; }
 			public string Key { get; set; }
@@ -953,7 +1117,7 @@ namespace IntegrationService.Targets.JIRA
 			}
 		}
 
-		public class Fields 
+		public class Fields
 		{
 			public string Summary { get; set; }
 			public IssueType IssueType { get; set; }
@@ -980,7 +1144,7 @@ namespace IntegrationService.Targets.JIRA
 			}
 		}
 
-		public class Author 
+		public class Author
 		{
 			public string Name { get; set; }
 			public string EmailAddress { get; set; }
@@ -994,7 +1158,7 @@ namespace IntegrationService.Targets.JIRA
 			}
 		}
 
-		public class IssueType 
+		public class IssueType
 		{
 			public string Id { get; set; }
 			public string Description { get; set; }
@@ -1008,7 +1172,7 @@ namespace IntegrationService.Targets.JIRA
 			}
 		}
 
-		public class Priority 
+		public class Priority
 		{
 			public string Description { get; set; }
 			public string Name { get; set; }
@@ -1022,7 +1186,7 @@ namespace IntegrationService.Targets.JIRA
 			}
 		}
 
-		public class Status 
+		public class Status
 		{
 			public string Description { get; set; }
 			public string Name { get; set; }
@@ -1057,7 +1221,7 @@ namespace IntegrationService.Targets.JIRA
 			public bool Custom { get; set; }
 		}
 
-		public class ErrorMessage 
+		public class ErrorMessage
 		{
 			public string Message { get; set; }
 		}
