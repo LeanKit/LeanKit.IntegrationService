@@ -493,13 +493,6 @@ namespace IntegrationService.Targets.JIRA
 			if (boardMapping.UpdateCardLanes && issue.Fields != null && issue.Fields.Status != null &&
 			    !string.IsNullOrEmpty(issue.Fields.Status.Name))
 			{
-				// if card is already in archive lane then we do not want to move it to the end lane
-				// because it is effectively the same thing with respect to integrating with TFS
-				if (card.LaneId == boardMapping.ArchiveLaneId)
-				{
-					return;
-				}
-
 				var laneIds = boardMapping.LanesFromState(issue.Fields.Status.Name);
 				if (laneIds.Any())
 				{
