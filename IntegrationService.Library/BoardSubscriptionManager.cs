@@ -8,18 +8,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading;
 using IntegrationService.Util;
 using LeanKit.API.Client.Library;
 using LeanKit.API.Client.Library.EventArguments;
-using LeanKit.API.Client.Library.TransferObjects;
 
 namespace IntegrationService
 {
     public interface IBoardSubscriptionManager
     {
-        ILeanKitApi Subscribe(LeanKitAccountAuth auth, long boardId, int pollingFrequency, Action<long, BoardChangedEventArgs, ILeanKitApi> notification);
+        ILeanKitApi Subscribe(ILeanKitAccountAuth auth, long boardId, int pollingFrequency, Action<long, BoardChangedEventArgs, ILeanKitApi> notification);
         void Unsubscribe(long boardId);
         void Shutdown();
     }
@@ -40,7 +38,7 @@ namespace IntegrationService
             internal ILeanKitIntegration Integration;
             internal readonly List<Action<long, BoardChangedEventArgs, ILeanKitApi>> Notifications = new List<Action<long, BoardChangedEventArgs, ILeanKitApi>>();
             
-            internal BoardSubscription(LeanKitAccountAuth auth, long boardId, int pollingFrequency)
+            internal BoardSubscription(ILeanKitAccountAuth auth, long boardId, int pollingFrequency)
             {
                 _boardId = boardId;
 				LkClientApi = new LeanKitClientFactory().Create(auth);
@@ -84,7 +82,7 @@ namespace IntegrationService
 	        }
         }
 
-        public ILeanKitApi Subscribe(LeanKitAccountAuth auth, long boardId, int pollingFrequency, Action<long, BoardChangedEventArgs, ILeanKitApi> notification)
+        public ILeanKitApi Subscribe(ILeanKitAccountAuth auth, long boardId, int pollingFrequency, Action<long, BoardChangedEventArgs, ILeanKitApi> notification)
         {
             if (notification == null)
             {

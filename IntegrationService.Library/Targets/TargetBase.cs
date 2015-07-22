@@ -36,7 +36,7 @@ namespace IntegrationService.Targets
 
         protected AutoResetEvent StopEvent = new AutoResetEvent(false);
         protected Configuration Configuration { get; set; }
-        protected LeanKitAccountAuth LeanKitAccount { get; set; }
+        protected LeanKitBasicAuth LeanKitAccount { get; set; }
         protected ILeanKitApi LeanKit { get; set; }
         public DateTime QueryDate { get; set; }
 	    private FileSystemWatcher _configWatcher;
@@ -191,7 +191,7 @@ namespace IntegrationService.Targets
 				Log.Debug(string.Format("Checking for any cards moved to mapped lanes on board [{0}] since service last ran, version [{1}].", boardId, version));
 			    try
 			    {
-				    var events = LeanKit.GetBoardHistorySince(boardId, (int) version);
+				    var events = LeanKit.GetBoardHistorySince(boardId, version);
 				    var board = LeanKit.GetBoard(boardId);
 				    if (board != null && events != null)
 				    {
@@ -289,7 +289,7 @@ namespace IntegrationService.Targets
        
         private void ConnectToLeanKit()
         {
-            LeanKitAccount = new LeanKitAccountAuth
+            LeanKitAccount = new LeanKitBasicAuth()
             {
                 Hostname = Configuration.LeanKit.Url,
                 UrlTemplateOverride = GetTemplateOverride(Configuration.LeanKit.Url),

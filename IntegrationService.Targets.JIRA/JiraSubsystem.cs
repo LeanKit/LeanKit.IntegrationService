@@ -21,6 +21,7 @@ namespace IntegrationService.Targets.JIRA
 	public class Jira : TargetBase
 	{
 		private readonly IRestClient _restClient;
+		private readonly IJiraConnection _jiraConnection;
 		private string _externalUrlTemplate;
 		private const string ServiceName = "JIRA";
 		private const string QueryDateFormat = "yyyy-MM-dd HH:mm";
@@ -116,16 +117,19 @@ namespace IntegrationService.Targets.JIRA
 				BaseUrl = new Uri(Configuration.Target.Url),
 				//Authenticator = new HttpBasicAuthenticator(Configuration.Target.User, Configuration.Target.Password)
 			};
+			_jiraConnection = new JiraConnection(_restClient);
 		}
 
 		public Jira(IBoardSubscriptionManager subscriptions,
 			IConfigurationProvider<Configuration> configurationProvider,
 			ILocalStorage<AppSettings> localStorage,
 			ILeanKitClientFactory leanKitClientFactory,
-			IRestClient restClient)
+			IRestClient restClient,
+			IJiraConnection jiraConnection)
 			: base(subscriptions, configurationProvider, localStorage, leanKitClientFactory)
 		{
 			_restClient = restClient;
+			_jiraConnection = jiraConnection;
 		}
 
 
@@ -139,7 +143,7 @@ namespace IntegrationService.Targets.JIRA
 
 		private void RefreshSessionCookie(string host, string user, string password)
 		{
-			_sessionCookies = JiraConnection.GetSessionCookie(host, user, password);
+			_sessionCookies = _jiraConnection.GetSessionCookie(host, user, password);
 		}
 
 		private RestRequest CreateRequest(string resource, Method method)
@@ -264,18 +268,10 @@ namespace IntegrationService.Targets.JIRA
 					}
 
 					if (updatedItems.Contains("Description") &&
-					    issueToUpdate.Fields.Description.SanitizeCardDescription() != updatedCard.Description)
+					    issueToUpdate.Fields.Description.SanitizeCardDescription().JiraPlainTextToLeanKitHtml() !=
+					    updatedCard.Description)
 					{
-						var updatedDescription = updatedCard.Description;
-						if (!string.IsNullOrEmpty(updatedDescription))
-						{
-							updatedDescription =
-								updatedDescription.Replace("<p>", "")
-									.Replace("</p>", "")
-									.Replace("\r", "\\r")
-									.Replace("\n", "\\n")
-									.Replace("\"", "\\\"");
-						}
+						var updatedDescription = updatedCard.Description.LeanKitHtmlToJiraPlainText();
 						updateJson += ", \"description\": \"" + updatedDescription + "\"";
 						isDirty = true;
 					}
@@ -427,9 +423,9 @@ namespace IntegrationService.Targets.JIRA
 				}
 
 				if (issue.Fields.Description != null &&
-				    issue.Fields.Description.SanitizeCardDescription() != card.Description)
+				    issue.Fields.Description.SanitizeCardDescription().JiraPlainTextToLeanKitHtml() != card.Description)
 				{
-					card.Description = issue.Fields.Description.SanitizeCardDescription();
+					card.Description = issue.Fields.Description.SanitizeCardDescription().JiraPlainTextToLeanKitHtml();
 					saveCard = true;
 				}
 
@@ -615,7 +611,7 @@ namespace IntegrationService.Targets.JIRA
 			{
 				Active = true,
 				Title = issue.Fields.Summary,
-				Description = issue.Fields.Description.SanitizeCardDescription(),
+				Description = issue.Fields.Description.SanitizeCardDescription().JiraPlainTextToLeanKitHtml(),
 				Priority = issue.LeanKitPriority(),
 				TypeId = mappedCardType.Id,
 				TypeName = mappedCardType.Name,
@@ -945,14 +941,7 @@ namespace IntegrationService.Targets.JIRA
 			string json = "{ \"fields\": { ";
 			json += "\"project\":  { \"key\": \"" + boardMapping.Identity.Target + "\" }";
 			json += ", \"summary\": \"" + card.Title.Replace("\"", "\\\"") + "\" ";
-			json += ", \"description\": \"" +
-			        (card.Description != null
-				        ? card.Description.Replace("</p>", "")
-					        .Replace("<p>", "")
-					        .Replace("\r", "\\r")
-					        .Replace("\n", "\\n")
-					        .Replace("\"", "\\\"")
-				        : "") + "\" ";
+			json += ", \"description\": \"" + card.Description.LeanKitHtmlToJiraPlainText() + "\" ";
 			json += ", \"issuetype\": { \"name\": \"" + jiraIssueType + "\" }";
 			json += ", \"priority\": { \"name\": \"" + GetPriority(card.Priority) + "\" }";
 

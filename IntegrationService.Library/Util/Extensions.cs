@@ -1,21 +1,42 @@
 ﻿//------------------------------------------------------------------------------
 // <copyright company="LeanKit Inc.">
 //     Copyright (c) LeanKit Inc.  All rights reserved.
-// </copyright> 
+// </copyright>
 //------------------------------------------------------------------------------
 
 using System;
 using System.Globalization;
 using System.Reflection;
+using System.Text;
 using RestSharp;
 
 namespace IntegrationService.Util
 {
 	public static class Extensions
 	{
+		public const int MaxCardDescriptionSize = 20000;
 		private static readonly Logger Log = Logger.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-		public const int MaxCardDescriptionSize = 20000;
+		public static string LeanKitHtmlToJiraPlainText(this string text)
+		{
+			if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+			if (text.StartsWith("<p>")) text = text.Substring(3);
+			if (text.EndsWith("</p>")) text = text.Remove(text.Length - 4);
+			return text.Replace("\\n", "")
+				.Replace("<p>", "")
+				.Replace("</p>", "\\r\\n\\r\\n")
+				.Replace("<br />", "\\r\\n")
+				.Replace("\"", "\\\"");
+		}
+
+		public static string JiraPlainTextToLeanKitHtml(this string text)
+		{
+			if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+			var tmp = "<p>" + text + "</p>";
+			tmp = tmp.Replace("\r\n\r\n", "</p>\n<p>")
+				.Replace("\r\n", "<br />");
+			return tmp;
+		}
 
 		public static string SanitizeCardDescription(this string description)
 		{
@@ -27,7 +48,7 @@ namespace IntegrationService.Util
 		{
 			try
 			{
-				return String.Format(CultureInfo.CurrentCulture, input, args);
+				return string.Format(CultureInfo.CurrentCulture, input, args);
 			}
 			catch (Exception ex)
 			{
@@ -49,7 +70,19 @@ namespace IntegrationService.Util
 
 		public static void Debug(this RestRequest request, IRestClient client)
 		{
-			Log.Debug("Attempting API: {0} {1}", request.Method, client.BaseUrl + request.Resource);
+			var requestParams = new StringBuilder();
+
+			if (request.Parameters.Count > 0)
+			{
+				requestParams.Append("?");
+				for (var i = 0; i < request.Parameters.Count; i++)
+				{
+					var p = request.Parameters[i];
+					if (i > 0) requestParams.Append("&");
+					requestParams.AppendFormat("{0}={1}", p.Name, p.Value);
+				}
+			}
+			Log.Debug("Attempting API: {0} {1}{2}", request.Method, client.BaseUrl + request.Resource, requestParams);
 		}
 
 		public static void Warn(this string message)
