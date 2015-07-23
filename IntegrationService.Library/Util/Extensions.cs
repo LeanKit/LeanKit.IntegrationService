@@ -22,7 +22,10 @@ namespace IntegrationService.Util
 			if (string.IsNullOrWhiteSpace(text)) return string.Empty;
 			if (text.StartsWith("<p>")) text = text.Substring(3);
 			if (text.EndsWith("</p>")) text = text.Remove(text.Length - 4);
-			return text.Replace("\\n", "")
+			return text
+				.Replace("\\n", "")
+				.Replace("\r", "")
+				.Replace("\n", "")
 				.Replace("<p>", "")
 				.Replace("</p>", "\\r\\n\\r\\n")
 				.Replace("<br />", "\\r\\n")
