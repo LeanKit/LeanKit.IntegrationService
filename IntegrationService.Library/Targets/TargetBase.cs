@@ -123,65 +123,67 @@ namespace IntegrationService.Targets
 
 		public virtual void Process()
 		{
-			if (Configuration != null && Configuration.Mappings != null)
-			{
-				var pollingInSeconds = Configuration.PollingFrequency / 1000;
-				
-				// Add 3 seconds to reduce risk of race conditions
-				// between LeanKit and Target system
-				pollingInSeconds += 3; 
+			if (Configuration == null || Configuration.Mappings == null) return;
 
-				foreach (var mapping in Configuration.Mappings)
+			var pollingInSeconds = Configuration.PollingFrequency / 1000;
+				
+			// Add 3 seconds to reduce risk of race conditions
+			// between LeanKit and Target system
+			pollingInSeconds += 3; 
+
+			foreach (var mapping in Configuration.Mappings)
+			{
+				// pickup any changes since the last time the service ran
+				// start subscription to each board in board mappings			
+				CheckForMissedCardMoves(mapping);
+				try
 				{
-					// pickup any changes since the last time the service ran
-					// start subscription to each board in board mappings			
-					CheckForMissedCardMoves(mapping);
-					try
-					{
-						Subscriptions.Subscribe(LeanKitAccount, mapping.Identity.LeanKit, pollingInSeconds, BoardUpdate);
-					}
-					catch (Exception ex)
-					{
-						Log.Error(string.Format("An error occured: {0} - {1} - {2}", ex.GetType(), ex.Message, ex.StackTrace));
-					}
+					Subscriptions.Subscribe(LeanKitAccount, mapping.Identity.LeanKit, pollingInSeconds, BoardUpdate);
+				}
+				catch (Exception ex)
+				{
+					Log.Error(string.Format("An error occured: {0} - {1} - {2}", ex.GetType(), ex.Message, ex.StackTrace));
 				}
 			}
 
-			if (Configuration != null && Configuration.Mappings != null)
+			QueryDate = Configuration.EarliestSyncDate.ToUniversalTime();
+
+			var i = 0;
+			while (true)
 			{
-				QueryDate = Configuration.EarliestSyncDate.ToUniversalTime();
+				i++;
+				if (i%10 == 0)
+					SaveRecentQueryDate(QueryDate);
 
-				int i = 0;
-				while (true)
+				foreach (var project in Configuration.Mappings)
 				{
-					i++;
-					if (i%10 == 0)
-						SaveRecentQueryDate(QueryDate);
-
-					foreach (var project in Configuration.Mappings)
+					try
 					{
-						try
-						{
-							Synchronize(project);
-						}
-						catch (Exception ex)
-						{
-							Log.Error("An error occurred: {0} - {1} - {2}", ex.GetType(), ex.Message, ex.StackTrace);
-						}
+						Synchronize(project);
 					}
-
-					if (StopEvent.WaitOne(Configuration.PollingFrequency))
-						break;
-
-					QueryDate = DateTime.Now;
+					catch (Exception ex)
+					{
+						Log.Error("An error occurred: {0} - {1} - {2}", ex.GetType(), ex.Message, ex.StackTrace);
+					}
 				}
+
+				if (StopEvent.WaitOne(Configuration.PollingFrequency))
+					break;
+
+				QueryDate = DateTime.Now;
 			}
 		}
 
 	    private void CheckForMissedCardMoves(BoardMapping mapping)
 	    {
+			if (!mapping.UpdateTargetItems)
+			{
+				Log.Info("Skipped check for missed card moves because 'UpdateTargetItems' is disabled.");
+				return;
+			}
+
 			// if we have local storage, we have saved board versions and we have one for this board			
-		    long boardId = mapping.Identity.LeanKit;
+			long boardId = mapping.Identity.LeanKit;
 			if (AppSettings != null &&
                 AppSettings.BoardVersions != null &&
                 AppSettings.BoardVersions.Any() &&
