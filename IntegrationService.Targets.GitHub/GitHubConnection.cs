@@ -40,11 +40,9 @@ namespace IntegrationService.Targets.GitHub
         {
 	        Host = host;
 	        if(isGitHubCom(host)){
-	        	//using github.com
 	       		RestClient.BaseUrl = new Uri("https://api.github.com");
 	        }else{
 			RestClient.BaseUrl = new Uri(host+"/api/v3");
-
 	        }
 		RestClient.Authenticator = new HttpBasicAuthenticator(user, password);
             
