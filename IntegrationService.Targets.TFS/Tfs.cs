@@ -325,7 +325,8 @@ namespace IntegrationService.Targets.TFS
 	    }
 
         protected void UpdateStateOfExternalItem(Card card, List<string> states, BoardMapping mapping, bool runOnlyOnce)
-		{
+        {
+	        if (!mapping.UpdateTargetItems) return;
 			if (!card.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase)) return;
 			if (string.IsNullOrEmpty(card.ExternalCardID)) return;
 

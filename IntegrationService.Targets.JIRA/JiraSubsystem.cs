@@ -159,31 +159,6 @@ namespace IntegrationService.Targets.JIRA
 			return _restClient.Execute(request);
 		}
 
-		//private string GetSessionCookie(string host, string user, string password)
-		//{
-		//	string sessionCookie = null;
-		//	try
-		//	{
-		//		_restClient.BaseUrl = new Uri(host);
-		//		var request = new RestRequest("rest/auth/1/session", Method.POST);
-		//		request.AddJsonBody(new { username = user, password = password });
-		//		var response = ExecuteRequest(request);
-		//		if (response.StatusCode != HttpStatusCode.OK)
-		//		{
-		//			string.Format("Error connecting to {0}{1}", _restClient.BaseUrl, request.Resource).Error();
-		//			if (response.Content != null) response.Content.Error();
-		//			return null;
-		//		};
-		//		var cookie = response.Cookies.FirstOrDefault(c => c.Name.Equals("JSESSIONID", StringComparison.OrdinalIgnoreCase));
-		//		if (cookie != null) sessionCookie = cookie.Value;
-		//	}
-		//	catch (Exception ex)
-		//	{
-		//		"Error getting session using rest/auth/1/session.".Error(ex);
-		//	}
-		//	return sessionCookie;
-		//}
-
 		public override void Init()
 		{
 			if (Configuration == null) return;
@@ -744,6 +719,8 @@ namespace IntegrationService.Targets.JIRA
 
 		protected void UpdateStateOfExternalItem(Card card, List<string> states, BoardMapping mapping, bool runOnlyOnce)
 		{
+			if (!mapping.UpdateTargetItems) return;
+
 			if (string.IsNullOrEmpty(card.ExternalSystemName) ||
 			    !card.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase))
 				return;

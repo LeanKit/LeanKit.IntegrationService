@@ -183,72 +183,68 @@ namespace IntegrationService.Targets
 			}
 
 			// if we have local storage, we have saved board versions and we have one for this board			
-			long boardId = mapping.Identity.LeanKit;
-			if (AppSettings != null &&
-                AppSettings.BoardVersions != null &&
-                AppSettings.BoardVersions.Any() &&
-                AppSettings.BoardVersions.ContainsKey(boardId))
+			var boardId = mapping.Identity.LeanKit;
+		    if (AppSettings == null || AppSettings.BoardVersions == null || !AppSettings.BoardVersions.Any() ||
+		        !AppSettings.BoardVersions.ContainsKey(boardId)) return;
+
+		    var version = AppSettings.BoardVersions[boardId];
+		    Log.Debug(string.Format("Checking for any cards moved to mapped lanes on board [{0}] since service last ran, version [{1}].", boardId, version));
+		    try
 		    {
-                var version = AppSettings.BoardVersions[boardId];
-				Log.Debug(string.Format("Checking for any cards moved to mapped lanes on board [{0}] since service last ran, version [{1}].", boardId, version));
-			    try
+			    var events = LeanKit.GetBoardHistorySince(boardId, version);
+			    var board = LeanKit.GetBoard(boardId);
+			    if (board == null || events == null) return;
+
+			    foreach (var ev in events)
 			    {
-				    var events = LeanKit.GetBoardHistorySince(boardId, version);
-				    var board = LeanKit.GetBoard(boardId);
-				    if (board != null && events != null)
+				    // check for created cards
+				    if (ev.EventType == "CardCreation")
 				    {
-					    foreach (var ev in events)
+					    var card = LeanKit.GetCard(board.Id, ev.CardId);
+					    if (card != null && string.IsNullOrEmpty(card.ExternalCardID))
 					    {
-							// check for created cards
-							if (ev.EventType == "CardCreation")
-							{
-								var card = LeanKit.GetCard(board.Id, ev.CardId);
-								if (card != null && string.IsNullOrEmpty(card.ExternalCardID))
-								{
-									try
-									{
-										CreateNewItem(card.ToCard(), mapping);
-									}
-									catch (Exception e)
-									{
-							            Log.Error("Exception for CreateNewItem: " + e.Message);
-						            }
-								}
-							}
-							// only look for moved cards
-						    else if (ev.ToLaneId != 0)
+						    try
 						    {
-							    var lane = board.GetLaneById(ev.ToLaneId);
-							    if (lane != null)
+							    CreateNewItem(card.ToCard(), mapping);
+						    }
+						    catch (Exception e)
+						    {
+							    Log.Error("Exception for CreateNewItem: " + e.Message);
+						    }
+					    }
+				    }
+				    // only look for moved cards
+				    else if (ev.ToLaneId != 0)
+				    {
+					    var lane = board.GetLaneById(ev.ToLaneId);
+					    if (lane != null)
+					    {
+						    if (lane.Id.HasValue && mapping.LaneToStatesMap.Any() && mapping.LaneToStatesMap.ContainsKey(lane.Id.Value))
+						    {
+							    if (mapping.LaneToStatesMap[lane.Id.Value] != null && mapping.LaneToStatesMap[lane.Id.Value].Count > 0)
 							    {
-								    if (lane.Id.HasValue && mapping.LaneToStatesMap.Any() && mapping.LaneToStatesMap.ContainsKey(lane.Id.Value))
+								    // board.GetCard() only seems to get cards in active lanes
+								    // using LeanKitApi.GetCard() instead because it will get 
+								    // cards in archive lanes
+								    var card = LeanKit.GetCard(board.Id, ev.CardId);
+								    if (card != null && !string.IsNullOrEmpty(card.ExternalCardID))
 								    {
-									    if (mapping.LaneToStatesMap[lane.Id.Value] != null && mapping.LaneToStatesMap[lane.Id.Value].Count > 0)
-									    {
-										    // board.GetCard() only seems to get cards in active lanes
-										    // using LeanKitApi.GetCard() instead because it will get 
-										    // cards in archive lanes
-										    var card = LeanKit.GetCard(board.Id, ev.CardId);
-										    if (card != null && !string.IsNullOrEmpty(card.ExternalCardID))
-										    {
-												try {
-												    UpdateStateOfExternalItem(card.ToCard(), mapping.LaneToStatesMap[lane.Id.Value], mapping);
-												} catch (Exception e) {
-													Log.Error("Exception for UpdateStateOfExternalItem: " + e.Message);
-												}
-										    }
+									    try {
+										    UpdateStateOfExternalItem(card.ToCard(), mapping.LaneToStatesMap[lane.Id.Value], mapping);
+									    } catch (Exception e) {
+										    Log.Error("Exception for UpdateStateOfExternalItem: " + e.Message);
 									    }
 								    }
 							    }
-						    }					    
+						    }
 					    }
-					    UpdateBoardVersion(board.Id, board.Version);
-				    }
+				    }					    
 			    }
-			    catch (Exception ex)
-			    {
-				    Log.Error(string.Format("An error occured: {0} - {1} - {2}", ex.GetType(), ex.Message, ex.StackTrace));
-			    }
+			    UpdateBoardVersion(board.Id, board.Version);
+		    }
+		    catch (Exception ex)
+		    {
+			    Log.Error(string.Format("An error occured: {0} - {1} - {2}", ex.GetType(), ex.Message, ex.StackTrace));
 		    }
 	    }
 
@@ -637,7 +633,7 @@ namespace IntegrationService.Targets
             // check for content change events
 			if (!boardConfig.CreateTargetItems)
 			{
-				Log.Info("Skipped adding target items because 'AddTargetItems' is disabled.");
+				Log.Info("Skipped checking for newly added cards because 'CreateTargetItems' is disabled.");
 			}
 			else
 			{
@@ -659,54 +655,66 @@ namespace IntegrationService.Targets
 				}
 			}
 
-			//Ignore all other events except for MovedCardEvents
-			if (!eventArgs.MovedCards.Any()) 
+			if (!boardConfig.UpdateTargetItems && !boardConfig.CreateTargetItems)
 			{
-				Log.Debug(String.Format("No Card Move Events detected event for board [{0}], exiting method", boardId));
+				Log.Info("Skipped checking moved cards because 'UpdateTargetItems' and 'CreateTargetItems' are disabled.");
+				UpdateBoardVersion(boardId);
 				return;
+			}
+
+			if (eventArgs.MovedCards.Any())
+			{
+				Log.Debug("Checking for cards moved to mapped lanes.");
+				foreach (var movedCardEvent in eventArgs.MovedCards.Where(x => x != null && x.ToLane != null && x.MovedCard != null))
+				{
+					try
+					{
+						if (!movedCardEvent.ToLane.Id.HasValue) continue;
+
+						if (boardConfig.LaneToStatesMap.Any() &&
+							boardConfig.LaneToStatesMap.ContainsKey(movedCardEvent.ToLane.Id.Value))
+						{
+							var states = boardConfig.LaneToStatesMap[movedCardEvent.ToLane.Id.Value];
+							if (states != null && states.Count > 0)
+							{
+								try
+								{
+									if (!string.IsNullOrEmpty(movedCardEvent.MovedCard.ExternalCardID) && boardConfig.UpdateTargetItems)
+									{
+										UpdateStateOfExternalItem(movedCardEvent.MovedCard, states, boardConfig);
+									}
+									else if (string.IsNullOrEmpty(movedCardEvent.MovedCard.ExternalCardID) && boardConfig.CreateTargetItems)
+									{
+										// This may be a task card being moved to the parent board, or card being moved from another board
+										CreateNewItem(movedCardEvent.MovedCard, boardConfig);
+									}
+								}
+								catch (Exception e)
+								{
+									Log.Error("Exception for UpdateStateOfExternalItem: " + e.Message);
+								}
+							}
+							else
+								Log.Debug(string.Format("No states are mapped to the Lane [{0}]", movedCardEvent.ToLane.Id.Value));
+						}
+						else
+						{
+							Log.Debug(string.Format("No states are mapped to the Lane [{0}]", movedCardEvent.ToLane.Id.Value));
+						}
+					}
+					catch (Exception e)
+					{
+						string.Format("Error processing moved card, [{0}]: {1}", movedCardEvent.MovedCard.Id, e.Message).Error(e);
+					}
+				}
+			}
+			else
+			{
+				Log.Debug(string.Format("No Card Move Events detected event for board [{0}], exiting method", boardId));
 			}
 
 			UpdateBoardVersion(boardId);
 
-			Log.Debug("Checking for cards moved to mapped lanes.");
-			foreach (var movedCardEvent in eventArgs.MovedCards.Where(x => x != null && x.ToLane != null && x.MovedCard != null))
-			{
-				try
-				{
-					if (!movedCardEvent.ToLane.Id.HasValue) continue;
-					
-					if (boardConfig.LaneToStatesMap.Any() &&
-					    boardConfig.LaneToStatesMap.ContainsKey(movedCardEvent.ToLane.Id.Value))
-					{
-						var states = boardConfig.LaneToStatesMap[movedCardEvent.ToLane.Id.Value];
-						if (states != null && states.Count > 0)
-						{
-							try
-							{
-								if (!string.IsNullOrEmpty(movedCardEvent.MovedCard.ExternalCardID))
-									UpdateStateOfExternalItem(movedCardEvent.MovedCard, states, boardConfig);
-								else if (boardConfig.CreateTargetItems) 
-									// This may be a task card being moved to the parent board, or card being moved from another board
-									CreateNewItem(movedCardEvent.MovedCard, boardConfig);
-							}
-							catch (Exception e)
-							{
-								Log.Error("Exception for UpdateStateOfExternalItem: " + e.Message);
-							}
-						}
-						else
-							Log.Debug(String.Format("No states are mapped to the Lane [{0}]", movedCardEvent.ToLane.Id.Value));
-					}
-					else
-					{
-						Log.Debug(String.Format("No states are mapped to the Lane [{0}]", movedCardEvent.ToLane.Id.Value));
-					}
-				}
-				catch (Exception e)
-				{
-					string.Format("Error processing moved card, [{0}]: {1}", movedCardEvent.MovedCard.Id, e.Message).Error(e);
-				}
-			}
 		}
 
 	    protected void SaveRecentQueryDate(DateTime queryDate)
