@@ -3,6 +3,7 @@
 //     Copyright (c) LeanKit Inc.  All rights reserved.
 // </copyright> 
 //------------------------------------------------------------------------------
+// This is my file now!
 
 using System;
 using System.Collections.Generic;
@@ -877,7 +878,26 @@ namespace IntegrationService.Targets.TFS
 		            }
 		            else
 		            {
-						_projectCollectionNetworkCredentials = new NetworkCredential(Configuration.Target.User, Configuration.Target.Password);
+                        // Check for common NTLM/Windows Auth convention
+                        // ("DOMAIN\Username") in User input and separate 
+                        // domain from username:
+                        string domain = null;
+                        string username = null;
+                        if (Configuration.Target.User.Contains("\\"))
+                        {
+                            string[] domainUser = Configuration.Target.User.Split('\\');
+                            domain = domainUser[0];
+                            username = domainUser[1];
+                        }
+                        if (domain != null)
+                        {
+                            Log.Debug("Logging in using NTLM auth (using domain: {0}, username: {1})", domain, username);
+						    _projectCollectionNetworkCredentials = new NetworkCredential(username, Configuration.Target.Password, domain);
+                        }
+                        else
+                        {
+						    _projectCollectionNetworkCredentials = new NetworkCredential(Configuration.Target.User, Configuration.Target.Password);
+                        }
 			            if (_projectCollection == null)
 			            {
 				            _projectCollection = new TfsTeamProjectCollection(_projectCollectionUri, _projectCollectionNetworkCredentials);
