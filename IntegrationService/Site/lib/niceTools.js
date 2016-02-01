@@ -21,6 +21,8 @@ String.prototype.toId = function (includeHashSymbol) {
     str = str.toLowerCase();
     // replace spaces with double underscores
     str = str.replace(/ /g, "__");
+    // replace slash with triple dash
+    str = str.replace(/\//g, "---");
     
     if (includeHashSymbol) str = "#" + str;
     
@@ -29,8 +31,11 @@ String.prototype.toId = function (includeHashSymbol) {
 
 String.prototype.fromId = function () {
     var str = this;
+    // replace double pluses with slash
+    str = str.replace(/---/g, "/");
     // replace double underscores with spaces
     str = str.replace(/__/g, " ");
+
 
     // trim and convert to Uppercase first letter
     str = str.replace(/\w\S*/g, function(txt) {

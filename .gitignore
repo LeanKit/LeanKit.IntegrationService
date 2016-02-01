@@ -29,3 +29,4 @@ node_modules
 packages
 *.sln.DotSettings
 *.bak
+.vs
