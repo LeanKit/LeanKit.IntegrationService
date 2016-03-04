@@ -125,11 +125,12 @@ namespace IntegrationService.Targets
 		{
 			if (Configuration == null || Configuration.Mappings == null) return;
 
-			var pollingInSeconds = Configuration.PollingFrequency / 1000;
+			const int pollingInSeconds = 5;
+			//var pollingInSeconds = Configuration.PollingFrequency / 1000;
 				
-			// Add 3 seconds to reduce risk of race conditions
-			// between LeanKit and Target system
-			pollingInSeconds += 3; 
+			//// Add 3 seconds to reduce risk of race conditions
+			//// between LeanKit and Target system
+			//pollingInSeconds += 3; 
 
 			foreach (var mapping in Configuration.Mappings)
 			{
@@ -664,7 +665,7 @@ namespace IntegrationService.Targets
 				if (!boardConfig.UpdateTargetItems && !boardConfig.CreateTargetItems)
 				{
 					Log.Info("Skipped checking moved cards because 'UpdateTargetItems' and 'CreateTargetItems' are disabled.");
-					// UpdateBoardVersion(boardId);
+					UpdateBoardVersion(boardId);
 					continue;
 				}
 

@@ -540,12 +540,13 @@ namespace IntegrationService.Targets.JIRA
 
 			var resp = new JsonSerializer<IssuesResponse>().DeserializeFromString(jiraResp.Content);
 
-			Log.Info("\nQueried [{0}] at {1} for changes after {2}", project.Identity.Target, QueryDate,
+			Log.Info("Queried [{0}] at {1} for changes after {2}", project.Identity.Target, QueryDate,
 				queryAsOfDate.ToString("o"));
 
 			if (resp != null && resp.Issues != null && resp.Issues.Any())
 			{
 				var issues = resp.Issues;
+				Log.Info("{0} item(s) queried.", issues.Count);
 				foreach (var issue in issues)
 				{
 					Log.Info("Issue [{0}]: {1}, {2}, {3}", issue.Key, issue.Fields.Summary, issue.Fields.Status.Name,
@@ -565,10 +566,9 @@ namespace IntegrationService.Targets.JIRA
 						if (project.UpdateCards)
 							IssueUpdated(issue, card, project);
 						else
-							Log.Info("Skipped card update because 'UpdateCards' is disabled.");
+							Log.Debug("Skipped card update because 'UpdateCards' is disabled.");
 					}
 				}
-				Log.Info("{0} item(s) queried.\n", issues.Count);
 			}
 		}
 
@@ -622,14 +622,14 @@ namespace IntegrationService.Targets.JIRA
 
 			// TODO: Add size from the custom story points field.
 
-			Log.Info("Creating a card of type [{0}] for issue [{1}] on Board [{2}] on Lane [{3}]", mappedCardType.Name,
+			Log.Debug("Creating a card of type [{0}] for issue [{1}] on Board [{2}] on Lane [{3}]", mappedCardType.Name,
 				issue.Key, boardId, laneId);
 
 			CardAddResult cardAddResult = null;
 
-			int tries = 0;
-			bool success = false;
-			while (tries < 10 && !success)
+			var tries = 0;
+			var success = false;
+			while (tries < 3 && !success)
 			{
 				if (tries > 0)
 				{
@@ -736,9 +736,9 @@ namespace IntegrationService.Targets.JIRA
 			if (states == null || states.Count == 0)
 				return;
 
-			int tries = 0;
-			bool success = false;
-			while (tries < 10 && !success && (!runOnlyOnce || tries == 0))
+			var tries = 0;
+			var success = false;
+			while (tries < 3 && !success && (!runOnlyOnce || tries == 0))
 			{
 				if (tries > 0)
 				{

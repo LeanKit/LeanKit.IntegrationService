@@ -109,7 +109,7 @@ namespace IntegrationService.Targets.TFS
 
             var changedItems = query.EndQuery(cancelableAsyncResult);
 
-			Log.Info("\nQuery [{0}] for changes after {1}", project.Identity.Target, queryAsOfDate);
+			Log.Info("Query [{0}] for changes after {1}", project.Identity.Target, queryAsOfDate);
 			Log.Debug(queryStr);
 
 		    foreach (WorkItem item in changedItems)
@@ -136,7 +136,7 @@ namespace IntegrationService.Targets.TFS
                         Log.Info("Skipped card update because 'UpdateCards' is disabled.");
                 }
             }
-            Log.Info("{0} item(s) queried.\n", changedItems.Count);            
+            Log.Info("{0} item(s) queried.", changedItems.Count);            
         }
 
 
