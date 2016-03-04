@@ -495,79 +495,80 @@ namespace IntegrationService.Targets
 		{
 		    if (eventArgs.BoardStructureChanged)
 		    {
-		        Log.Debug(String.Format("Received BoardStructureChanged event for [{0}], reloading Configuration", boardId));
+		        Log.Debug(string.Format("Received BoardStructureChanged event for [{0}], reloading Configuration", boardId));
 		        // TODO: Ideally this would be ReloadConfiguration(boardId);
 		        ReloadConfiguration();
 		    }
 
-		    var boardConfig = Configuration.Mappings.FirstOrDefault(x => x.Identity.LeanKit == boardId);
-		    if (boardConfig == null)
-		    {
-		        Log.Debug(String.Format("Expected a configuration for board [{0}].", boardId));
-		        return;
-		    }
+			Log.Debug(string.Format("Received board changed event for board [{0}]", boardId));
 
-		    Log.Debug(String.Format("Received board changed event for board [{0}]", boardId));
+			// var boardConfig = Configuration.Mappings.FirstOrDefault(x => x.Identity.LeanKit == boardId);
+			var boardConfigs = Configuration.Mappings.Where(x => x.Identity.LeanKit == boardId).ToList();
+			if (boardConfigs.Count == 0)
+			{
+				Log.Debug(string.Format("Expected a configuration for board [{0}].", boardId));
+				return;
+			}
 
-            // check for content change events
-		    if (!boardConfig.UpdateTargetItems)
-		    {
-		        Log.Info("Skipped target item update because 'UpdateTargetItems' is disabled.");
-		    }
-		    else
-		    {
-		        Log.Info("Checking for updated cards.");
-			    if (eventArgs.UpdatedCards.Any())
-			    {
-				    var itemsUpdated = new List<string>();
-				    foreach (var updatedCardEvent in eventArgs.UpdatedCards)
-				    {
-					    try
-					    {
-						    if (updatedCardEvent.UpdatedCard == null) throw new Exception("Updated card is null");
-						    if (updatedCardEvent.OriginalCard == null) throw new Exception("Original card is null");
+			// check for content change events
+			if (boardConfigs.Any(c => c.UpdateTargetItems))
+			{
+				var boardConfig =
+					Configuration.Mappings.FirstOrDefault(x => x.Identity.LeanKit == boardId && x.UpdateTargetItems == true);
 
-						    var card = updatedCardEvent.UpdatedCard;
+				Log.Info("Checking for updated cards.");
 
-						    if (string.IsNullOrEmpty(card.ExternalCardID) && !string.IsNullOrEmpty(card.ExternalSystemUrl))
-						    {
-							    // try to grab id from url
-							    var pos = card.ExternalSystemUrl.LastIndexOf('=');
-							    if (pos > 0)
-								    card.ExternalCardID = card.ExternalSystemUrl.Substring(pos + 1);
-						    }
+				if (eventArgs.UpdatedCards.Any())
+				{
+					var itemsUpdated = new List<string>();
+					foreach (var updatedCardEvent in eventArgs.UpdatedCards)
+					{
+						try
+						{
+							if (updatedCardEvent.UpdatedCard == null) throw new Exception("Updated card is null");
+							if (updatedCardEvent.OriginalCard == null) throw new Exception("Original card is null");
 
-						    if (string.IsNullOrEmpty(card.ExternalCardID)) continue; // still invalid; skip this card
+							var card = updatedCardEvent.UpdatedCard;
 
-						    if (card.Title != updatedCardEvent.OriginalCard.Title)
-							    itemsUpdated.Add("Title");
-						    if (card.Description != updatedCardEvent.OriginalCard.Description)
-							    itemsUpdated.Add("Description");
-						    if (card.Tags != updatedCardEvent.OriginalCard.Tags)
-							    itemsUpdated.Add("Tags");
-						    if (card.Priority != updatedCardEvent.OriginalCard.Priority)
-							    itemsUpdated.Add("Priority");
-						    if (card.DueDate != updatedCardEvent.OriginalCard.DueDate)
-							    itemsUpdated.Add("DueDate");
-						    if (card.Size != updatedCardEvent.OriginalCard.Size)
-							    itemsUpdated.Add("Size");
-						    if (card.IsBlocked != updatedCardEvent.OriginalCard.IsBlocked)
-							    itemsUpdated.Add("Blocked");
+							if (string.IsNullOrEmpty(card.ExternalCardID) && !string.IsNullOrEmpty(card.ExternalSystemUrl))
+							{
+								// try to grab id from url
+								var pos = card.ExternalSystemUrl.LastIndexOf('=');
+								if (pos > 0)
+									card.ExternalCardID = card.ExternalSystemUrl.Substring(pos + 1);
+							}
 
-						    if (itemsUpdated.Count <= 0) continue;
+							if (string.IsNullOrEmpty(card.ExternalCardID)) continue; // still invalid; skip this card
 
-						    CardUpdated(card, itemsUpdated, boardConfig);
-					    }
-					    catch (Exception e)
-					    {
+							if (card.Title != updatedCardEvent.OriginalCard.Title)
+								itemsUpdated.Add("Title");
+							if (card.Description != updatedCardEvent.OriginalCard.Description)
+								itemsUpdated.Add("Description");
+							if (card.Tags != updatedCardEvent.OriginalCard.Tags)
+								itemsUpdated.Add("Tags");
+							if (card.Priority != updatedCardEvent.OriginalCard.Priority)
+								itemsUpdated.Add("Priority");
+							if (card.DueDate != updatedCardEvent.OriginalCard.DueDate)
+								itemsUpdated.Add("DueDate");
+							if (card.Size != updatedCardEvent.OriginalCard.Size)
+								itemsUpdated.Add("Size");
+							if (card.IsBlocked != updatedCardEvent.OriginalCard.IsBlocked)
+								itemsUpdated.Add("Blocked");
+
+							if (itemsUpdated.Count <= 0) continue;
+
+							CardUpdated(card, itemsUpdated, boardConfig);
+						}
+						catch (Exception e)
+						{
 							var card = updatedCardEvent.UpdatedCard ?? updatedCardEvent.OriginalCard ?? new Card();
 							string.Format("Error processing blocked card, [{0}]: {1}", card.Id, e.Message).Error(e);
-					    }
-				    }
-			    }
-			    if (eventArgs.BlockedCards.Any())
+						}
+					}
+				}
+				if (eventArgs.BlockedCards.Any())
 				{
-		            var itemsUpdated = new List<string>();
+					var itemsUpdated = new List<string>();
 					foreach (var cardBlockedEvent in eventArgs.BlockedCards)
 					{
 						try
@@ -599,7 +600,7 @@ namespace IntegrationService.Targets
 				if (eventArgs.UnBlockedCards.Any())
 				{
 					var itemsUpdated = new List<string>();
-					foreach (var cardUnblockedEvent in eventArgs.UnBlockedCards) 
+					foreach (var cardUnblockedEvent in eventArgs.UnBlockedCards)
 					{
 						try
 						{
@@ -625,92 +626,98 @@ namespace IntegrationService.Targets
 							var card = cardUnblockedEvent.UnBlockedCard ?? new Card();
 							string.Format("Error processing unblocked card, [{0}]: {1}", card.Id, e.Message).Error(e);
 						}
-					}					
+					}
 				}
-		    }
-
-
-            // check for content change events
-			if (!boardConfig.CreateTargetItems)
-			{
-				Log.Info("Skipped checking for newly added cards because 'CreateTargetItems' is disabled.");
 			}
 			else
 			{
-				Log.Info("Checking for added cards.");
-				if (eventArgs.AddedCards.Any())
+				Log.Info("Skipped target item update because 'UpdateTargetItems' is disabled.");
+			}
+
+			foreach (var boardConfig in boardConfigs)
+			{
+				// check for content change events
+				if (!boardConfig.CreateTargetItems)
 				{
-					foreach (var newCard in eventArgs.AddedCards.Select(cardAddEvent => cardAddEvent.AddedCard)
-						.Where(newCard => newCard != null && string.IsNullOrEmpty(newCard.ExternalCardID)))
+					Log.Info("Skipped checking for newly added cards because 'CreateTargetItems' is disabled.");
+				}
+				else
+				{
+					Log.Info("Checking for added cards.");
+					if (eventArgs.AddedCards.Any())
+					{
+						foreach (var newCard in eventArgs.AddedCards.Select(cardAddEvent => cardAddEvent.AddedCard)
+							.Where(newCard => newCard != null && string.IsNullOrEmpty(newCard.ExternalCardID)))
+						{
+							try
+							{
+								CreateNewItem(newCard, boardConfig);
+							}
+							catch (Exception e)
+							{
+								string.Format("Error processing newly created card, [{0}]: {1}", newCard.Id, e.Message).Error(e);
+							}
+						}
+					}
+				}
+
+				if (!boardConfig.UpdateTargetItems && !boardConfig.CreateTargetItems)
+				{
+					Log.Info("Skipped checking moved cards because 'UpdateTargetItems' and 'CreateTargetItems' are disabled.");
+					// UpdateBoardVersion(boardId);
+					continue;
+				}
+
+				if (eventArgs.MovedCards.Any())
+				{
+					Log.Debug("Checking for cards moved to mapped lanes.");
+					foreach (var movedCardEvent in eventArgs.MovedCards.Where(x => x != null && x.ToLane != null && x.MovedCard != null))
 					{
 						try
 						{
-							CreateNewItem(newCard, boardConfig);
+							if (!movedCardEvent.ToLane.Id.HasValue) continue;
+
+							if (boardConfig.LaneToStatesMap.Any() &&
+								boardConfig.LaneToStatesMap.ContainsKey(movedCardEvent.ToLane.Id.Value))
+							{
+								var states = boardConfig.LaneToStatesMap[movedCardEvent.ToLane.Id.Value];
+								if (states != null && states.Count > 0)
+								{
+									try
+									{
+										if (!string.IsNullOrEmpty(movedCardEvent.MovedCard.ExternalCardID) && boardConfig.UpdateTargetItems)
+										{
+											UpdateStateOfExternalItem(movedCardEvent.MovedCard, states, boardConfig);
+										}
+										else if (string.IsNullOrEmpty(movedCardEvent.MovedCard.ExternalCardID) && boardConfig.CreateTargetItems)
+										{
+											// This may be a task card being moved to the parent board, or card being moved from another board
+											CreateNewItem(movedCardEvent.MovedCard, boardConfig);
+										}
+									}
+									catch (Exception e)
+									{
+										Log.Error("Exception for UpdateStateOfExternalItem: " + e.Message);
+									}
+								}
+								else
+									Log.Debug(string.Format("No states are mapped to the Lane [{0}]", movedCardEvent.ToLane.Id.Value));
+							}
+							else
+							{
+								Log.Debug(string.Format("No states are mapped to the Lane [{0}]", movedCardEvent.ToLane.Id.Value));
+							}
 						}
 						catch (Exception e)
 						{
-							string.Format("Error processing newly created card, [{0}]: {1}", newCard.Id, e.Message).Error(e);
+							string.Format("Error processing moved card, [{0}]: {1}", movedCardEvent.MovedCard.Id, e.Message).Error(e);
 						}
 					}
 				}
-			}
-
-			if (!boardConfig.UpdateTargetItems && !boardConfig.CreateTargetItems)
-			{
-				Log.Info("Skipped checking moved cards because 'UpdateTargetItems' and 'CreateTargetItems' are disabled.");
-				UpdateBoardVersion(boardId);
-				return;
-			}
-
-			if (eventArgs.MovedCards.Any())
-			{
-				Log.Debug("Checking for cards moved to mapped lanes.");
-				foreach (var movedCardEvent in eventArgs.MovedCards.Where(x => x != null && x.ToLane != null && x.MovedCard != null))
+				else
 				{
-					try
-					{
-						if (!movedCardEvent.ToLane.Id.HasValue) continue;
-
-						if (boardConfig.LaneToStatesMap.Any() &&
-							boardConfig.LaneToStatesMap.ContainsKey(movedCardEvent.ToLane.Id.Value))
-						{
-							var states = boardConfig.LaneToStatesMap[movedCardEvent.ToLane.Id.Value];
-							if (states != null && states.Count > 0)
-							{
-								try
-								{
-									if (!string.IsNullOrEmpty(movedCardEvent.MovedCard.ExternalCardID) && boardConfig.UpdateTargetItems)
-									{
-										UpdateStateOfExternalItem(movedCardEvent.MovedCard, states, boardConfig);
-									}
-									else if (string.IsNullOrEmpty(movedCardEvent.MovedCard.ExternalCardID) && boardConfig.CreateTargetItems)
-									{
-										// This may be a task card being moved to the parent board, or card being moved from another board
-										CreateNewItem(movedCardEvent.MovedCard, boardConfig);
-									}
-								}
-								catch (Exception e)
-								{
-									Log.Error("Exception for UpdateStateOfExternalItem: " + e.Message);
-								}
-							}
-							else
-								Log.Debug(string.Format("No states are mapped to the Lane [{0}]", movedCardEvent.ToLane.Id.Value));
-						}
-						else
-						{
-							Log.Debug(string.Format("No states are mapped to the Lane [{0}]", movedCardEvent.ToLane.Id.Value));
-						}
-					}
-					catch (Exception e)
-					{
-						string.Format("Error processing moved card, [{0}]: {1}", movedCardEvent.MovedCard.Id, e.Message).Error(e);
-					}
+					Log.Debug(string.Format("No Card Move Events detected event for board [{0}], exiting method", boardId));
 				}
-			}
-			else
-			{
-				Log.Debug(string.Format("No Card Move Events detected event for board [{0}], exiting method", boardId));
 			}
 
 			UpdateBoardVersion(boardId);

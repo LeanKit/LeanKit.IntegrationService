@@ -90,14 +90,12 @@ namespace IntegrationService
             }
             lock (BoardSubscriptions)
             {
-                if (!BoardSubscriptions.ContainsKey(boardId))
-                {
-	                BoardSubscriptions[boardId] = new BoardSubscription(auth, boardId, pollingFrequency);
-                }
- 
-                BoardSubscriptions[boardId].Notifications.Add(notification);
-                
-                return BoardSubscriptions[boardId].LkClientApi;
+	            if (BoardSubscriptions.ContainsKey(boardId)) return BoardSubscriptions[boardId].LkClientApi;
+
+	            BoardSubscriptions[boardId] = new BoardSubscription(auth, boardId, pollingFrequency);
+	            BoardSubscriptions[boardId].Notifications.Add(notification);
+
+	            return BoardSubscriptions[boardId].LkClientApi;
             }
         }
 

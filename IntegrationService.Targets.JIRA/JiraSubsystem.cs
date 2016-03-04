@@ -465,30 +465,30 @@ namespace IntegrationService.Targets.JIRA
 			    !string.IsNullOrEmpty(issue.Fields.Status.Name))
 			{
 				var laneIds = boardMapping.LanesFromState(issue.Fields.Status.Name);
-				if (laneIds.Any())
+				if (!laneIds.Any()) return;
+				if (laneIds.Contains(card.LaneId))
 				{
-					if (!laneIds.Contains(card.LaneId))
-					{
-						// first let's see if any of the lanes are sibling lanes, if so then
-						// we should be using one of them. So we'll limit the results to just siblings
-						if (boardMapping.ValidLanes != null)
-						{
-							var siblingLaneIds = (from siblingLaneId in laneIds
-								let parentLane =
-									boardMapping.ValidLanes.FirstOrDefault(x =>
-										x.HasChildLanes &&
-										x.ChildLaneIds.Contains(siblingLaneId) &&
-										x.ChildLaneIds.Contains(card.LaneId))
-								where parentLane != null
-								select siblingLaneId).ToList();
-							if (siblingLaneIds.Any())
-								laneIds = siblingLaneIds;
-						}
-
-						LeanKit.MoveCard(boardMapping.Identity.LeanKit, card.Id, laneIds.First(), 0,
-							"Moved Lane From Jira Issue");
-					}
+					Log.Debug("Card [{0}] is already in mapped Lane [{1}]", card.Id, card.LaneId);
+					return;
 				}
+				// first let's see if any of the lanes are sibling lanes, if so then
+				// we should be using one of them. So we'll limit the results to just siblings
+				if (boardMapping.ValidLanes != null)
+				{
+					var siblingLaneIds = (from siblingLaneId in laneIds
+						let parentLane =
+							boardMapping.ValidLanes.FirstOrDefault(x =>
+								x.HasChildLanes &&
+								x.ChildLaneIds.Contains(siblingLaneId) &&
+								x.ChildLaneIds.Contains(card.LaneId))
+						where parentLane != null
+						select siblingLaneId).ToList();
+					if (siblingLaneIds.Any())
+						laneIds = siblingLaneIds;
+				}
+				var laneId = laneIds.First();
+				Log.Info("Moving card [{0}] to Lane [{1}]", card.Id, laneId);
+				LeanKit.MoveCard(boardMapping.Identity.LeanKit, card.Id, laneId, 0, "Moved Lane From Jira Issue");
 			}
 		}
 
@@ -497,6 +497,7 @@ namespace IntegrationService.Targets.JIRA
 			Log.Debug("Polling Jira for Issues");
 
 			var queryAsOfDate = QueryDate.AddMilliseconds(Configuration.PollingFrequency*-1.5);
+			//var queryAsOfDate = QueryDate.AddMinutes(-5);
 
 			string jqlQuery;
 			var formattedQueryDate = queryAsOfDate.ToString(QueryDateFormat, CultureInfo.InvariantCulture);
