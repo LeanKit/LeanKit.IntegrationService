@@ -10,6 +10,7 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using IntegrationService.Util;
 using LeanKit.API.Client.Library;
@@ -55,6 +56,60 @@ namespace IntegrationService.Targets
 			        };
 		        return _appSettings;
 	        }
+	    }
+
+	    protected void TargetSetCacheVersion(string key, string value)
+	    {
+			const int cacheExpiration = 60 * 60 * 1000;
+			var targetKey = GetTargetCacheKey(key);
+			if (MemoryCache.Cache.Exists(targetKey))
+			{
+				MemoryCache.Cache.Update(targetKey, value);
+			}
+			else
+			{
+				MemoryCache.Cache.Store(targetKey, value, cacheExpiration);
+			}
+		}
+
+	    protected bool TargetCacheCheckForVersion(string key, string value)
+	    {
+			var targetKey = GetTargetCacheKey(key);
+		    if (!MemoryCache.Cache.Exists(targetKey)) return false;
+		    var val = (string) MemoryCache.Cache.Get(targetKey);
+		    return val.Equals(value, StringComparison.OrdinalIgnoreCase);
+	    }
+
+		private static string GetTargetCacheKey(string key)
+		{
+			var rgx = new Regex("[^a-zA-Z0-9-]");
+			return "t-" + rgx.Replace(key, "");
+		}
+
+		private static string GetCardCacheKey(long cardId, bool isStateChange)
+	    {
+		    return string.Format("{0}-{1}", cardId, isStateChange);
+	    }
+
+	    protected void CacheCardVersion(long cardId, bool isStateChange, long version)
+	    {
+		    const int cardCacheExpiration = 60*60*1000;
+			var key = GetCardCacheKey(cardId, isStateChange);
+		    if (MemoryCache.Cache.Exists(key))
+		    {
+			    MemoryCache.Cache.Update(key, version);
+		    }
+		    else
+		    {
+			    MemoryCache.Cache.Store(key, version, cardCacheExpiration);
+		    }
+	    }
+
+	    protected long GetCachedCardVersion(long cardId, bool isStateChange)
+	    {
+		    var key = GetCardCacheKey(cardId, isStateChange);
+		    if (!MemoryCache.Cache.Exists(key)) return 0;
+		    return (long) MemoryCache.Cache.Get(key);
 	    }
 
 	    private User _currentUser;
@@ -530,6 +585,12 @@ namespace IntegrationService.Targets
 							if (updatedCardEvent.OriginalCard == null) throw new Exception("Original card is null");
 
 							var card = updatedCardEvent.UpdatedCard;
+							var version = GetCachedCardVersion(card.Id, false);
+							if (version >= card.Version)
+							{
+								Log.Debug("Processing UpdatedCards events, Card [{0}] with version [{1}] has already been processed. Skipping comparison.", card.Id, card.Version);
+								continue;
+							}
 
 							if (string.IsNullOrEmpty(card.ExternalCardID) && !string.IsNullOrEmpty(card.ExternalSystemUrl))
 							{
@@ -744,7 +805,7 @@ namespace IntegrationService.Targets
             Configuration.EarliestSyncDate = AppSettings.RecentQueryDate;
 		}
 
-		private void UpdateBoardVersion(long boardId, long? version = null) 
+		protected void UpdateBoardVersion(long boardId, long? version = null) 
 		{
 			if (!version.HasValue) {
 				var board = LeanKit.GetBoard(boardId);

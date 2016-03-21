@@ -192,6 +192,13 @@ namespace IntegrationService.Targets.JIRA
 				return;
 			}
 
+			var version = GetCachedCardVersion(updatedCard.Id, false);
+			if (version >= updatedCard.Version)
+			{
+				Log.Debug("CardUpdated, Card [{0}] with version [{1}] has already been processed. Skipping comparison.", updatedCard.Id, updatedCard.Version);
+				return;
+			}
+
 			//https://yoursite.atlassian.net/rest/api/latest/issue/{issueIdOrKey}
 			var request = CreateRequest(string.Format("rest/api/latest/issue/{0}", updatedCard.ExternalCardID),
 				Method.GET);
@@ -328,6 +335,7 @@ namespace IntegrationService.Targets.JIRA
 							else
 							{
 								Log.Debug(String.Format("Updated Issue [{0}]", updatedCard.ExternalCardID));
+								CacheCardVersion(updatedCard.Id, false, updatedCard.Version);
 							}
 						}
 						catch (Exception ex)
@@ -366,8 +374,8 @@ namespace IntegrationService.Targets.JIRA
 							}
 							else
 							{
-								Log.Debug(String.Format("Created comment for updated Issue [{0}]",
-									updatedCard.ExternalCardID));
+								Log.Debug(string.Format("Created comment for updated Issue [{0}]", updatedCard.ExternalCardID));
+								CacheCardVersion(updatedCard.Id, false, updatedCard.Version);
 							}
 						}
 						catch (Exception ex)
@@ -398,7 +406,7 @@ namespace IntegrationService.Targets.JIRA
 				}
 
 				if (issue.Fields.Description != null &&
-				    issue.Fields.Description.SanitizeCardDescription().JiraPlainTextToLeanKitHtml() != card.Description)
+					issue.Fields.Description.SanitizeCardDescription().JiraPlainTextToLeanKitHtml() != card.Description)
 				{
 					card.Description = issue.Fields.Description.SanitizeCardDescription().JiraPlainTextToLeanKitHtml();
 					saveCard = true;
@@ -455,7 +463,9 @@ namespace IntegrationService.Targets.JIRA
 			if (saveCard)
 			{
 				Log.Info("Updating card [{0}]", card.Id);
-				LeanKit.UpdateCard(boardId, card);
+				var result = LeanKit.UpdateCard(boardId, card);
+				CacheCardVersion(result.CardDTO.Id, false, result.CardDTO.Version);
+				TargetSetCacheVersion(issue.Key, issue.Fields.Updated);
 			}
 
 			// check the state of the work item
@@ -469,6 +479,7 @@ namespace IntegrationService.Targets.JIRA
 				if (laneIds.Contains(card.LaneId))
 				{
 					Log.Debug("Card [{0}] is already in mapped Lane [{1}]", card.Id, card.LaneId);
+					TargetSetCacheVersion(issue.Key, issue.Fields.Updated);
 					return;
 				}
 				// first let's see if any of the lanes are sibling lanes, if so then
@@ -489,6 +500,9 @@ namespace IntegrationService.Targets.JIRA
 				var laneId = laneIds.First();
 				Log.Info("Moving card [{0}] to Lane [{1}]", card.Id, laneId);
 				LeanKit.MoveCard(boardMapping.Identity.LeanKit, card.Id, laneId, 0, "Moved Lane From Jira Issue");
+				var updatedCard = LeanKit.GetCard(boardMapping.Identity.LeanKit, card.Id);
+				CacheCardVersion(updatedCard.Id, true, updatedCard.Version);
+				TargetSetCacheVersion(issue.Key, issue.Fields.Updated);
 			}
 		}
 
@@ -513,7 +527,7 @@ namespace IntegrationService.Targets.JIRA
 				{
 					queryFilter += project.ExcludedTypeQuery;
 				}
-				jqlQuery = string.Format("project=\"{0}\" {1} and updated > \"{2}\" order by created asc",
+				jqlQuery = string.Format("project=\"{0}\" {1} and updated > \"{2}\" order by updated asc",
 					project.Identity.Target, queryFilter, formattedQueryDate);
 			}
 
@@ -522,7 +536,7 @@ namespace IntegrationService.Targets.JIRA
 
 			request.AddParameter("jql", jqlQuery);
 			request.AddParameter("fields",
-				"id,status,priority,summary,description,issuetype,type,assignee,duedate,labels");
+				"id,status,priority,summary,description,issuetype,type,assignee,duedate,labels,updated");
 			request.AddParameter("maxResults", "9999");
 
 			var jiraResp = ExecuteRequest(request);
@@ -549,6 +563,11 @@ namespace IntegrationService.Targets.JIRA
 				Log.Info("{0} item(s) queried.", issues.Count);
 				foreach (var issue in issues)
 				{
+					if (TargetCacheCheckForVersion(issue.Key, issue.Fields.Updated))
+					{
+						Log.Info("Issue [{0}] already processed, skipping.", issue.Key);
+						continue;
+					}
 					Log.Info("Issue [{0}]: {1}, {2}, {3}", issue.Key, issue.Fields.Summary, issue.Fields.Status.Name,
 						issue.Fields.Priority.Name);
 
@@ -643,6 +662,9 @@ namespace IntegrationService.Targets.JIRA
 				{
 					cardAddResult = LeanKit.AddCard(boardId, card, "New Card From Jira Issue");
 					success = true;
+					CacheCardVersion(cardAddResult.CardId, false, 1);
+					CacheCardVersion(cardAddResult.CardId, true, 1);
+					TargetSetCacheVersion(issue.Key, issue.Fields.Updated);
 				}
 				catch (Exception ex)
 				{
@@ -729,6 +751,13 @@ namespace IntegrationService.Targets.JIRA
 			if (string.IsNullOrEmpty(card.ExternalCardID))
 			{
 				Log.Debug("Ignoring card [{0}] with missing external id value.", card.Id);
+				return;
+			}
+
+			var version = GetCachedCardVersion(card.Id, true);
+			if (version >= card.Version)
+			{
+				Log.Debug("UpdateStateOfExternalItem, Card [{0}] with version [{1}] has already been processed. Skipping comparison.", card.Id, card.Version);
 				return;
 			}
 
@@ -888,8 +917,9 @@ namespace IntegrationService.Targets.JIRA
 									else
 									{
 										success = true;
-										Log.Debug(String.Format("Updated state for Issue [{0}] to [{1}]",
+										Log.Debug(string.Format("Updated state for Issue [{0}] to [{1}]",
 											card.ExternalCardID, validTransition.To.Name));
+										CacheCardVersion(card.Id, true, card.Version);
 									}
 								}
 							}
@@ -1009,7 +1039,9 @@ namespace IntegrationService.Targets.JIRA
 						UpdateStateOfExternalItem(card, states, boardMapping, true);
 					}
 
-					LeanKit.UpdateCard(boardMapping.Identity.LeanKit, card);
+					var result = LeanKit.UpdateCard(boardMapping.Identity.LeanKit, card);
+					CacheCardVersion(card.Id, false, result.CardDTO.Version);
+					CacheCardVersion(card.Id, true, result.CardDTO.Version);
 				}
 				catch (Exception ex)
 				{
