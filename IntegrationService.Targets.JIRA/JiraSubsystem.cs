@@ -334,7 +334,7 @@ namespace IntegrationService.Targets.JIRA
 							}
 							else
 							{
-								Log.Debug(String.Format("Updated Issue [{0}]", updatedCard.ExternalCardID));
+								Log.Debug(string.Format("Updated Issue [{0}]", updatedCard.ExternalCardID));
 								CacheCardVersion(updatedCard.Id, false, updatedCard.Version);
 							}
 						}
@@ -471,39 +471,38 @@ namespace IntegrationService.Targets.JIRA
 			// check the state of the work item
 			// if we have the state mapped to a lane then check to see if the card is in that lane
 			// if it is not in that lane then move it to that lane
-			if (boardMapping.UpdateCardLanes && issue.Fields != null && issue.Fields.Status != null &&
-			    !string.IsNullOrEmpty(issue.Fields.Status.Name))
+			if (!boardMapping.UpdateCardLanes || issue.Fields == null || issue.Fields.Status == null ||
+			    string.IsNullOrEmpty(issue.Fields.Status.Name)) return;
+
+			var laneIds = boardMapping.LanesFromState(issue.Fields.Status.Name);
+			if (!laneIds.Any()) return;
+			if (laneIds.Contains(card.LaneId))
 			{
-				var laneIds = boardMapping.LanesFromState(issue.Fields.Status.Name);
-				if (!laneIds.Any()) return;
-				if (laneIds.Contains(card.LaneId))
-				{
-					Log.Debug("Card [{0}] is already in mapped Lane [{1}]", card.Id, card.LaneId);
-					TargetSetCacheVersion(issue.Key, issue.Fields.Updated);
-					return;
-				}
-				// first let's see if any of the lanes are sibling lanes, if so then
-				// we should be using one of them. So we'll limit the results to just siblings
-				if (boardMapping.ValidLanes != null)
-				{
-					var siblingLaneIds = (from siblingLaneId in laneIds
-						let parentLane =
-							boardMapping.ValidLanes.FirstOrDefault(x =>
-								x.HasChildLanes &&
-								x.ChildLaneIds.Contains(siblingLaneId) &&
-								x.ChildLaneIds.Contains(card.LaneId))
-						where parentLane != null
-						select siblingLaneId).ToList();
-					if (siblingLaneIds.Any())
-						laneIds = siblingLaneIds;
-				}
-				var laneId = laneIds.First();
-				Log.Info("Moving card [{0}] to Lane [{1}]", card.Id, laneId);
-				LeanKit.MoveCard(boardMapping.Identity.LeanKit, card.Id, laneId, 0, "Moved Lane From Jira Issue");
-				var updatedCard = LeanKit.GetCard(boardMapping.Identity.LeanKit, card.Id);
-				CacheCardVersion(updatedCard.Id, true, updatedCard.Version);
+				Log.Debug("Card [{0}] is already in mapped Lane [{1}]", card.Id, card.LaneId);
 				TargetSetCacheVersion(issue.Key, issue.Fields.Updated);
+				return;
 			}
+			// first let's see if any of the lanes are sibling lanes, if so then
+			// we should be using one of them. So we'll limit the results to just siblings
+			if (boardMapping.ValidLanes != null)
+			{
+				var siblingLaneIds = (from siblingLaneId in laneIds
+					let parentLane =
+						boardMapping.ValidLanes.FirstOrDefault(x =>
+							x.HasChildLanes &&
+							x.ChildLaneIds.Contains(siblingLaneId) &&
+							x.ChildLaneIds.Contains(card.LaneId))
+					where parentLane != null
+					select siblingLaneId).ToList();
+				if (siblingLaneIds.Any())
+					laneIds = siblingLaneIds;
+			}
+			var laneId = laneIds.First();
+			Log.Info("Moving card [{0}] to Lane [{1}]", card.Id, laneId);
+			LeanKit.MoveCard(boardMapping.Identity.LeanKit, card.Id, laneId, 0, "Moved Lane From Jira Issue");
+			var updatedCard = LeanKit.GetCard(boardMapping.Identity.LeanKit, card.Id);
+			CacheCardVersion(updatedCard.Id, true, updatedCard.Version);
+			TargetSetCacheVersion(issue.Key, issue.Fields.Updated);
 		}
 
 		protected override void Synchronize(BoardMapping project)

@@ -63,7 +63,7 @@ namespace IntegrationService.Targets.TFS
             Log.Debug("Polling TFS [{0}] for Work Items", project.Identity.TargetName);
 
 			//query a project for new items   
-	        var stateQuery = string.Format(" AND ({0})", String.Join(" or ", project.QueryStates.Select(x => "[System.State] = '" + x.Trim() + "'").ToList()));
+	        var stateQuery = string.Format(" AND ({0})", string.Join(" or ", project.QueryStates.Select(x => "[System.State] = '" + x.Trim() + "'").ToList()));
 	        var iterationQuery = "";
 			if (!string.IsNullOrEmpty(project.IterationPath))
 	        {
@@ -79,7 +79,7 @@ namespace IntegrationService.Targets.TFS
 			} 
 			else 
 			{
-				tfsQuery = String.Format(
+				tfsQuery = string.Format(
 					"[System.TeamProject] = '{0}' {1} {2} {3} and [System.ChangedDate] > '{4}'",
 					 project.Identity.TargetName, iterationQuery, stateQuery, project.ExcludedTypeQuery, queryAsOfDate);
 			}
@@ -114,7 +114,13 @@ namespace IntegrationService.Targets.TFS
 
 		    foreach (WorkItem item in changedItems)
             {
-                Log.Info("Work Item [{0}]: {1}, {2}, {3}",
+				if (CheckWorkItemCache(item))
+				{
+					Log.Info("Work Item [{0}] already processed, skipping.", item.Id);
+					continue;
+				}
+
+				Log.Info("Work Item [{0}]: {1}, {2}, {3}",
                                   item.Id, item.Title, item.Fields["System.AssignedTo"].Value, item.State);
 
                 // does this workitem have a corresponding card?
@@ -245,8 +251,11 @@ namespace IntegrationService.Targets.TFS
 		        {
 			        cardAddResult = LeanKit.AddCard(boardId, card, "New Card From TFS Work Item");
 			        success = true;
-		        }
-		        catch (Exception ex)
+					CacheCardVersion(cardAddResult.CardId, false, 1);
+					CacheCardVersion(cardAddResult.CardId, true, 1);
+					CacheWorkItem(workItem);
+				}
+				catch (Exception ex)
 		        {
 					Log.Error(ex, string.Format("An error occurred creating a new card for work item [{0}]", workItem.Id));
 		        }
@@ -257,8 +266,18 @@ namespace IntegrationService.Targets.TFS
             Log.Info("Created a card [{0}] of type [{1}] for work item [{2}] on Board [{3}] on Lane [{4}]", card.Id, mappedCardType.Name, workItem.Id, boardId, laneId);
         }
 
+	    private void CacheWorkItem(WorkItem workItem)
+	    {
+		    TargetSetCacheVersion(workItem.Id.ToString(), workItem.ChangedDate.ToString("s"));
+	    }
 
-		public void SetWorkItemPriority(WorkItem workItem, int newPriority)
+	    private bool CheckWorkItemCache(WorkItem workItem)
+	    {
+		    return TargetCacheCheckForVersion(workItem.Id.ToString(), workItem.ChangedDate.ToString("s"));
+	    }
+
+
+	    public void SetWorkItemPriority(WorkItem workItem, int newPriority)
 		{
 			//LK Priority: 0 = Low, 1 = Normal, 2 = High, 3 = Critical
 			//TFS Priority: 1-4
@@ -330,6 +349,13 @@ namespace IntegrationService.Targets.TFS
 	        if (!mapping.UpdateTargetItems) return;
 			if (!card.ExternalSystemName.Equals(ServiceName, StringComparison.OrdinalIgnoreCase)) return;
 			if (string.IsNullOrEmpty(card.ExternalCardID)) return;
+
+			var version = GetCachedCardVersion(card.Id, true);
+			if (version >= card.Version)
+			{
+				Log.Debug("UpdateStateOfExternalItem, Card [{0}] with version [{1}] has already been processed. Skipping comparison.", card.Id, card.Version);
+				return;
+			}
 
 			int workItemId;
 
@@ -482,6 +508,7 @@ namespace IntegrationService.Targets.TFS
 						workItemToUpdate.Save();
 						success = true;
 						Log.Debug("Updated state for mapped WorkItem [{0}] to [{1}]", workItemId, workItemToUpdate.State);
+						CacheCardVersion(card.Id, true, card.Version);
 					}
 					catch (ValidationException ex)
 					{
@@ -595,13 +622,15 @@ namespace IntegrationService.Targets.TFS
             if(saveCard)
             {
                 Log.Info("Updating card [{0}]", card.Id);
-                LeanKit.UpdateCard(boardId, card);
-            }
+				var result = LeanKit.UpdateCard(boardId, card);
+	            CacheCardVersion(result.CardDTO.Id, false, result.CardDTO.Version);
+			}
+			CacheWorkItem(workItem);
 
 			// check the state of the work item
 			// if we have the state mapped to a lane then check to see if the card is in that lane
 			// if it is not in that lane then move it to that lane
-	        if (!project.UpdateCardLanes || string.IsNullOrEmpty(workItem.State)) return;
+			if (!project.UpdateCardLanes || string.IsNullOrEmpty(workItem.State)) return;
 
 	        // if card is already in archive lane then we do not want to move it to the end lane
 	        // because it is effectively the same thing with respect to integrating with TFS
@@ -612,28 +641,28 @@ namespace IntegrationService.Targets.TFS
 
 			var laneIds = project.LanesFromState(workItem.State);
 
-	        if (laneIds.Any())
-	        {
-		        if (!laneIds.Contains(card.LaneId))
-		        {
-					// first let's see if any of the lanes are sibling lanes, if so then 
-					// we should be using one of them. So we'll limit the results to just siblings
-					if (project.ValidLanes != null) {
-						var siblingLaneIds = (from siblingLaneId in laneIds
-											  let parentLane =
-												  project.ValidLanes.FirstOrDefault(x =>
-													  x.HasChildLanes &&
-													  x.ChildLaneIds.Contains(siblingLaneId) &&
-													  x.ChildLaneIds.Contains(card.LaneId))
-											  where parentLane != null
-											  select siblingLaneId).ToList();
-						if (siblingLaneIds.Any())
-							laneIds = siblingLaneIds;
-					}
+	        if (!laneIds.Any()) return;
+	        if (laneIds.Contains(card.LaneId)) return;
 
-			        LeanKit.MoveCard(project.Identity.LeanKit, card.Id, laneIds.First(), 0, "Moved Lane From TFS Work Item");
-		        }
+	        // first let's see if any of the lanes are sibling lanes, if so then 
+	        // we should be using one of them. So we'll limit the results to just siblings
+	        if (project.ValidLanes != null) {
+		        var siblingLaneIds = (from siblingLaneId in laneIds
+			        let parentLane =
+				        project.ValidLanes.FirstOrDefault(x =>
+					        x.HasChildLanes &&
+					        x.ChildLaneIds.Contains(siblingLaneId) &&
+					        x.ChildLaneIds.Contains(card.LaneId))
+			        where parentLane != null
+			        select siblingLaneId).ToList();
+		        if (siblingLaneIds.Any())
+			        laneIds = siblingLaneIds;
 	        }
+
+	        LeanKit.MoveCard(project.Identity.LeanKit, card.Id, laneIds.First(), 0, "Moved Lane From TFS Work Item");
+	        var updatedCard = LeanKit.GetCard(project.Identity.LeanKit, card.Id);
+	        CacheCardVersion(updatedCard.Id, true, updatedCard.Version);
+			CacheWorkItem(workItem);
         }
 
 	    protected override void CardUpdated(Card card, List<string> updatedItems, BoardMapping boardMapping)
@@ -644,7 +673,14 @@ namespace IntegrationService.Targets.TFS
 		    if (string.IsNullOrEmpty(card.ExternalCardID))
 			    return;
 
-		    Log.Info("Card [{0}] updated.", card.Id);
+			var version = GetCachedCardVersion(card.Id, false);
+			if (version >= card.Version)
+			{
+				Log.Debug("CardUpdated, Card [{0}] with version [{1}] has already been processed. Skipping comparison.", card.Id, card.Version);
+				return;
+			}
+
+			Log.Info("Card [{0}] updated.", card.Id);
 
 		    int workItemId;
 		    try
@@ -707,7 +743,8 @@ namespace IntegrationService.Targets.TFS
 		    {
 			    Log.Info("Updating corresponding work item [{0}]", workItem.Id);
 			    workItem.Save();
-		    }
+				CacheCardVersion(card.Id, false, card.Version);
+			}
 
 		    // unsupported properties; append changes to history
 
@@ -726,12 +763,10 @@ namespace IntegrationService.Targets.TFS
 			    workItem.Save();
 		    }
 
-		    if (updatedItems.Contains("Tags"))
-		    {
-			    workItem.History += "Tags in LeanKit changed to " + card.Tags + "\r";
-			    workItem.Save();
-		    }
+		    if (!updatedItems.Contains("Tags")) return;
 
+		    workItem.History += "Tags in LeanKit changed to " + card.Tags + "\r";
+		    workItem.Save();
 	    }
 
 	    private void SetDueDate(WorkItem workItem, string date)
@@ -819,10 +854,13 @@ namespace IntegrationService.Targets.TFS
 				if (states != null) 
 				{
 					UpdateStateOfExternalItem(card, states, boardMapping, true);
-				}			
+				}
 
-				LeanKit.UpdateCard(boardMapping.Identity.LeanKit, card);
-			} 
+				var result = LeanKit.UpdateCard(boardMapping.Identity.LeanKit, card);
+				CacheCardVersion(card.Id, false, result.CardDTO.Version);
+				CacheCardVersion(card.Id, true, result.CardDTO.Version);
+
+			}
 			catch (ValidationException ex) 
 			{
 				Log.Error("Unable to create WorkItem from Card [{0}]. ValidationException: {1}", card.Id, ex.Message);
