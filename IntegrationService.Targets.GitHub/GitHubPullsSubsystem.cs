@@ -242,8 +242,13 @@ namespace IntegrationService.Targets.GitHub
         private void CreateCardFromItem(BoardMapping project, Pull pull)
         {
 			if (pull == null) return;
-        
-            var boardId = project.Identity.LeanKit;
+			if (!project.CreateCards)
+			{
+				Log.Debug("CreateCards is disabled, skipping card creation.");
+				return;
+			}
+
+			var boardId = project.Identity.LeanKit;
         
             var mappedCardType = pull.LeanKitCardType(project);
             var laneId = project.LanesFromState(pull.State).First();

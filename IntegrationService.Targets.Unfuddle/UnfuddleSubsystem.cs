@@ -354,8 +354,13 @@ namespace IntegrationService.Targets.Unfuddle
         private void CreateCardFromItem(BoardMapping project, Ticket ticket)
         {
             if (ticket == null) return;
+			if (!project.CreateCards)
+			{
+				Log.Debug("CreateCards is disabled, skipping card creation.");
+				return;
+			}
 
-            var boardId = project.Identity.LeanKit;
+			var boardId = project.Identity.LeanKit;
 
 	        var mappedCardType = ticket.LeanKitCardType(project);
 

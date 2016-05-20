@@ -593,6 +593,11 @@ namespace IntegrationService.Targets.JIRA
 		private void CreateCardFromItem(BoardMapping project, Issue issue)
 		{
 			if (issue == null) return;
+			if (!project.CreateCards)
+			{
+				Log.Debug("CreateCards is disabled, skipping card creation.");
+				return;
+			}
 
 			var boardId = project.Identity.LeanKit;
 

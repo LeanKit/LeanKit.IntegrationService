@@ -150,6 +150,12 @@ namespace IntegrationService.Targets.TFS
         {
             if (workItem == null) return;
 
+	        if (!project.CreateCards)
+	        {
+		        Log.Debug("CreateCards is disabled, skipping card creation.");
+		        return;
+	        }
+
             var boardId = project.Identity.LeanKit;
 
             var mappedCardType = workItem.LeanKitCardType(project);
