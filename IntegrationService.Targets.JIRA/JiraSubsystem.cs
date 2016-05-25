@@ -48,11 +48,7 @@ namespace IntegrationService.Targets.JIRA
 
 							if (jiraResp.StatusCode != HttpStatusCode.OK)
 							{
-								var serializer = new JsonSerializer<JiraConnection.ErrorMessage>();
-								var errorMessage = serializer.DeserializeFromString(jiraResp.Content);
-								Log.Error(string.Format(
-									"Unable to get custom fields from JIRA, Error: {0}. Check your JIRA connection configuration.",
-									errorMessage.Message));
+								ProcessJiraError(jiraResp, "Unable to get custom fields from JIRA.");
 							}
 							else
 							{
@@ -87,11 +83,7 @@ namespace IntegrationService.Targets.JIRA
 
 						if (jiraResp.StatusCode != HttpStatusCode.OK)
 						{
-							var serializer = new JsonSerializer<JiraConnection.ErrorMessage>();
-							var errorMessage = serializer.DeserializeFromString(jiraResp.Content);
-							Log.Error(string.Format(
-								"Unable to get priorities from JIRA, Error: {0}. Check your JIRA connection configuration.",
-								errorMessage.Message));
+							ProcessJiraError(jiraResp, "Unable to get priorities from JIRA.");
 						}
 						else
 						{
@@ -132,6 +124,11 @@ namespace IntegrationService.Targets.JIRA
 			_jiraConnection = jiraConnection;
 		}
 
+
+		private void ClearSessionCookies()
+		{
+			_sessionCookies?.Clear();
+		}
 
 		public void AddSessionCookieToRequest(RestRequest request)
 		{
@@ -206,12 +203,7 @@ namespace IntegrationService.Targets.JIRA
 
 			if (jiraResp.StatusCode != HttpStatusCode.OK)
 			{
-				var serializer = new JsonSerializer<ErrorMessage>();
-				var errorMessage = serializer.DeserializeFromString(jiraResp.Content);
-				Log.Error(
-					string.Format(
-						"Unable to get issues from Jira, Error: {0}. Check your board/repo mapping configuration.",
-						errorMessage.Message));
+				ProcessJiraError(jiraResp, string.Format("Unable to get issue [{0}] from JIRA.", updatedCard.ExternalCardID));
 			}
 			else
 			{
@@ -327,10 +319,7 @@ namespace IntegrationService.Targets.JIRA
 
 							if (resp.StatusCode != HttpStatusCode.OK && resp.StatusCode != HttpStatusCode.NoContent)
 							{
-								var serializer = new JsonSerializer<ErrorMessage>();
-								var errorMessage = serializer.DeserializeFromString(resp.Content);
-								Log.Error(string.Format("Unable to update Issue [{0}], Description: {1}, Message: {2}",
-									updatedCard.ExternalCardID, resp.StatusDescription, errorMessage.Message));
+								ProcessJiraError(resp, string.Format("Unable to update JIRA Issue [{0}].", updatedCard.ExternalCardID));
 							}
 							else
 							{
@@ -365,12 +354,7 @@ namespace IntegrationService.Targets.JIRA
 							    resp.StatusCode != HttpStatusCode.NoContent &&
 							    resp.StatusCode != HttpStatusCode.Created)
 							{
-								var serializer = new JsonSerializer<ErrorMessage>();
-								var errorMessage = serializer.DeserializeFromString(resp.Content);
-								Log.Error(
-									string.Format(
-										"Unable to create comment for updated Issue [{0}], Description: {1}, Message: {2}",
-										updatedCard.ExternalCardID, resp.StatusDescription, errorMessage.Message));
+								ProcessJiraError(resp, string.Format("Unable to create comment for updated Issue [{0}].", updatedCard.ExternalCardID));
 							}
 							else
 							{
@@ -542,12 +526,7 @@ namespace IntegrationService.Targets.JIRA
 
 			if (jiraResp.StatusCode != HttpStatusCode.OK)
 			{
-				var serializer = new JsonSerializer<ErrorMessage>();
-				var errorMessage = serializer.DeserializeFromString(jiraResp.Content);
-				Log.Error(
-					string.Format(
-						"Unable to get issues from Jira, Error: {0}. Check your board/project mapping configuration.",
-						errorMessage.Message));
+				ProcessJiraError(jiraResp, "Unable to get issues from Jira.");
 				return;
 			}
 
@@ -587,6 +566,23 @@ namespace IntegrationService.Targets.JIRA
 							Log.Debug("Skipped card update because 'UpdateCards' is disabled.");
 					}
 				}
+			}
+		}
+
+		private void ProcessJiraError(IRestResponse response, string errMessage)
+		{
+			try
+			{
+				var serializer = new JsonSerializer<ErrorMessage>();
+				var errorMessage = serializer.DeserializeFromString(response.Content);
+				var err = string.Format(" Status: {0}, Message: {1}", response.StatusDescription, errorMessage.Message);
+				Log.Error( errMessage + err );
+			}
+			catch (Exception)
+			{
+				var err = string.Format(" Status: {0}, Message: {1}", response.StatusDescription, response.Content);
+				Log.Error(errMessage + err);
+				ClearSessionCookies();
 			}
 		}
 
@@ -788,12 +784,7 @@ namespace IntegrationService.Targets.JIRA
 
 				if (jiraResp.StatusCode != HttpStatusCode.OK)
 				{
-					var serializer = new JsonSerializer<ErrorMessage>();
-					var errorMessage = serializer.DeserializeFromString(jiraResp.Content);
-					Log.Error(
-						string.Format(
-							"Unable to get issues from Jira, Error: {0}. Check your board/repo mapping configuration.",
-							errorMessage.Message));
+					ProcessJiraError(jiraResp, string.Format("Unable to get issue [{0}] from Jira.", card.ExternalCardID));
 				}
 				else
 				{
@@ -853,10 +844,7 @@ namespace IntegrationService.Targets.JIRA
 
 						if (transitionsResponse.StatusCode != HttpStatusCode.OK)
 						{
-							var serializer = new JsonSerializer<ErrorMessage>();
-							var errorMessage = serializer.DeserializeFromString(jiraResp.Content);
-							Log.Error(string.Format("Unable to get available transitions from Jira, Error: {0}.",
-								errorMessage.Message));
+							ProcessJiraError(jiraResp, "Unable to get available transitions from Jira.");
 						}
 						else
 						{
@@ -910,13 +898,7 @@ namespace IntegrationService.Targets.JIRA
 									if (resp.StatusCode != HttpStatusCode.OK &&
 									    resp.StatusCode != HttpStatusCode.NoContent)
 									{
-										var serializer = new JsonSerializer<ErrorMessage>();
-										var errorMessage = serializer.DeserializeFromString(resp.Content);
-										Log.Error(
-											string.Format(
-												"Unable to update Issue [{0}] to [{1}], Description: {2}, Message: {3}",
-												card.ExternalCardID, validTransition.To.Name, resp.StatusDescription,
-												errorMessage.Message));
+										ProcessJiraError(jiraResp, string.Format("Unable to update Issue [{0}] to [{1}].", card.ExternalCardID, validTransition.To.Name));
 									}
 									else
 									{
@@ -1013,13 +995,12 @@ namespace IntegrationService.Targets.JIRA
 
 				if (resp.StatusCode != HttpStatusCode.OK && resp.StatusCode != HttpStatusCode.Created)
 				{
-					Log.Error(string.Format("Unable to create Issue from card [{0}], Description: {1}, Message: {2}",
-						card.ExternalCardID, resp.StatusDescription, resp.Content));
+					ProcessJiraError(resp, string.Format("Unable to create Issue from card [{0}].", card.ExternalCardID));
 				}
 				else
 				{
 					newIssue = new JsonSerializer<Issue>().DeserializeFromString(resp.Content);
-					Log.Debug(String.Format("Created Issue [{0}]", newIssue.Key));
+					Log.Debug(string.Format("Created Issue [{0}]", newIssue.Key));
 				}
 			}
 			catch (Exception ex)
