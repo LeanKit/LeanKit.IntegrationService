@@ -10,6 +10,7 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Caching;
 using System.Text.RegularExpressions;
 using System.Threading;
 using IntegrationService.Util;
@@ -58,26 +59,60 @@ namespace IntegrationService.Targets
 	        }
 	    }
 
+	    private double? _cacheMinutes;
+	    protected double CacheMinutes
+	    {
+		    get
+		    {
+			    if (_cacheMinutes.HasValue) return _cacheMinutes.Value;
+				var configMinutes = ConfigurationManager.AppSettings["CacheExpirationMinutes"];
+			    const double defaultCacheMinutes = 60*6;
+			    if (configMinutes == null)
+			    {
+				    _cacheMinutes = defaultCacheMinutes;
+					Log.Debug(string.Format("Cache: Caching is set to {0} minutes", _cacheMinutes.Value));
+				    return _cacheMinutes.Value;
+			    }
+			    double minutes;
+			    if (double.TryParse(configMinutes, out minutes))
+			    {
+				    if (minutes <= 0) minutes = defaultCacheMinutes;
+			    }
+			    else
+			    {
+					minutes = defaultCacheMinutes;
+				}
+			    _cacheMinutes = minutes;
+				Log.Debug(string.Format("Cache: Caching is set to {0} minutes", _cacheMinutes.Value));
+				return _cacheMinutes.Value;
+		    }
+	    }
+
+	    protected CacheItemPolicy GetCacheItemPolicy()
+	    {
+		    return new CacheItemPolicy {SlidingExpiration = TimeSpan.FromMinutes(CacheMinutes) };
+	    }
+
 	    protected void TargetSetCacheVersion(string key, string value)
 	    {
-			const int cacheExpiration = 60 * 60 * 1000;
+		    var cache = MemoryCache.Default;
 			var targetKey = GetTargetCacheKey(key);
-			if (MemoryCache.Cache.Exists(targetKey))
-			{
-				MemoryCache.Cache.Update(targetKey, value);
-			}
-			else
-			{
-				MemoryCache.Cache.Store(targetKey, value, cacheExpiration);
-			}
+			Log.Debug(string.Format("Cache: Setting Target Version [{0}]: {1}", targetKey, value));
+			cache.Set(targetKey, value, GetCacheItemPolicy());
 		}
 
 	    protected bool TargetCacheCheckForVersion(string key, string value)
 	    {
+			var cache = MemoryCache.Default;
 			var targetKey = GetTargetCacheKey(key);
-		    if (!MemoryCache.Cache.Exists(targetKey)) return false;
-		    var val = (string) MemoryCache.Cache.Get(targetKey);
-		    return val.Equals(value, StringComparison.OrdinalIgnoreCase);
+		    if (!cache.Contains(targetKey))
+		    {
+				Log.Debug(string.Format("Cache: Target Version not found [{0}]: {1}", targetKey, value));
+				return false;
+		    }
+		    var val = (string) cache.Get(targetKey);
+			Log.Debug(string.Format("Cache: Returning Target Version [{0}]: {1}", targetKey, val));
+			return val.Equals(value, StringComparison.OrdinalIgnoreCase);
 	    }
 
 		private static string GetTargetCacheKey(string key)
@@ -93,23 +128,24 @@ namespace IntegrationService.Targets
 
 	    protected void CacheCardVersion(long cardId, bool isStateChange, long version)
 	    {
-		    const int cardCacheExpiration = 60*60*1000;
-			var key = GetCardCacheKey(cardId, isStateChange);
-		    if (MemoryCache.Cache.Exists(key))
-		    {
-			    MemoryCache.Cache.Update(key, version);
-		    }
-		    else
-		    {
-			    MemoryCache.Cache.Store(key, version, cardCacheExpiration);
-		    }
-	    }
+			var targetKey = GetCardCacheKey(cardId, isStateChange);
+			var cache = MemoryCache.Default;
+			Log.Debug(string.Format("Cache: Setting Card Version [{0}]: {1}", targetKey, version));
+			cache.Set(targetKey, version, GetCacheItemPolicy());
+		}
 
 	    protected long GetCachedCardVersion(long cardId, bool isStateChange)
 	    {
-		    var key = GetCardCacheKey(cardId, isStateChange);
-		    if (!MemoryCache.Cache.Exists(key)) return 0;
-		    return (long) MemoryCache.Cache.Get(key);
+			var targetKey = GetCardCacheKey(cardId, isStateChange);
+			var cache = MemoryCache.Default;
+		    if (!cache.Contains(targetKey))
+		    {
+				Log.Debug(string.Format("Cache: Card Version not found [{0}]", targetKey));
+			    return 0;
+		    }
+			var version = (long)cache.Get(targetKey);
+			Log.Debug(string.Format("Cache: Returning Cached Card Version [{0}]: {1}", targetKey, version));
+			return version;
 	    }
 
 	    private User _currentUser;
