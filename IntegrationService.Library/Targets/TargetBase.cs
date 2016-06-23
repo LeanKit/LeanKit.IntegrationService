@@ -293,16 +293,31 @@ namespace IntegrationService.Targets
 				    if (ev.EventType == "CardCreation")
 				    {
 					    var card = LeanKit.GetCard(board.Id, ev.CardId);
-					    if (card != null && string.IsNullOrEmpty(card.ExternalCardID))
+					    if (card != null && string.IsNullOrEmpty(card.ExternalCardID) && mapping.CreateTargetItems)
 					    {
-						    try
-						    {
-							    CreateNewItem(card.ToCard(), mapping);
-						    }
-						    catch (Exception e)
-						    {
-							    Log.Error("Exception for CreateNewItem: " + e.Message);
-						    }
+                            if (mapping.LaneToStatesMap.Any() &&
+                                mapping.LaneToStatesMap.ContainsKey(card.LaneId))
+                            {
+                                var states = mapping.LaneToStatesMap[card.LaneId];
+                                if (states != null && states.Count > 0)
+                                {
+                                    try
+                                    {
+                                        CreateNewItem(card.ToCard(), mapping);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Log.Error("Exception for CreateNewItem: " + e.Message);
+                                    }
+
+                                }
+                                else
+                                    Log.Debug(string.Format("No states are mapped to the Lane [{0}]", card.LaneId));
+                            }
+                            else
+                            {
+                                Log.Debug(string.Format("No states are mapped to the Lane [{0}]", card.LaneId));
+                            }
 					    }
 				    }
 				    // only look for moved cards
@@ -747,14 +762,29 @@ namespace IntegrationService.Targets
 						foreach (var newCard in eventArgs.AddedCards.Select(cardAddEvent => cardAddEvent.AddedCard)
 							.Where(newCard => newCard != null && string.IsNullOrEmpty(newCard.ExternalCardID)))
 						{
-							try
-							{
-								CreateNewItem(newCard, boardConfig);
-							}
-							catch (Exception e)
-							{
-								string.Format("Error processing newly created card, [{0}]: {1}", newCard.Id, e.Message).Error(e);
-							}
+                            if (boardConfig.LaneToStatesMap.Any() &&
+                                boardConfig.LaneToStatesMap.ContainsKey(newCard.LaneId))
+                            {
+                                var states = boardConfig.LaneToStatesMap[newCard.LaneId];
+                                if (states != null && states.Count > 0)
+                                {
+                                    try
+                                    {
+                                        CreateNewItem(newCard, boardConfig);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Log.Error("Exception for CreateNewItem: " + e.Message);
+                                    }
+
+                                }
+                                else
+                                    Log.Debug(string.Format("No states are mapped to the Lane [{0}]", newCard.LaneId));
+                            }
+                            else
+                            {
+                                Log.Debug(string.Format("No states are mapped to the Lane [{0}]", newCard.LaneId));
+                            }
 						}
 					}
 				}

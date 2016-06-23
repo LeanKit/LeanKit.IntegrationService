@@ -575,7 +575,7 @@ namespace IntegrationService.Targets.JIRA
 			{
 				var serializer = new JsonSerializer<ErrorMessage>();
 				var errorMessage = serializer.DeserializeFromString(response.Content);
-				var err = string.Format(" Status: {0}, Message: {1}", response.StatusDescription, errorMessage.Message);
+				var err = errorMessage.Message != null ? string.Format(" Status: {0}, Message: {1}", response.StatusDescription, errorMessage.Message) : string.Format(" Status: {0}, Message: {1}", response.StatusDescription, response.Content);
 				Log.Error( errMessage + err );
 			}
 			catch (Exception)
@@ -995,7 +995,7 @@ namespace IntegrationService.Targets.JIRA
 
 				if (resp.StatusCode != HttpStatusCode.OK && resp.StatusCode != HttpStatusCode.Created)
 				{
-					ProcessJiraError(resp, string.Format("Unable to create Issue from card [{0}].", card.ExternalCardID));
+					ProcessJiraError(resp, string.Format("Unable to create Issue from card [{0}].", card.Id));
 				}
 				else
 				{
@@ -1005,8 +1005,7 @@ namespace IntegrationService.Targets.JIRA
 			}
 			catch (Exception ex)
 			{
-				Log.Error(string.Format("Unable to create Issue from Card [{0}], Exception: {1}", card.ExternalCardID,
-					ex.Message));
+				Log.Error(string.Format("Unable to create Issue from Card [{0}], Exception: {1}", card.Id, ex.Message));
 			}
 
 			if (newIssue != null)
@@ -1031,7 +1030,7 @@ namespace IntegrationService.Targets.JIRA
 				catch (Exception ex)
 				{
 					Log.Error(string.Format("Error updating Card [{0}] after creating new Issue, Exception: {1}",
-						card.ExternalCardID,
+						card.Id,
 						ex.Message));
 				}
 			}
