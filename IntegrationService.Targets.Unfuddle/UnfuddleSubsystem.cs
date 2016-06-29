@@ -376,7 +376,8 @@ namespace IntegrationService.Targets.Unfuddle
                     LaneId = laneId,
                     ExternalCardID = ticket.Id.ToString(),
                     ExternalSystemName = ServiceName,
-                    ExternalSystemUrl = string.Format(_externalUrlTemplate, ticket.Id, project.Identity.Target)
+                    ExternalSystemUrl = string.Format(_externalUrlTemplate, ticket.Id, project.Identity.Target),
+                    Index = 9999
                 };
 
 			var assignedUserId = CalculateAssignedUserId(boardId, ticket);

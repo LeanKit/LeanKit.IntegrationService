@@ -263,7 +263,8 @@ namespace IntegrationService.Targets.GitHub
                 LaneId = laneId,
                 ExternalCardID = pull.Id.ToString() + "|" + pull.Number.ToString(),
                 ExternalSystemName = ServiceName, 				
-				ExternalSystemUrl = string.Format(_externalUrlTemplate, project.Identity.Target, pull.Number)
+				ExternalSystemUrl = string.Format(_externalUrlTemplate, project.Identity.Target, pull.Number),
+                Index = 9999
             };
 
 			var assignedUserId = pull.LeanKitAssignedUser(boardId, LeanKit);

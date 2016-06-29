@@ -171,7 +171,8 @@ namespace IntegrationService.Targets.TFS
                     TypeName = mappedCardType.Name,
                     LaneId = laneId,
                     ExternalCardID = workItem.Id.ToString(CultureInfo.InvariantCulture),
-                    ExternalSystemName = ServiceName
+                    ExternalSystemName = ServiceName,
+                    Index = 9999
                 };
 
 			if (workItem.Fields.Contains("Tags") && workItem.Fields["Tags"] != null && workItem.Fields["Tags"].Value != null)

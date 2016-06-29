@@ -546,8 +546,7 @@ namespace IntegrationService.Targets.JIRA
 						Log.Info("Issue [{0}] already processed, skipping.", issue.Key);
 						continue;
 					}
-					Log.Info("Issue [{0}]: {1}, {2}, {3}", issue.Key, issue.Fields.Summary, issue.Fields.Status.Name,
-						issue.Fields.Priority.Name);
+					Log.Info("Issue [{0}]: {1}, {2}", issue.Key, issue.Fields.Summary, issue.Fields.Status.Name);
 
 					// does this workitem have a corresponding card?
 					var card = LeanKit.GetCardByExternalId(project.Identity.LeanKit, issue.Key);
@@ -613,7 +612,8 @@ namespace IntegrationService.Targets.JIRA
 				LaneId = laneId,
 				ExternalCardID = issue.Key,
 				ExternalSystemName = ServiceName,
-				ExternalSystemUrl = string.Format(_externalUrlTemplate, issue.Key)
+				ExternalSystemUrl = string.Format(_externalUrlTemplate, issue.Key),
+                Index = 9999
 			};
 
 			var assignedUserId = issue.LeanKitAssignedUserId(boardId, LeanKit);
