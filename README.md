@@ -2,7 +2,7 @@
 
 * [Installation and Overview Guide](./docs/overview.md)
 * [Change log](./docs/changelog.md)
-* [Downloads](./docs/download.md)
+* [Downloads](./docs/downloads.md)
 
 The **LeanKit Integration Service** synchronizes items between a Target system and LeanKit.
 
