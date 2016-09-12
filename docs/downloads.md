@@ -4,7 +4,7 @@
 
 ## Installing
 
-Download the **.zip** file below, and follow the installation directions in the **[LeanKit Integration Service Overview & Guide](/entries/28393486 "LeanKit Integration Service Overview & Guide")**.
+Download the **.zip** file, and follow the installation directions in the **[Installation and Overview Guide](./overview.md)**.
 
 ## Upgrading
 
