@@ -1,3 +1,5 @@
+# LeanKit Integration Service
+
 * [Installation and Overview Guide](./docs/overview.md)
 * [Change log](./docs/changelog.md)
 * [Downloads](./docs/download.md)
