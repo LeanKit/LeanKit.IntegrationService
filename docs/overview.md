@@ -144,14 +144,15 @@ Open a command prompt as an administrator, and type the following:
 
 Locate and open the file IntegrationService.exe.config in a text editor. Find the application setting “ConfigurationSitePort” and change the value to the desired port number. Save the file, and restart the service.
 
-<pre><?xml version="1.0" encoding="utf-8"?>
+```
+<?xml version="1.0" encoding="utf-8"?>
 <configuration> 
   <appSettings> 
     <add key="ConfigurationSitePort" value="8090" />
   </appSettings> 
   ... 
 </configuration>
-</pre>
+```
 
 # <a name="configuration"></a>Configuration
 
@@ -251,14 +252,15 @@ This is a placeholder used to filter items in the query to only those that have 
 
 The default Work Item query used by the LeanKit Integration Service is:
 
-<pre>[System.TeamProject] = '<ProjectName>' 
+```
+[System.TeamProject] = '<ProjectName>' 
   AND [System.IterationPath] UNDER '<ProjectName>\\<IterationName>' 
   AND ([System.State] = '<First State Selected>' 
        OR [System.State] = '<Second State Selected>' OR ... ) 
   AND ([System.WorkItemType] <> '<First Excluded Type Selected>' 
        AND [System.WorkItemType] <> '<Second Excluded Type Selected>' AND ...) 
   AND [System.ChangedDate] > '{0}'
-</pre>
+```
 
 A full explanation of the query capabilities available for Visual Studio Team Services and TFS is beyond the scope of this documentation. Please consult your Work Item query documentation.
 
@@ -272,11 +274,12 @@ This is a placeholder used to filter items in the query to only those that have 
 
 The default JIRA query used by the LeanKit Integration Service is:
 
-<pre>project='<Project Name>' 
+```
+project='<Project Name>' 
 and (status='<First Selected Status>' or status='<Second Selected Status>' [or <additional statuses>]) 
 and updated > '{0}'   
 order by created asc
-</pre>
+```
 
 A full explanation of the query capabilities available for JIRA is beyond the scope of this documentation. Please consult your JIRA Query Language documentation.
 
@@ -396,27 +399,33 @@ When trying to connect to LeanKit, you see:
 
 This could be due to the Integration Service being installed behind a proxy server. To configure the Integration Service to use a proxy server, edit IntegrationService.exe.config, and update the following configuration section just before the closing </configuration> tag. It should look something like:
 
-<pre><system.net>  
+```
+<system.net>  
   <defaultProxy>  
     <proxy bypassonlocal="true" usesystemdefault="true" />  
   </defaultProxy>  
-</system.net></pre>
+</system.net>
+```
 
 Add a "useDefaultCredentials" setting.
 
-<pre><system.net>  
+```
+<system.net>  
   <defaultProxy useDefaultCredentials="true">  
     <proxy bypassonlocal="true" usesystemdefault="true" />  
   </defaultProxy>  
-</system.net></pre>
+</system.net>
+```
 
 Or, if more granular control of the proxy is required, it could look something like:
 
-<pre><system.net>  
+```
+<system.net>  
   <defaultProxy enabled="true" useDefaultCredentials="false">  
     <proxy usesystemdefaults="true" proxyaddress="http://192.168.1.10:3128" bypassonlocal="true" />  
   </defaultProxy>  
-</system.net></pre>
+</system.net>
+```
 
 For more proxy help, please review the documentation on [.NET proxy configuration](http://msdn.microsoft.com/en-us/library/kd3cf2ex(v=vs.110).aspx).
 
