@@ -1,4 +1,6 @@
-Read the [LeanKit Integration Service Guide](https://support.leankit.com/entries/28393486-LeanKit-Integration-Service-Guide)
+* [Installation and Overview Guide](./docs/overview.md)
+* [Change log](./docs/changelog.md)
+* [Downloads](./docs/download.md)
 
 The **LeanKit Integration Service** synchronizes items between a Target system and LeanKit.
 
