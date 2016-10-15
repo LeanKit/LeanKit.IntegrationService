@@ -27,26 +27,38 @@ namespace IntegrationService.Targets.GitHub
 		{
 			RestClient = restClient;
 		}
+		
+		/*
+			fqdn: target host + protocol as defined on the config screen
+			returns whether or not the host was targetting github.com
+		*/
+		protected Boolean isGitHubCom(String fqdn){
+			return fqdn.includes("github.com") || String.isBlank(fqdn);
+		}
 
         public ConnectionResult Connect(string host, string user, string password)
         {
 	        Host = host;
-	        RestClient.BaseUrl = new Uri("https://api.github.com");
-			RestClient.Authenticator = new HttpBasicAuthenticator(user, password);
+	        if(isGitHubCom(host)){
+	       		RestClient.BaseUrl = new Uri("https://api.github.com");
+	        }else{
+			RestClient.BaseUrl = new Uri(host+"/api/v3");
+	        }
+		RestClient.Authenticator = new HttpBasicAuthenticator(user, password);
             
-			try
-            {
-				//https://api.github.com/users/[username]/keys
-				var request = new RestRequest("/users/" + user +"/keys", Method.GET);
-				var githubResp = RestClient.Execute(request);
+		try
+        	    {
+			//https://{api_endpoint}/users/[username]/keys
+			var request = new RestRequest("/users/" + user +"/keys", Method.GET);
+			var githubResp = RestClient.Execute(request);
 
-	            if (githubResp.StatusCode != HttpStatusCode.OK)
-	            {
-					//var serializer = new JsonSerializer<ErrorMessage>();
-					//var errorMessage = serializer.DeserializeFromString(githubResp.Content);
-					return ConnectionResult.FailedToConnect;
+	            	if (githubResp.StatusCode != HttpStatusCode.OK)
+	            	{
+				//var serializer = new JsonSerializer<ErrorMessage>();
+				//var errorMessage = serializer.DeserializeFromString(githubResp.Content);
+				return ConnectionResult.FailedToConnect;
+		            }
 	            }
-            }
             catch (Exception)
             {
                 return ConnectionResult.FailedToConnect;
@@ -81,7 +93,7 @@ namespace IntegrationService.Targets.GitHub
 
 		protected IRestResponse ReposResponse(int pageNumber, int pageSize) 
 		{
-			//https://api.github.com/search/repositories?q=@hostname
+			//https://{api_endpoint}/search/repositories?q=@hostname
 			var reposRequest = new RestRequest(string.Format("/search/repositories?q=@{0}&page={1}&per_page={2}", Host, pageNumber, pageSize), Method.GET);
 			// required for GitHub Search API during the developer preview
 			reposRequest.AddHeader("Accept", "application/vnd.github.preview");
